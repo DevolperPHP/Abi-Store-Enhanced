@@ -1,0 +1,44 @@
+<%- include("../layout/navbar") -%>
+
+<div class="sell-dashboard">
+    <p class="title">Sales history</p>
+    <p class="current-filter">Search by <%= filter%></p>
+    <div class="filters">
+        <div class="flex">
+            <input type="text" id="phone" placeholder="Phone number">
+            <button onclick="searchByPhone()"><ion-icon name="search"></ion-icon></button>
+            <input type="date" id="startDate" name="startDate">
+            <input type="date" id="endDate" name="endDate">
+            <button onclick="searchByDate()"><ion-icon name="search"></ion-icon></button>
+            <select onchange="redirectToPage(this)">
+                <option selected>Filter</option>
+                <option value="/sell">All</option>
+                <option value="/sell/search-by-filter/newest">Newest</option>
+                <option value="/sell/search-by-filter/oldest">Oldest</option>
+                <option value="/sell/search-by-filter/pending">Pending</option>
+            </select>
+        </div>
+    </div>
+    <button class="add" onclick="window.location.href='/sell/new'"><ion-icon class="icon" name="add"></ion-icon></button>
+    <div class="sell-cards">
+        <% sell.forEach(data => {%>
+            <div class="sell-card" onclick="window.location.href='/sell/get-data/<%=data._id%>'">
+                <div class="flex">
+                    <p class="icon"><ion-icon name="folder"></ion-icon></p>
+                    <div class="details">
+                        <p><%= data.Date%></p>
+                        <p><%= data.phone%></p>
+                        <p><%= data.adress%></p>
+                    </div>
+                    <% if(data.status == "pending"){%>
+                        <p class="status">Pending</p>
+                    <%} %>
+                </div>
+            </div>
+        <%}) %>
+    </div>
+</div>
+
+<script src="/javascript/sell-dashboard.js"></script>
+
+<%- include("../layout/footer") -%>

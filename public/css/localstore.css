@@ -1,0 +1,749 @@
+@import url('https://fonts.googleapis.com/css2?family=Ubuntu&display=swap');
+
+* {
+    font-family: 'Ubuntu', sans-serif;
+}
+
+html, body {
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden !important;
+}
+
+.flex {
+    display: flex;
+}
+
+.only-phone{
+    display: none!important;
+}
+
+@media only screen and (max-width: 1000px){
+    .only-pc{
+        display: none!important;
+    }
+
+    .only-phone{
+        display: block;
+    }
+}
+
+nav {
+    float: right;
+    width: 80%;
+    position: fixed !important;
+    right: 0;
+    z-index: 10;
+    box-shadow: 0px 0px 10px #00000026;
+    border-bottom: 1px solid #00000026;
+}
+
+nav img {
+    width: 70px;
+}
+
+.navbar-nav {
+    margin-left: auto !important;
+}
+
+@media only screen and (max-width: 1000px) {
+    nav {
+        float: right;
+        width: 90%;
+        position: fixed !important;
+        right: 0;
+        z-index: 10;
+        box-shadow: 0px 0px 10px #00000026;
+        border-bottom: 1px solid #00000026;
+    }
+    
+    nav img {
+        width: 50px;
+    }
+    
+    .navbar-nav {
+        margin-left: auto !important;
+    }
+
+    nav button{
+        display: none;
+    }
+    
+    nav .title{
+        text-align: center;
+        margin-left: auto !important;
+        margin-right: auto !important;
+        padding-left: 10px;
+        padding-right: 10px;
+    }
+}
+
+.list {
+    width: 20% !important;
+    height: 100%;
+    float: left;
+    position: fixed;
+    box-shadow: 0px 0px 10px #00000026;
+    border-right: 1px solid #0000000e;
+    z-index: 11;
+}
+
+.list .title {
+    text-align: center;
+    margin-top: 30px;
+    font-size: 25px;
+    border-bottom: 1px solid #0000003f;
+    width: 80%;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.list ul {
+    text-decoration: none;
+    list-style: none;
+}
+
+.list li {
+    margin-top: 30px;
+    cursor: pointer;
+    color: #00000081;
+}
+
+.list .bottom {
+    border-top: 1px solid #0000003f;
+    width: 100%;
+    position: absolute;
+    bottom: 20px;
+    left: 0;
+}
+
+.list .bottom li {
+    margin-left: 20px;
+}
+
+.icon {
+    margin-bottom: -3px !important;
+    font-size: 20px;
+}
+
+.list li button {
+    border: none;
+    background-color: #00000000;
+    outline: none;
+}
+
+@media only screen and (max-width: 1000px) {
+    .list {
+        width: 10% !important;
+        height: 100%;
+        float: left;
+        position: fixed;
+        box-shadow: 0px 0px 10px #00000026;
+        border-right: 1px solid #0000000e;
+        z-index: 11;
+    }
+    
+    .list .title {
+        display: none;
+    }
+    
+    .list ul {
+        text-decoration: none;
+        list-style: none;
+        display: grid;
+        justify-content: center;
+        margin-left: -22px;
+    }
+
+    .list span{
+        display: none;
+    }
+    
+    .list li {
+        margin-top: 50px;
+        cursor: pointer;
+        color: #00000081;
+    }
+    
+    .list .bottom {
+        border-top: 1px solid #0000003f;
+        width: 100%;
+        position: absolute;
+        bottom: 20px;
+        left: 0;
+    }
+    
+    .list .bottom li {
+        margin-left: 20px;
+    }
+    
+    .icon {
+        margin-bottom: -3px !important;
+        font-size: 20px;
+    }
+    
+    .list li button {
+        border: none;
+        background-color: #00000000;
+        outline: none;
+        margin-left: -10px;
+    }
+}
+
+.storage {
+    width: 80%;
+    margin-top: 0px;
+    margin-left: auto;
+    margin-top: 80px;
+}
+
+.storage .title{
+    text-align: center;
+    margin-left: auto;
+    margin-right: auto;
+    border-bottom: 1px solid #0000007b;
+    width: 350px;
+    font-size: 30px;
+}
+
+.storage .tools{
+    display: flex;
+    justify-content: space-around;
+}
+
+.storage .tools select{
+    margin-left: 10px;
+    margin-right: 10px;
+    width: 200px;
+    padding: 5px 0px 5px 0px;
+    background-color: #ffdb57;
+    border: none;
+    border-radius: 5px;
+}
+.storage .tools input{
+    width: 200px;
+    border: none;
+    border-bottom: 1px solid #000;
+    outline: none;
+}
+
+.storage .autocomplete-items{
+    position: absolute;
+    background-color: #ffdb57b3;
+    width: 200px;
+}
+
+.storage .tools .tools-inputs{
+    display: flex;
+}
+
+.storage .add button{
+    color: #000;
+    background-color: #ffdb57;
+    border: none;
+    border-radius: 5px;
+}
+
+.storage table{
+    margin-top: 30px;
+    text-align: center;
+}
+
+.storage table th{
+    background-color: #ffdb57!important;
+}
+
+.storage table img{
+    width: 80px;
+    border-radius: 10px;
+    box-shadow: 0 0 5px #0000002c;
+}
+
+.storage table .color{
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.storage table .add-btn{
+    background-color: #5cb85c;
+    border:none;
+    border-radius: 5px;
+}
+
+.storage table .return-btn{
+    background-color: #d9534f;
+    border:none;
+    border-radius: 5px;
+}
+
+.sell{
+    width: 80%;
+    margin-left: auto;
+    margin-top: 80px;
+}
+
+.sell .title{
+    text-align: center;
+    margin-left: auto;
+    margin-right: auto;
+    border-bottom: 1px solid #0000007b;
+    width: 350px;
+    font-size: 30px;
+}
+
+.sell .tools{
+    display: flex;
+    justify-content: space-around;
+}
+
+.sell .tools input{
+    border: none;
+    outline: none;
+    border-bottom: 1px solid #000000;
+    width: 300px;
+    margin-right: 10px;
+}
+
+.sell .tools button{
+    border: none;
+    border-radius: 3px;
+    background-color: #ffdb57;
+}
+
+.sell table{
+    margin-top: 30px;
+    text-align: center;
+}
+
+.sell table th{
+    background-color: #ffdb57!important;
+}
+
+.sell table img{
+    width: 80px;
+    border-radius: 10px;
+    box-shadow: 0 0 5px #0000002c;
+}
+
+.sell table .color{
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.sell table .return-btn{
+    background-color: #d9534f;
+    border:none;
+    border-radius: 5px;
+}
+
+.sell .confirm button{
+    border: none;
+    border-radius: 5px;
+    background-color: #ffdb57;
+    padding: 5px 10px 5px 10px;
+}
+
+.sell .autocomplete-items{
+    position: absolute;
+    background-color: #ffdb57;
+    width: 300px;
+    cursor: pointer;
+}
+
+.sell .tools-form{
+    display: flex;
+    justify-content: center;
+}
+
+.sell .tools-form *{
+    margin-left: 20px;
+    margin-right: 20px;
+}
+
+.sell .tools-form input{
+    width: 300px;
+}
+
+.items {
+    width: 80%;
+    margin-left: auto;
+}
+
+.items .add-btn {
+    position: absolute;
+    top: 100px;
+    right: 40px;
+    background-color: #5cb85c;
+    border: none;
+    border-radius: 5px;
+    box-shadow: 0 0 10px #00000026;
+}
+
+.items {
+    margin-top: 40px;
+    padding-bottom: 40px;
+}
+
+.items .flex{
+    position: relative;
+}
+
+.items .flex .autocomplete{
+    left: 20px;
+    position: absolute;
+}
+
+.items .flex .autocomplete input{
+    border:none;
+    border-bottom: 1px solid #000;
+    outline: none;
+    width: 250px;
+}
+
+.add-by-code-form input{
+    border:none;
+    border-bottom: 1px solid #000;
+    outline: none;
+    width: 250px;
+    margin-left: 20px;
+}
+
+.add-by-code-form button{
+    border: none;
+    background-color: #2e86ea;
+    border-radius: 5px;
+    color: #ffffff;
+    margin-left: 20px;
+}
+
+.items .flex .autocomplete .autocomplete-items{
+    background-color: #2e86ea;
+    color: #fff;
+    width: 250px;
+    border-bottom-left-radius: 5px;
+    border-bottom-right-radius: 5px;
+}
+
+.items .flex .autocomplete .autocomplete-items div{
+    margin-left: 10px;
+    cursor: pointer;
+}
+
+.items .cards {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.items .card-made {
+    margin-top: 40px;
+    width: 200px;
+    box-shadow: 0 0 10px #00000026;
+    border-radius: 10px;
+    background-color: #00000000;
+    padding-bottom: 20px;
+    margin-left: 20px;
+    margin-right: 20px;
+}
+
+.items .card-made img {
+    width: 100%;
+    border-bottom: 1px solid #0000007a;
+    border-top-left-radius: 10px;
+    border-top-right-radius: 10px;
+    height: auto;
+    aspect-ratio: 2/3;
+    object-fit: cover;
+}
+
+.items .card-made .title {
+    text-align: center;
+    border-bottom: 1px solid #00000026;
+    width: 80%;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.items .card-made .des {
+    display: flex;
+    justify-content: space-around;
+}
+
+.items .card-made .item-color {
+    display: flex;
+}
+
+.items .card-made .card-color {
+    width: 20px;
+    height: 20px;
+    margin-top: 3px;
+    margin-left: 5px;
+    border-radius: 50%;
+}
+
+.items .card-made .price {
+    display: flex;
+    justify-content: space-around;
+    font-size: 15px;
+    margin-bottom: -10px;
+}
+
+.items .card-made .price-p {
+    color: #5cb85c;
+}
+
+.items .card-made .sell_price {
+    color: #5cb85c;
+}
+
+.items .card-made .item-colorName p{
+    text-align: center;
+    font-size: 13px;
+}
+
+.items .page-title {
+    text-align: center;
+    border-bottom: 1px solid #2e86ea7c;
+    width: 400px;
+    margin-left: auto;
+    margin-right: auto;
+    font-size: 25px;
+}
+
+.items .flex {
+    justify-content: space-around;
+}
+
+.items select {
+    padding: 10px;
+    border: none;
+    box-shadow: 0 0 10px #00000050;
+    background-color: #2e86ea;
+    color: #fff;
+    border-radius: 5px;
+}
+
+.items button{
+    margin-top: 30px;
+    background-color: #ffdb57;
+    border: none;
+    border-radius: 5px;
+    font-size: 20px;
+    padding: 5px 15px 5px 15px;
+}
+
+.sell-dashboard {
+    margin-left: auto;
+    margin-top: 80px;
+    width: 80%
+}
+
+.sell-dashboard .title {
+    margin-left: auto;
+    margin-right: auto;
+    text-align: center;
+    font-size: 25px;
+    border-bottom: 1px solid #00000026;
+    width: 300px;
+}
+
+.sell-dashboard .sell-cards {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-around;
+    margin-top: 20px;
+    width: 95%;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.sell-dashboard .sell-card {
+    border: 1px solid #00000026;
+    border-radius: 10px;
+    width: 350px;
+    margin-top: 20px;
+    position: relative;
+}
+
+.sell-dashboard .sell-card .icon {
+    color: #ffdb57;
+    font-size: 100px;
+    margin-left: 20px;
+}
+
+.sell-dashboard .sell-card .details {
+    margin-top: 30px;
+    margin-left: 20px;
+}
+
+.sell-dashboard .sell-card .details p {
+    margin-bottom: -1px;
+}
+
+.sell-dashboard .sell-card .status {
+    position: absolute;
+    right: 0;
+    top: 10px;
+    background-color: #2e86ea;
+    padding: 0 10px 0 10px;
+    color: #ffffff;
+    border-top-left-radius: 5px;
+    border-bottom-left-radius: 5px;
+}
+
+.get-sell{
+    width: 80%;
+    margin-left: auto;
+    margin-top: 80px;
+}
+
+.get-sell .title{
+    text-align: center;
+    margin-left: auto;
+    margin-right: auto;
+    font-size: 25px;
+    width: 300px;
+    border-bottom: 1px solid #00000026;
+}
+
+.get-sell .info{
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-around;
+    margin-top: 20px;
+}
+
+.get-sell table{
+    width: 90%;
+    margin-left: auto;
+    margin-right: auto;
+    text-align: center;
+}
+
+.get-sell table th, .get-sell table thead{
+    background-color: #ffdb57;
+    color: #000;
+}
+
+.get-sell table img{
+    width: 50px;
+    border-radius: 5px;
+}
+
+.get-sell table .color {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    margin-left: 35%;
+    box-shadow: 0 0 10px #00000026;
+}
+
+.get-sell .note{
+    width: 90%;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.get-sell .flex{
+    justify-content: center;
+}
+
+.get-sell .flex button{
+    margin-left: 20px;
+    margin-right: 20px;
+}
+
+.daily-money{
+    width: 80%;
+    margin-left: auto;
+    margin-top: 100px;
+}
+
+.daily-money .title{
+    margin-left: auto;
+    margin-right: auto;
+    text-align: center;
+    border-bottom: 1px solid #00000026;
+    width: 300px;
+    font-size: 20px;
+}
+
+.daily-money button{
+    position: absolute;
+    background-color:#5cb85c;
+    right: 20px;
+    border: none;
+    border-radius: 4px;
+}
+
+.daily-money-data{
+    width: 80%;
+    margin-left: auto;
+    margin-top: 100px;
+}
+
+.daily-money-data .title{
+    text-align: center;
+    margin-left: auto;
+    margin-right: auto;
+    width: 300px;
+    border-bottom: 1px solid #00000026;
+    font-size: 20px;
+}
+
+.daily-money-data table {
+    width: 90%;
+    margin-left: auto;
+    margin-right: auto;
+    text-align: center;
+}
+
+.daily-money-data table th, .daily-money-data table thead{
+    background-color: #ffdb57;
+    color: #000;
+}
+
+.daily-money-data table input{
+    border: none;
+    box-shadow: 0 0 10px #00000026;
+    border-radius: 5px;
+}
+
+.daily-money-data table .confirm{
+    border: none;
+    background-color: #5cb85c;
+    border-radius: 5px;
+}
+
+.daily-money-data table .remove{
+    border: none;
+    background-color: #d9534f;
+    border-radius: 5px;
+}
+
+.sell-dashboard .orders-id-form{
+    width: 90%;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.sell-dashboard .orders-id-form input{
+    width: 300px;
+    border: none;
+    border-bottom: 1px solid #000;
+}
+
+.sell-dashboard .orders-id-form button{
+    margin-left: 20px;
+    margin-top: -15px;
+    border: none;
+    background-color: #ffdb57;
+    border-radius: 5px;
+    padding: 5px 10px 5px 10px;
+}

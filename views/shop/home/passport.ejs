@@ -1,0 +1,68 @@
+<%- include('../layout/navbar') -%>
+    HIDDEN
+
+    <% if(err_filter.length > 0){%>
+        <script>
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Email already used'
+            })
+        </script>
+    <%} %>
+
+    <% if(err.length > 0){%>
+        <script>
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Information error, try again'
+            })
+        </script>
+    <%} %>
+
+    <div class="passport">
+        <% if(sign_in==true){%>
+            <div class="sign-in">
+                <img src="/images/doc.svg" alt="">
+                <div class="inputs">
+                    <p class="title">Sign-In</p>
+                    <form action="/shop/passport/sign-in" method="post">
+                        <input type="email" name="email" placeholder="Email" required>
+                        <br>
+                        <input type="password" name="password" placeholder="Password" required>
+                        <br>
+                        <span><a href="/shop/passport/sign-up">Sign-up</a></span>
+                        <br><br><br>
+                        <button>Sign-in</button>
+                    </form>
+                </div>
+            </div>
+            <%} %>
+
+            <% if(sign_up==true){%>
+                <div class="sign-in">
+                    <img src="/images/doc.svg" alt="">
+                    <div class="inputs">
+                        <p class="title">Sign-Up</p>
+                        <form action="/shop/passport/sign-up" method="post">
+                            <input type="text" name="name" placeholder="Name" required>
+                            <br>
+                            <input type="email" name="email" placeholder="Email" required>
+                            <br>
+                            <input type="password" name="password" placeholder="Password" required>
+                            <br>
+                            <input type="text" name="city" placeholder="City" required>
+                            <br>
+                            <input type="number" name="phone" placeholder="Phone number" required>
+                            <br>
+                            <span><a href="/shop/passport/sign-in">Sign-in</a></span>
+                            <br>
+                            <button>Sign-up</button>
+                        </form>
+                    </div>
+                </div>
+                <%} %>
+    </div>
+    <br><br>
+    <%- include('../layout/footer') -%>

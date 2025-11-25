@@ -1,0 +1,69 @@
+<%- include('../layout/navbar') -%>
+    <div class="home">
+        <div class="header">
+            <img src="/images/show1.png" alt="">
+            <div class="text">
+                <p>Explore</p>
+                <a href="">More</a>
+            </div>
+        </div>
+        <div class="category">
+            <p class="title"><%= category.name%></p>
+            <div class="cat-body">
+                <div class="image" onclick="window.location.href='/shop/product/get/<%= products[0].id%>'">
+                    <img src="/upload/images/<%= products[0].image%>" alt="">
+                    <div class="cat-text">
+                        <p class="cat-title"><%= products[0].name%></p>
+                        <p class="cat-brand"><%= products[0].brand%></p>
+                    </div>
+                </div>
+                <div class="text">
+                    <p><%= category.des%></p>
+                </div>
+            </div>
+        </div>
+        <div class="products">
+            <div class="home-card" onclick="window.location.href='/shop/product/get/<%= products[1].id%>'">
+                <div class="image">
+                    <img src="/upload/images/<%= products[1].image%>" alt="">
+                    <div class="card-title">
+                        <p><%= products[1].name%></p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="home-card" onclick="window.location.href='/shop/product/get/<%= products[2].id%>'">
+                <div class="image">
+                    <img src="/upload/images/<%= products[2].image%>" alt="">
+                    <div class="card-title">
+                        <p><%= products[2].name%></p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="home-card" onclick="window.location.href='/shop/product/get/<%= products[3].id%>'">
+                <div class="image">
+                    <img src="/upload/images/<%= products[3].image%>" alt="">
+                    <div class="card-title">
+                        <p><%= products[3].name%></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <center>
+            <button onclick="window.location.href='/shop/categories'">View More</button>
+        </center>
+
+        <div class="brands container">
+            <p class="title">Brands</p>
+            <div class="brands-cards">
+                <% brand.forEach(data => {%>
+                    <div class="brand-card" onclick="window.location.href='/shop/brands/<%= data.name%>'">
+                        <img src="/upload/images/<%= data.image%>" alt="">
+                    </div>
+                <%})%>
+            </div>
+        </div>
+    </div>
+    <%- include('../layout/footer') -%>

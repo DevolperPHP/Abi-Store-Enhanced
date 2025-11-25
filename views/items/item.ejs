@@ -1,0 +1,151 @@
+<%- include("../layout/navbar") -%>
+
+    <% if(suc.length> 0){%>
+        <script>
+            var name = '<%= data.name %> - <%= data.size%>'
+            Swal.fire({
+                icon: 'success',
+                title: 'Color added',
+                text: `New color successfully added to ${name}`
+            })
+        </script>
+        <%} %>
+
+            <% if(edit_suc.length> 0){%>
+                <script>
+                    var name = '<%= data.name %> - <%= data.size%>'
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Edit',
+                        text: `The information of ${name} has been successfully edited`
+                    })
+                </script>
+                <%} %>
+                    <div class="item-page"><br><br>
+                        <p class="title" style="border-bottom:1px solid <%=data.color%>;"><span
+                                style="background-color: <%=data.color%>;">co</span>
+                            <%= data.name%> - <%= data.size%>
+                        </p>
+                        <div class="item-content" style="border-bottom: 1px solid <%= data.color%>;">
+                            <div class="item-image only-phone">
+                                <img src="/upload/images/<%= data.image%>" alt="item image">
+                            </div>
+                            <div class="details">
+                                <p>Name: <%= data.name%>
+                                </p>
+                                <p>Category: <%= data.category%>
+                                </p>
+                                <p>Brand: <%= data.brand%>
+                                </p>
+                                <div class="flex">
+                                    <p>Color:
+                                    <div class="item-color" style="background-color: <%= data.color%>;"></div>
+                                    </p>
+                                </div>
+                                <p>Size: <%= data.size%>
+                                </p>
+                                <p>Quantity: <%= data.qty%>
+                                </p>
+                                <p>Price: <%= data.price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, "," )%> IQD</p>
+                                <p>Selling Price: <%= data.sell_price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","
+                                        )%> IQD</p>
+                                <% if(data.colorName){%>
+                                    <p>Color Name: <%= data.colorName%>
+                                    </p>
+                                    <%} %>
+                                        <div class="flex colors-container">
+                                            <p>Colors: </p>
+                                            <% colors.forEach(color=> {%>
+                                                <div class="item-color"
+                                                    onclick="window.location.href='/items/get/<%= color.id%>'"
+                                                    style="background-color: <%= color.color%>"></div>
+                                                <%}) %>
+                                                    <button
+                                                        onclick="window.location.href='/items/add-color/<%= data.id%>'"><ion-icon
+                                                            class="icon" name="add-outline"></ion-icon></button>
+                                        </div>
+                                        <br>
+                                        <br>
+                                        <div class="flex colors-container">
+                                            <p>Sizes: </p>
+                                            <% sizes.forEach(size=> {%>
+                                                <p class="item-size"
+                                                    onclick="window.location.href='/items/get/<%= size.id%>'">
+                                                    <%= size.size%>
+                                                </p>
+                                                <%}) %>
+                                                    <button
+                                                        onclick="window.location.href='/items/add-size/<%= data.id%>'"><ion-icon
+                                                            class="icon" name="add-outline"></ion-icon></button>
+                                        </div>
+                            </div>
+                            <div class="item-image only-pc">
+                                <img src="/upload/images/<%= data.image%>" alt="item image">
+                            </div>
+                        </div>
+                        <div class="chart-section" style="border-bottom: 1px solid <%= data.color%>;">
+                            <canvas id="myChart" class="chart" style="width:100%;max-width:600px"></canvas>
+                        </div>
+
+                        <div class="tools">
+                            <button class="btn btn-primary"
+                                onclick="window.location.href='/items/edit/<%= data.id%>'">Edit item</button>
+                            <button class="btn btn-success"
+                                onclick="window.location.href='/items/barcode/<%= data.id%>'">Print code</button>
+                            <button class="btn btn-warning"
+                                onclick="window.location.href='/items/edit/price-all/<%= data.id%>'">Edit to
+                                all</button>
+                            <button class="btn btn-info"
+                                onclick="window.location.href='/items/edit/name-all/<%= data.id%>'">Edit name to all</button>
+                            <button class="btn btn-dark"
+                                onclick="window.location.href='/items/edit/image-color-all/<%= data.id%>'">Edit Colors
+                                image</button>
+                            <button class="btn btn-danger" onclick="del()">Delete Item</button>
+                        </div>
+                    </div>
+                    <script>
+                        function del() {
+                            Swal.fire({
+                                icon: 'warning',
+                                title: 'Are you sure ?!',
+                                text: 'All data about the item will be lost and there is no way to get it back',
+                                confirmButtonText: "Cancel",
+                                html: `
+                        <form action="/items/delete/<%= data.id%>?_method=DELETE" method="post">
+                    <button style="margin-top: 10px; margin-left: auto;
+                     margin-right: auto; border: none; border-radius: 5px;
+                     padding: 10px; background-color: #d9534f;
+                    color: #fff; font-size: 20px">Delete</button>
+                </form>
+                        `
+                            })
+                        }
+                    </script>
+
+                    <script>
+                        const getValuesOfLabels = "<%= scoreDate%>".split`,`
+                        const xValues = getValuesOfLabels
+                        const yValues = [<%= score %>];
+                        var color = "<%= data.color%>"
+
+                        new Chart("myChart", {
+                            type: "line",
+                            data: {
+                                labels: xValues,
+                                datasets: [{
+                                    fill: false,
+                                    lineTension: 0,
+                                    backgroundColor: `${color}`,
+                                    borderColor: "rgba(0,0,255,0.1)",
+                                    data: yValues
+                                }]
+                            },
+                            options: {
+                                legend: { display: false },
+                                scales: {
+                                    yAxes: [{ ticks: { min: 1, max: 50 } }]
+                                }
+                            }
+                        });
+                    </script>
+                    <%- include("../layout/footer") -%>

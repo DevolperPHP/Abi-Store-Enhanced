@@ -1,0 +1,73 @@
+<%- include('../layout/navbar') -%>
+    <div class="bill" id="printable-content">
+        <div class="bill-items">
+            <div class="info">
+                <p>Phone Number: <%= data.phone%>
+                </p>
+                <p>Address: <%= data.adress%>
+                </p>
+                <p>Date: <%= data.Date%>
+                </p>
+                <p>ID: <%= data.bid%>
+                </p>
+            </div>
+            <p class="title">Order</p>
+            <table class="table table-bordered table-dark">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Name</th>
+                        <th>Size</th>
+                        <th>Color</th>
+                        <th>Price</th>
+                        <th>Qty</th>
+                        <th>total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% for (let i=0; i < data.products.length; i++) {%>
+                        <tr>
+                            <td>
+                                <%= i+1%>
+                            </td>
+                            <td>
+                                <%= data.products[i].name%>
+                            </td>
+                            <td>
+                                <%= data.products[i].size%>
+                            </td>
+                            <td>
+                                <div class="color" style="background-color: <%= data.products[i].color%>"></div>
+                            </td>
+                            <td>
+                                <%= data.products[i].price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")%>
+                            </td>
+                            <td>
+                                <%= data.products[i].qty%>
+                            </td>
+                            <td>
+                                <%= data.products[i].total.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")%>
+                            </td>
+                        </tr>
+                        <%} %>
+                            <% if(data.total=="" ){%>
+                                <tr>
+                                    <td colspan="10">Total: <%= total.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")%> IQD</td>
+                                </tr>
+                                <%} else {%>
+                                    <tr>
+                                        <td colspan="10">Total: <%= data.total%> IQD - Discount <%= (Number(total) -
+                                                    Number(data.total)).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")%> IQD</td>
+                                    </tr>
+                                    <%} %>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        window.print()
+    </script>
+    <br><br>
+
+    <%- include('../layout/footer') -%>

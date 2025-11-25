@@ -1,0 +1,142 @@
+<%- include("../layout/navbar") -%>
+<% if(del.length > 0){%>
+    <script>
+        Swal.fire({
+            icon: 'success',
+            title: 'Item deleted',
+            text: 'Item deleted successfully !'
+        })
+    </script>
+<%} %>
+    <div class="items"><br><br>
+        <p class="page-title">Items</p>
+        <div class="flex">
+            <div class="autocomplete" style="width:300px;">
+                <input autocomplete="off" id="myInput" type="text" placeholder="Search for item">
+            </div>
+            <select id="mySelect" onchange="redirectToPage(this)">
+            <option>Filter</option>
+            <option value="/items">Main</option>
+            <option value="/items/filter/all">All</option>
+            <option value="/items/filter/new">Newest</option>
+            <option value="/items/filter/old">Oldest</option>
+          </select></div>
+        <button class="add-btn" onclick="window.location.href='/items/add-item'"><ion-icon class="icon"
+                name="add-outline"></ion-icon></button>
+
+        <div class="cards">
+            <% products.forEach(data=> {%>
+                <div class="card-made" onclick="window.location.href='/items/get/<%= data.id%>'">
+                    <div class="item-image">
+                        <img src="/upload/images/<%= data.image%>" alt="">
+                    </div>
+                    <p class="title">
+                        <%= data.name%>
+                    </p>
+                    <div class="des">
+                        <div class="item-color">
+                            <p>Color : <div class="card-color" style="background-color: <%= data.color%>"></div></p>
+                        </div>
+                        <div class="item-size">
+                            <p>Size : <%= data.size%></p>
+                        </div>
+                    </div>
+
+                    <div class="price">
+                        <p class="price-p">Price</p>
+                        <p class="sell_price">Selling</p>
+                    </div>
+                    <div class="price">
+                        <p class="price-p"><%= data.price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")%> IQD</p>
+                        <p class="sell_price"><%= data.sell_price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")%> IQD</p>
+                    </div>
+                    <% if(data.colorName){%>
+                        <div class="item-colorName">
+                            <p>Color Name: <%= data.colorName%></p>
+                        </div>
+                    <%} %>
+                </div>
+                <%}) %>
+        </div>
+    </div>
+
+    <script src="/javascript/items.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/fuse.js@6.6.2"></script>
+    <script>
+        function autocomplete(inp, arr) {
+            let currentFocus;
+            const fuse = new Fuse(arr, {
+                threshold: 0.4,
+            });
+    
+            inp.addEventListener("input", function () {
+                let a, b, val = this.value;
+                closeAllLists();
+                if (!val) return false;
+                currentFocus = -1;
+    
+                a = document.createElement("DIV");
+                a.setAttribute("id", this.id + "autocomplete-list");
+                a.setAttribute("class", "autocomplete-items");
+                this.parentNode.appendChild(a);
+    
+                const results = fuse.search(val);
+                results.forEach(({ item }) => {
+                    b = document.createElement("DIV");
+                    b.innerHTML = `<strong>${item.substr(0, val.length)}</strong>${item.substr(val.length)}`;
+                    b.innerHTML += `<input type='hidden' value='${item}'>`;
+                    b.addEventListener("click", function () {
+                        window.location.href = `/items/search/${String(this.getElementsByTagName("input")[0].value)}`
+                        closeAllLists();
+                    });
+                    a.appendChild(b);
+                });
+            });
+    
+            inp.addEventListener("keydown", function (e) {
+                let x = document.getElementById(this.id + "autocomplete-list");
+                if (x) x = x.getElementsByTagName("div");
+                if (e.keyCode == 40) {
+                    currentFocus++;
+                    addActive(x);
+                } else if (e.keyCode == 38) {
+                    currentFocus--;
+                    addActive(x);
+                } else if (e.keyCode == 13) {
+                    e.preventDefault();
+                    if (currentFocus > -1 && x) x[currentFocus].click();
+                }
+            });
+    
+            function addActive(x) {
+                if (!x) return false;
+                removeActive(x);
+                if (currentFocus >= x.length) currentFocus = 0;
+                if (currentFocus < 0) currentFocus = x.length - 1;
+                x[currentFocus].classList.add("autocomplete-active");
+            }
+    
+            function removeActive(x) {
+                for (let i = 0; i < x.length; i++) {
+                    x[i].classList.remove("autocomplete-active");
+                }
+            }
+    
+            function closeAllLists(elmnt) {
+                const x = document.getElementsByClassName("autocomplete-items");
+                for (let i = 0; i < x.length; i++) {
+                    if (elmnt != x[i] && elmnt != inp) {
+                        x[i].parentNode.removeChild(x[i]);
+                    }
+                }
+            }
+    
+            document.addEventListener("click", function (e) {
+                closeAllLists(e.target);
+            });
+        }
+    
+        const data = "<%= data %>".split(",");
+        autocomplete(document.getElementById("myInput"), data);
+    </script>
+    <%- include("../layout/footer") -%>

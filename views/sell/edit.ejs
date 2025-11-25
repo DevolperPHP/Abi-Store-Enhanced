@@ -1,0 +1,250 @@
+<%- include("../layout/navbar") -%>
+
+<% if(uniqueErr.length> 0) {%>
+    <script>
+        Swal.fire({
+            icon: 'error',
+            title: 'Item already added',
+            text: 'This item has already been added'
+        })
+    </script>
+    <%}%>
+
+<% if(err.length> 0) {%>
+    <script>
+        Swal.fire({
+            icon: 'error',
+            title: 'Quantity is not enough',
+            text: 'You are trying to sell more than you have in storage of this item'
+        })
+    </script>
+    <%}%>
+
+    <div class="sell">
+        <p class="title">Sell products</p>
+        <div class="autocomplete" style="width:300px;">
+            <input autocomplete="off" id="myInput" type="text" placeholder="Search for item">
+        </div>
+
+        <table class="table table-striped table-hover">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th class="only-pc">Image</th>
+                    <th>Name</th>
+                    <th>Size</th>
+                    <th>Color</th>
+                    <th>Price</th>
+                    <th>Qty</th>
+                    <th>Type</th>
+                    <th>Total</th>
+                    <th>Delete</th>
+                </tr>
+            </thead>
+            <tbody>
+                <% for (let i=0; i < data.products.length; i++) {%>
+                    <tr>
+                        <td>
+                            <%= i+1%>
+                        </td>
+                        <td class="only-pc"><img src="/upload/images/<%= data.products[i].image%>" alt=""></td>
+                        <td>
+                            <%= data.products[i].name%>
+                        </td>
+                        <td>
+                            <%= data.products[i].size%>
+                        </td>
+                        <td>
+                            <div class="color" style="background-color: <%= data.products[i].color%>"></div>
+                        </td>
+                        <td>
+                            <%= data.products[i].price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, "," )%>
+                        </td>
+                        <td>
+                            <%= data.products[i].qty%>
+                        </td>
+                        <td>
+                            <%= data.products[i].type%>
+                        </td>
+                        <td>
+                            <%= (data.products[i].price * data.products[i].qty).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","
+                                )%>
+                        </td>
+                        <td>
+                            <% if(data.isShop == true){%>
+                                <form action="/sell/edit/remove-shop/<%= data.id%>/<%= data.products[i]._id%>?_method=PUT" method="post">
+                                    <button><ion-icon class="icon" name="remove-outline"></ion-icon></button>
+                                </form>
+                            <%} else {%>
+                                    <button onclick="window.location.href='/sell/edit-return/<%= data._id%>/<%= data.products[i]._id%>'"><ion-icon class="icon" name="remove-outline"></ion-icon></button>
+                                </form>
+                            <%} %>
+                        </td>
+                    </tr>
+                    <%} %>
+                    <% if(data.total == ""){%>
+                        <tr>
+                            <td colspan="10">Total: <%= total.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")%> IQD</td>
+                        </tr>
+                    <%} else {%>
+                        <tr>
+                            <td colspan="10">Total: <%= data.total.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")%> IQD - Discount <%= (Number(total) - Number(data.total)).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")%> IQD</td>
+                        </tr>
+                    <%} %>
+            </tbody>
+        </table>
+
+        <div class="inputs">
+            <div class="flex dis" style="display:none">
+                <input type="number" id="discount" value="<%= Number(total) - Number(data.total)%>" onclick="discount()" placeholder="Discount">
+                <button class="discount">Discount</button>
+                <button class="refresh" onclick="refresh()"><ion-icon class="icon"
+                        name="refresh-outline"></ion-icon></button>
+            </div>
+            <form action="/sell/edit/confirm/<%= data.id%>?_method=PUT" method="post">
+                <div class="flex">
+                    <input type="text" value="<%= data.name%>" name="name" placeholder="Name" required>
+                    <input type="text" value="<%= data.phone%>" name="phone" placeholder="Phone number" required>
+                    <input type="text" value="<%= data.adress%>" name="adress" placeholder="Address" required>
+                    <input type="text" name="total" id="total_price" style="display:none">
+                </div>
+                <center><textarea name="note" cols="30" rows="7" placeholder="Note"><%= data.note%></textarea>
+                    <br>
+                    <button class="btn btn-success">Confirm</button>
+                </center>
+            </form><br><br><br>
+        </div>
+    </div>
+
+    <script>
+        function discount() {
+            var discount = document.getElementById("discount");
+            var totalInput = document.getElementById("total").value
+            var total = parseInt(totalInput.replace(/,/g, ""));
+            var total_price = document.getElementById("total_price")
+
+            var newPrice = Number(total) - Number(discount.value)
+            if (newPrice < 0) {
+                Swal.fire({
+                    icon: 'error',
+                    text: 'The discount value is more than the total price'
+                })
+            } else {
+                document.getElementById("total").value = newPrice.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")
+                total_price.value = newPrice
+            }
+        }
+
+        function refresh() {
+            window.location.reload()
+        }
+    </script>
+
+    <script>
+        // An array of example autocomplete values
+        function autocomplete(inp, arr) {
+            /*the autocomplete function takes two arguments,
+            the text field element and an array of possible autocompleted values:*/
+            var currentFocus;
+            /*execute a function when someone writes in the text field:*/
+            inp.addEventListener("input", function (e) {
+                var a, b, i, val = this.value;
+                /*close any already open lists of autocompleted values*/
+                closeAllLists();
+                if (!val) { return false; }
+                currentFocus = -1;
+                /*create a DIV element that will contain the items (values):*/
+                a = document.createElement("DIV");
+                a.setAttribute("id", this.id + "autocomplete-list");
+                a.setAttribute("class", "autocomplete-items");
+                /*append the DIV element as a child of the autocomplete container:*/
+                this.parentNode.appendChild(a);
+                /*for each item in the array...*/
+                for (i = 0; i < arr.length; i++) {
+                    /*check if the item starts with the same letters as the text field value:*/
+                    if (arr[i].substr(0, val.length).toUpperCase() == val.toUpperCase()) {
+                        /*create a DIV element for each matching element:*/
+                        b = document.createElement("DIV");
+                        /*make the matching letters bold:*/
+                        b.innerHTML = "<strong>" + arr[i].substr(0, val.length) + "</strong>";
+                        b.innerHTML += arr[i].substr(val.length);
+                        /*insert a input field that will hold the current array item's value:*/
+                        b.innerHTML += "<input type='hidden' value='" + arr[i] + "'>";
+                        /*execute a function when someone clicks on the item value (DIV element):*/
+                        b.addEventListener("click", function (e) {
+                            /*insert the value for the autocomplete text field:*/
+                            window.location.href = `/sell/edit/search/<%= data.id%>/${String(this.getElementsByTagName("input")[0].value)}`
+                            /*close the list of autocompleted values,
+                            (or any other open lists of autocompleted values:*/
+                            closeAllLists();
+                        });
+                        a.appendChild(b);
+                    }
+                }
+            });
+            /*execute a function presses a key on the keyboard:*/
+            inp.addEventListener("keydown", function (e) {
+                var x = document.getElementById(this.id + "autocomplete-list");
+                if (x) x = x.getElementsByTagName("div");
+                if (e.keyCode == 40) {
+                    /*If the arrow DOWN key is pressed,
+                    increase the currentFocus variable:*/
+                    currentFocus++;
+                    /*and and make the current item more visible:*/
+                    addActive(x);
+                } else if (e.keyCode == 38) { //up
+                    /*If the arrow UP key is pressed,
+                    decrease the currentFocus variable:*/
+                    currentFocus--;
+                    /*and and make the current item more visible:*/
+                    addActive(x);
+                } else if (e.keyCode == 13) {
+                    /*If the ENTER key is pressed, prevent the form from being submitted,*/
+                    e.preventDefault();
+                    if (currentFocus > -1) {
+                        /*and simulate a click on the "active" item:*/
+                        if (x) x[currentFocus].click();
+                    }
+                }
+            });
+            function addActive(x) {
+                /*a function to classify an item as "active":*/
+                if (!x) return false;
+                /*start by removing the "active" class on all items:*/
+                removeActive(x);
+                if (currentFocus >= x.length) currentFocus = 0;
+                if (currentFocus < 0) currentFocus = (x.length - 1);
+                /*add class "autocomplete-active":*/
+                x[currentFocus].classList.add("autocomplete-active");
+            }
+            function removeActive(x) {
+                /*a function to remove the "active" class from all autocomplete items:*/
+                for (var i = 0; i < x.length; i++) {
+                    x[i].classList.remove("autocomplete-active");
+                }
+            }
+            function closeAllLists(elmnt) {
+                /*close all autocomplete lists in the document,
+                except the one passed as an argument:*/
+                var x = document.getElementsByClassName("autocomplete-items");
+                for (var i = 0; i < x.length; i++) {
+                    if (elmnt != x[i] && elmnt != inp) {
+                        x[i].parentNode.removeChild(x[i]);
+                    }
+                }
+            }
+            /*execute a function when someone clicks in the document:*/
+            document.addEventListener("click", function (e) {
+                closeAllLists(e.target);
+            });
+        }
+
+        /*An array containing all the country names in the world:*/
+        const data = "<%= uniqueArray%>".split`,`
+        var products = data
+
+        /*initiate the autocomplete function on the "myInput" element, and pass along the countries array as possible autocomplete values:*/
+        autocomplete(document.getElementById("myInput"), products);
+    </script>
+
+    <%- include("../layout/footer") -%>

@@ -1,0 +1,17 @@
+<%- include('../layout/navbar') -%>
+    <div class="category-products">
+        <p>HIDDEN</p>
+        <p class="title"><%= brand.name%></p>
+        <div class="cards">
+            <% products.forEach(data => {%>
+                <div class="product-card" onclick="window.location.href='/shop/product/get/<%= data.id%>'">
+                    <img src="/upload/images/<%= data.image%>" alt="Image">
+                    <div class="card-details">
+                        <p class="card-title"><%= data.name%></p>
+                        <p class="price"><%= data.sell_price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")%> <span>IQD</span></p>
+                    </div>
+                </div>
+            <%}) %>
+        </div>
+    </div>
+<%- include('../layout/footer') -%>

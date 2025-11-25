@@ -1,0 +1,191 @@
+<%- include("../layout/navbar") -%>
+<% if(err.length > 0){%>
+    <script>
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: `<%= err%>`,
+        })
+    </script>
+<%} %>
+<div class="sell">
+    <p class="title">Sell</p>
+    <div class="tools">
+        <form id="searchForm" action="" method="post">
+            <input id="searchInput" autocomplete="off" type="text" placeholder="Barcode">
+            <button><ion-icon class="icon" name="search-outline"></ion-icon></button>
+        </form>
+            <div class="autocomplete" style="width:300px;">
+                <input id="myInput" type="text" placeholder="Search for item" autocomplete="off">
+            </div>
+    </div>
+<br>
+    <div class="container">
+        <table class="table table-striped table-hover">
+            <tr>
+                <th>Image</th>
+                <th>Name</th>
+                <th>Size</th>
+                <th>Color</th>
+                <th>Qty</th>
+                <th>Price</th>
+                <th>total</th>
+                <th>Return</th>
+            </tr>
+    
+            <% for (let i = 0; i < products.length; i++) {%>
+                <tr>
+                    <td><img src="/upload/images/<%= products[i].image%>" alt="" /></td>
+                    <td><%= products[i].name%></td>
+                    <td><%= products[i].size%></td>
+                    <td><%= products[i].colorName%></td>
+                    <td><%= products[i].qty%></td>
+                    <td><%= products[i].sell_price%></td>
+                    <td><%= products[i].total%></td>
+                    <td>
+                        <form action="/localstore/sell/remove/<%= products[i]._id%>?_method=PUT" method="post">
+                            <button class="return-btn"><ion-icon class="icon" name="remove-outline"></ion-icon></button>
+                        </form>
+                    </td>
+                </tr>
+            <%} %>
+            <tr>
+                <td colspan="4" id="totalTable">Total: <%= total.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")%> IQD</td>
+                <td colspan="4">Qty: <%= totalQty.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")%></td>
+            </tr>
+        </table>
+
+        <div class="tools-form">
+            <input type="number" class="form-control" id="discount" placeholder="Discount">
+            <button onclick="discount()" class="btn btn-success">Discount</button>
+            <button class="btn btn-primary" onclick="refresh()"><ion-icon class="icon" name="refresh-outline"></ion-icon></button>
+        </div>
+
+        <form class="confirm" action="/localstore/sell/confirm" method="post">
+            <input value="<%= total%>" id="totalForm" name="total" style="display: none;">
+            <br>
+            <center><button>Confirm</button></center>
+        </form>
+    </div>
+</div>
+
+<script>
+    function discount(){
+        var discount = Number(document.getElementById("discount").value)
+        var total = `<%= total%>`
+        var totalTable = document.getElementById("totalTable")
+        var newTotal = Number(total) - discount
+        var totalForm = document.getElementById("totalForm")
+        totalTable.innerHTML = "Total: " + `${newTotal.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")} IQD`
+        totalForm.value = newTotal
+    }
+
+    function refresh(){
+        var discount = document.getElementById("discount")
+        var total = `<%= total%>`
+        var totalTable = document.getElementById("totalTable")
+        var totalForm = document.getElementById("totalForm")
+        totalTable.innerHTML = "Total: " + `${total.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")} IQD`
+        totalForm.value = total
+        discount.value = "";
+    }
+</script>
+
+<script>
+    const form = document.getElementById("searchForm");
+    const searchInput = document.getElementById("searchInput");
+  
+    form.addEventListener("submit", function (event) {
+      const inputValue = searchInput.value;
+      form.action = `/localstore/sell/add-by-barcode/${inputValue}?_method=PUT`;
+    });
+  
+    form.addEventListener("keydown", function (event) {
+      if (event.key === "Enter") {
+        event.preventDefault(); // Prevent the default form submission
+        const inputValue = event.target.value; // Get the input value
+        const form = document.getElementById("searchForm");
+        form.action = `/localstore/sell/add-by-barcode/${inputValue}?_method=PUT`; // Set form action to /search/[inputValue]
+        form.submit(); // Submit the form
+      }
+    });
+  </script>
+    <script src="https://cdn.jsdelivr.net/npm/fuse.js@6.6.2"></script>
+    <script>
+        function autocomplete(inp, arr) {
+            let currentFocus;
+            const fuse = new Fuse(arr, {
+                threshold: 0.4,
+            });
+    
+            inp.addEventListener("input", function () {
+                let a, b, val = this.value;
+                closeAllLists();
+                if (!val) return false;
+                currentFocus = -1;
+    
+                a = document.createElement("DIV");
+                a.setAttribute("id", this.id + "autocomplete-list");
+                a.setAttribute("class", "autocomplete-items");
+                this.parentNode.appendChild(a);
+    
+                const results = fuse.search(val);
+                results.forEach(({ item }) => {
+                    b = document.createElement("DIV");
+                    b.innerHTML = `<strong>${item.substr(0, val.length)}</strong>${item.substr(val.length)}`;
+                    b.innerHTML += `<input type='hidden' value='${item}'>`;
+                    b.addEventListener("click", function () {
+                        window.location.href = `/localstore/sell/search-by-name/${String(this.getElementsByTagName("input")[0].value)}`
+                        closeAllLists();
+                    });
+                    a.appendChild(b);
+                });
+            });
+    
+            inp.addEventListener("keydown", function (e) {
+                let x = document.getElementById(this.id + "autocomplete-list");
+                if (x) x = x.getElementsByTagName("div");
+                if (e.keyCode == 40) {
+                    currentFocus++;
+                    addActive(x);
+                } else if (e.keyCode == 38) {
+                    currentFocus--;
+                    addActive(x);
+                } else if (e.keyCode == 13) {
+                    e.preventDefault();
+                    if (currentFocus > -1 && x) x[currentFocus].click();
+                }
+            });
+    
+            function addActive(x) {
+                if (!x) return false;
+                removeActive(x);
+                if (currentFocus >= x.length) currentFocus = 0;
+                if (currentFocus < 0) currentFocus = x.length - 1;
+                x[currentFocus].classList.add("autocomplete-active");
+            }
+    
+            function removeActive(x) {
+                for (let i = 0; i < x.length; i++) {
+                    x[i].classList.remove("autocomplete-active");
+                }
+            }
+    
+            function closeAllLists(elmnt) {
+                const x = document.getElementsByClassName("autocomplete-items");
+                for (let i = 0; i < x.length; i++) {
+                    if (elmnt != x[i] && elmnt != inp) {
+                        x[i].parentNode.removeChild(x[i]);
+                    }
+                }
+            }
+    
+            document.addEventListener("click", function (e) {
+                closeAllLists(e.target);
+            });
+        }
+    
+        const data = "<%= data %>".split(",");
+        autocomplete(document.getElementById("myInput"), data);
+    </script>
+<%- include("../layout/footer") -%>

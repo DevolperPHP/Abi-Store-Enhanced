@@ -1,0 +1,44 @@
+<%- include("../layout/navbar") -%>
+
+<% if(err.length > 0) {%>
+    <script>
+        Swal.fire({
+            icon: 'error',
+            title: 'Size already added',
+            text: 'the size that you trying to add has already been added'
+        })
+    </script>
+<%}%>
+<div class="size">
+    <br><br>
+    <p class="title">Sizes</p>
+    <button class="show" id="show" onclick="show()"><ion-icon class="icon" name="add-outline"></ion-icon></button>
+    <button class="hide" id="hide" onclick="hide()"><ion-icon class="icon" name="remove-outline"></ion-icon></button>
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Size</th>
+                <th>Delete</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr id="size-input">
+                <form action="/size/add" method="post">
+                    <td><input class="size-input" name="size" type="text" placeholder="Enter size"></td>
+                    <td><button class="size-btn"><ion-icon class="icon" name="add-outline"></ion-icon></button></td>
+                </form>
+            </tr>
+            <% size.forEach(data => {%>
+                <tr>
+                <td><%= data.size%></td>
+                <td><form action="/size/delete/<%= data.id%>?_method=DELETE" method="post">
+                    <button class="delete"><ion-icon class="icon" name="remove-outline"></ion-icon></button>
+                </form></td>
+            <%}) %>
+        </tr>
+        </tbody>
+    </table>
+</div>
+
+<script src="/javascript/size.js"></script>
+<%- include("../layout/footer") -%>

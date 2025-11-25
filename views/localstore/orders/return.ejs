@@ -1,0 +1,20 @@
+<%- include("../layout/navbar") -%>
+
+    <script>
+        Swal.fire({
+            icon: 'info',
+            showConfirmButton: false,
+        html: `<form action="/localstore/orders/return/<%= orderId%>/<%= itemId%>?_method=PUT" method="post">
+        <input type="number" name="qty"
+            style="border: none; width: 80%; border-bottom: 1px solid #000; margin-top: 20px;" name="qty"
+            placeholder="Quantity">
+        <br><br>
+        <button
+            style="border: none; background-color: #ffdb57; padding: 5px; margin-top: 30px; color: #000; border-radius: 8px;">Confirm</button>
+        <br>
+    </form>
+    <button onclick="window.location.href='/localstore/orders/edit/<%= orderId%>'"
+        style="border: none; background-color: ##f0ad4e; padding: 5px; margin-top: 30px; color: #000; border-radius: 8px;">Cancel</button>`,
+        })
+    </script>
+    <%- include("../layout/footer") -%>

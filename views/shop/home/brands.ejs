@@ -1,0 +1,13 @@
+<%- include('../layout/navbar') -%>
+HIDDEN
+<div class="brands">
+    <p class="title">Brands</p>
+    <div class="cards">
+        <% brand.forEach(data => {%>
+            <div class="brand-card" onclick="window.location.href='/shop/brands/<%= data.name%>'">
+                <img src="/upload/images/<%=data.image%>" alt="">
+            </div>
+        <%}) %>
+    </div>
+</div>
+<%- include('../layout/footer') -%>

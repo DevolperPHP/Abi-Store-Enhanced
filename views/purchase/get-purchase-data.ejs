@@ -1,0 +1,61 @@
+<%- include("../layout/navbar") -%>
+
+<div class="get-purchase-data">
+    <br><br><br>
+    <p class="title">Purchase information</p>
+
+    <div class="info">
+        <p>Trader: <%= data.trader%></p>
+        <p>Date: <%= data.Date%></p>
+        <p>User: <%= data.user%></p>
+    </div>
+
+    <table class="table table-striped table-hover">
+        <thead>
+            <tr>
+                <th>#</th>
+                <th class="only-pc">Image</th>
+                <th>Name</th>
+                <th>Qty</th>
+                <th>Size</th>
+                <th>Color</th>
+                <th>Cost</th>
+                <th>Selling price</th>
+                <th>Total</th>
+            </tr>
+        </thead>
+        <tbody>
+            <% for (let i = 0; i < data.purchase.length; i++) {%>
+                <tr>
+                    <td><%= i+1%></td>
+                    <td class="only-pc"><img src="/upload/images/<%= data.purchase[i].image%>" alt="Product image"></td>
+                    <td><%= data.purchase[i].name%></td>
+                    <td><%= data.purchase[i].qty%></td>
+                    <td><%= data.purchase[i].size%></td>
+                    <td><div class="color" style="background-color: <%= data.purchase[i].color%>;"></div></td>
+                    <td><%= data.purchase[i].cost.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")%></td>
+                    <td><%= data.purchase[i].sell.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")%></td>
+                    <td><%= (data.purchase[i].cost * data.purchase[i].qty).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")%></td>
+                </tr>
+            <%} %>
+            <tr>
+                <td colspan="9">Total cost of items : <%= total.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")%> IQD</td>
+            </tr>
+            <tr>
+                <td colspan="9">Additional cost : <%= data.cost.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")%> IQD</td>
+            </tr>
+            <tr>
+                <td colspan="9">Total : <%= (data.cost + total).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")%> IQD</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <center>
+        <button class="btn btn-primary" onclick="window.location.href='/purchase/edit/<%= data.id%>'">Edit</button>
+        <form action="/purchase/delete/<%= data.id%>?_method=delete" method="post">
+          <br><button class="btn btn-danger">Delete</button>
+        </form>
+    </center>
+</div>
+
+<%- include("../layout/footer") -%>

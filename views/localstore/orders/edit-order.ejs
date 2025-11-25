@@ -1,0 +1,67 @@
+<%- include("../layout/navbar") -%>
+    <div class="get-sell">
+        <p class="title">Order</p>
+        <div class="info">
+            <p>Name: <%= data.name%>
+            </p>
+            <p>Date: <%= data.Date%>
+            </p>
+            <p>ID: <%= data.bid%>
+            </p>
+        </div>
+
+        <table class="table table-striped table-hover">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th class="only-pc">Image</th>
+                    <th>Name</th>
+                    <th>Size</th>
+                    <th>Color</th>
+                    <th>Price</th>
+                    <th>Qty</th>
+                    <th>Total</th>
+                    <th>Return</th>
+                </tr>
+            </thead>
+            <tbody>
+                <% for (let i=0; i < data.products.length; i++) {%>
+                    <tr>
+                        <td>
+                            <%= i+1%>
+                        </td>
+                        <td class="only-pc"><img src="/upload/images/<%= data.products[i].image%>"></td>
+                        <td>
+                            <%= data.products[i].name%>
+                        </td>
+                        <td>
+                            <%= data.products[i].size%>
+                        </td>
+                        <td>
+                            <div class="color" style="background-color: <%= data.products[i].color%>"></div>
+                        </td>
+                        <td>
+                            <%= data.products[i].price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, "," )%>
+                        </td>
+                        <td>
+                            <%= data.products[i].qty%>
+                        </td>
+                        <td>
+                            <%= data.products[i].total.toString().replace(/\B(?=(\d{3})+(?!\d))/g, "," )%>
+                        </td>
+                        <td><button class="btn btn-danger"
+                                onclick="window.location.href='/localstore/orders/return/<%= data.id%>/<%= data.products[i]._id%>'">Return</button>
+                        </td>
+                    </tr>
+                    <%} %>
+                        <tr>
+                            <td colspan="5">Total: <%= data.total.toString().replace(/\B(?=(\d{3})+(?!\d))/g, "," )%>
+                                    IQD</td>
+                            <td colspan="5">Qty: <%= totalQty.toString().replace(/\B(?=(\d{3})+(?!\d))/g, "," )%>
+                                    IQD</td>
+                        </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <%- include("../layout/footer") -%>

@@ -1,0 +1,654 @@
+<%- include('../layout/navbar') -%>
+
+<%
+  const metrics = analytics || {};
+  const totalValue = metrics.totalValue || 0;
+  const totalCost = metrics.totalCost || 0;
+  const totalProfit = totalValue - totalCost;
+  const profitMargin = totalValue > 0 ? ((totalProfit / totalValue) * 100).toFixed(1) : 0;
+  const locationData = locationDistribution || { mainQty: 0, storeQty: 0 };
+%>
+
+<style>
+  .analytics-dashboard {
+    animation: fadeIn 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    padding-bottom: 60px;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  .analytics-shell {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 24px;
+  }
+
+  .analytics-header {
+    margin-bottom: 32px;
+  }
+
+  .analytics-header .breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+    font-size: 0.875rem;
+    color: var(--text-secondary, #64748b);
+  }
+
+  .analytics-header .breadcrumb a {
+    color: var(--md-primary, #1976d2);
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+
+  .analytics-header .breadcrumb a:hover {
+    color: var(--md-primary-dark, #1565c0);
+  }
+
+  .analytics-header h1 {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--text-primary, #1e293b);
+    margin: 0 0 8px 0;
+  }
+
+  .analytics-header .subtitle {
+    font-size: 1rem;
+    color: var(--text-secondary, #64748b);
+    margin: 0;
+  }
+
+  /* KPI Cards */
+  .kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 20px;
+    margin-bottom: 32px;
+  }
+
+  .kpi-card {
+    background: white;
+    border-radius: 12px;
+    padding: 24px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    border: 1px solid rgba(0,0,0,0.06);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    animation: slideUp 0.5s cubic-bezier(0.4, 0, 0.2, 1) backwards;
+  }
+
+  .kpi-card:nth-child(1) { animation-delay: 0.05s; }
+  .kpi-card:nth-child(2) { animation-delay: 0.1s; }
+  .kpi-card:nth-child(3) { animation-delay: 0.15s; }
+  .kpi-card:nth-child(4) { animation-delay: 0.2s; }
+
+  @keyframes slideUp {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .kpi-card:hover {
+    box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+    transform: translateY(-2px);
+  }
+
+  .kpi-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+  }
+
+  .kpi-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+  }
+
+  .kpi-icon.blue {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+  }
+
+  .kpi-icon.green {
+    background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+    color: white;
+  }
+
+  .kpi-icon.orange {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    color: white;
+  }
+
+  .kpi-icon.teal {
+    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+    color: white;
+  }
+
+  .kpi-label {
+    font-size: 0.875rem;
+    color: var(--text-secondary, #64748b);
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .kpi-value {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--text-primary, #1e293b);
+    margin: 8px 0;
+  }
+
+  .kpi-subtext {
+    font-size: 0.875rem;
+    color: var(--text-secondary, #64748b);
+  }
+
+  .kpi-trend {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 600;
+  }
+
+  .kpi-trend.positive {
+    background: rgba(16, 185, 129, 0.1);
+    color: #059669;
+  }
+
+  .kpi-trend.negative {
+    background: rgba(239, 68, 68, 0.1);
+    color: #dc2626;
+  }
+
+  /* Chart Sections */
+  .charts-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+    gap: 24px;
+    margin-bottom: 32px;
+  }
+
+  .chart-card {
+    background: white;
+    border-radius: 12px;
+    padding: 24px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    border: 1px solid rgba(0,0,0,0.06);
+    animation: fadeIn 0.6s cubic-bezier(0.4, 0, 0.2, 1) 0.3s backwards;
+  }
+
+  .chart-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 24px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid rgba(0,0,0,0.06);
+  }
+
+  .chart-title {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: var(--text-primary, #1e293b);
+    margin: 0;
+  }
+
+  .chart-body {
+    min-height: 300px;
+  }
+
+  canvas {
+    max-height: 300px;
+  }
+
+  /* Tables */
+  .table-card {
+    background: white;
+    border-radius: 12px;
+    padding: 24px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    border: 1px solid rgba(0,0,0,0.06);
+    margin-bottom: 24px;
+    animation: fadeIn 0.7s cubic-bezier(0.4, 0, 0.2, 1) 0.4s backwards;
+  }
+
+  .data-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  .data-table thead {
+    background: rgba(0,0,0,0.02);
+    border-bottom: 2px solid rgba(0,0,0,0.06);
+  }
+
+  .data-table th {
+    padding: 12px 16px;
+    text-align: left;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--text-secondary, #64748b);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .data-table td {
+    padding: 16px;
+    border-bottom: 1px solid rgba(0,0,0,0.04);
+    color: var(--text-primary, #1e293b);
+  }
+
+  .data-table tbody tr {
+    transition: background 0.2s;
+  }
+
+  .data-table tbody tr:hover {
+    background: rgba(0,0,0,0.02);
+  }
+
+  .product-name-cell {
+    font-weight: 600;
+  }
+
+  .badge {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+  }
+
+  .badge.success {
+    background: rgba(16, 185, 129, 0.1);
+    color: #059669;
+  }
+
+  .badge.warning {
+    background: rgba(251, 146, 60, 0.1);
+    color: #ea580c;
+  }
+
+  .badge.danger {
+    background: rgba(239, 68, 68, 0.1);
+    color: #dc2626;
+  }
+
+  /* Empty State */
+  .empty-state {
+    text-align: center;
+    padding: 48px 24px;
+    color: var(--text-secondary, #64748b);
+  }
+
+  .empty-state ion-icon {
+    font-size: 64px;
+    opacity: 0.3;
+    margin-bottom: 16px;
+  }
+
+  /* Responsive */
+  @media (max-width: 768px) {
+    .charts-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .kpi-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .analytics-shell {
+      padding: 16px;
+    }
+
+    .data-table {
+      font-size: 0.875rem;
+    }
+
+    .data-table th,
+    .data-table td {
+      padding: 12px 8px;
+    }
+  }
+</style>
+
+<div class="analytics-dashboard">
+  <div class="dashboard-container">
+    <div class="analytics-shell">
+      <!-- Header -->
+      <header class="analytics-header">
+        <div class="breadcrumb">
+          <a href="/storage">Storage</a>
+          <ion-icon name="chevron-forward-outline"></ion-icon>
+          <span>Analytics</span>
+        </div>
+        <h1>Storage Analytics</h1>
+        <p class="subtitle">Comprehensive insights into inventory performance and trends</p>
+      </header>
+
+      <!-- KPI Cards -->
+      <div class="kpi-grid">
+        <div class="kpi-card">
+          <div class="kpi-header">
+            <div class="kpi-icon blue">
+              <ion-icon name="cube-outline"></ion-icon>
+            </div>
+          </div>
+          <p class="kpi-label">Total Products</p>
+          <div class="kpi-value"><%= (metrics.totalProducts || 0).toLocaleString() %></div>
+          <p class="kpi-subtext"><%= (metrics.totalStock || 0).toLocaleString() %> units in stock</p>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-header">
+            <div class="kpi-icon green">
+              <ion-icon name="cash-outline"></ion-icon>
+            </div>
+          </div>
+          <p class="kpi-label">Total Value</p>
+          <div class="kpi-value">IQD <%= totalValue.toLocaleString() %></div>
+          <p class="kpi-subtext">
+            <span class="kpi-trend positive">
+              <ion-icon name="trending-up-outline"></ion-icon>
+              <%= profitMargin %>% margin
+            </span>
+          </p>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-header">
+            <div class="kpi-icon orange">
+              <ion-icon name="alert-circle-outline"></ion-icon>
+            </div>
+          </div>
+          <p class="kpi-label">Stock Alerts</p>
+          <div class="kpi-value"><%= (metrics.lowStock || 0) + (metrics.outOfStock || 0) %></div>
+          <p class="kpi-subtext">
+            <%= metrics.lowStock || 0 %> low · <%= metrics.outOfStock || 0 %> out
+          </p>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-header">
+            <div class="kpi-icon teal">
+              <ion-icon name="trending-up-outline"></ion-icon>
+            </div>
+          </div>
+          <p class="kpi-label">Potential Profit</p>
+          <div class="kpi-value">IQD <%= totalProfit.toLocaleString() %></div>
+          <p class="kpi-subtext">From current inventory</p>
+        </div>
+      </div>
+
+      <!-- Charts -->
+      <div class="charts-grid">
+        <!-- Category Distribution Chart -->
+        <div class="chart-card">
+          <div class="chart-header">
+            <h2 class="chart-title">Distribution by Category</h2>
+          </div>
+          <div class="chart-body">
+            <% if (categoryDistribution && categoryDistribution.length > 0) { %>
+              <canvas id="categoryChart"></canvas>
+            <% } else { %>
+              <div class="empty-state">
+                <ion-icon name="pie-chart-outline"></ion-icon>
+                <p>No category data available</p>
+              </div>
+            <% } %>
+          </div>
+        </div>
+
+        <!-- Brand Distribution Chart -->
+        <div class="chart-card">
+          <div class="chart-header">
+            <h2 class="chart-title">Top Brands by Value</h2>
+          </div>
+          <div class="chart-body">
+            <% if (brandDistribution && brandDistribution.length > 0) { %>
+              <canvas id="brandChart"></canvas>
+            <% } else { %>
+              <div class="empty-state">
+                <ion-icon name="bar-chart-outline"></ion-icon>
+                <p>No brand data available</p>
+              </div>
+            <% } %>
+          </div>
+        </div>
+
+        <!-- Stock Location Distribution -->
+        <div class="chart-card">
+          <div class="chart-header">
+            <h2 class="chart-title">Stock by Location</h2>
+          </div>
+          <div class="chart-body">
+            <canvas id="locationChart"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- Top Products Table -->
+      <div class="table-card">
+        <div class="chart-header">
+          <h2 class="chart-title">Top Products by Value</h2>
+        </div>
+        <% if (topProducts && topProducts.length > 0) { %>
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Product</th>
+                <th>Size</th>
+                <th>Stock</th>
+                <th>Unit Price</th>
+                <th>Total Value</th>
+                <th>Margin</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% topProducts.forEach(product => { 
+                const statusClass = product.totalStock === 0 ? 'danger' : 
+                                   product.totalStock <= 10 ? 'warning' : 'success';
+                const statusText = product.totalStock === 0 ? 'Out' : 
+                                  product.totalStock <= 10 ? 'Low' : 'In Stock';
+              %>
+                <tr>
+                  <td class="product-name-cell"><%= product.name %></td>
+                  <td><%= product.size || 'N/A' %></td>
+                  <td><%= product.totalStock %> units</td>
+                  <td>IQD <%= (product.sell_price || 0).toLocaleString() %></td>
+                  <td><strong>IQD <%= (product.totalValue || 0).toLocaleString() %></strong></td>
+                  <td><%= product.margin %>%</td>
+                  <td><span class="badge <%= statusClass %>"><%= statusText %></span></td>
+                </tr>
+              <% }); %>
+            </tbody>
+          </table>
+        <% } else { %>
+          <div class="empty-state">
+            <ion-icon name="file-tray-outline"></ion-icon>
+            <p>No products found</p>
+          </div>
+        <% } %>
+      </div>
+
+      <!-- Low Stock Alerts Table -->
+      <% if (lowStockProducts && lowStockProducts.length > 0) { %>
+        <div class="table-card">
+          <div class="chart-header">
+            <h2 class="chart-title">Low Stock Alerts</h2>
+          </div>
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Product</th>
+                <th>Size</th>
+                <th>Barcode</th>
+                <th>Main Stock</th>
+                <th>Store Stock</th>
+                <th>Total</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% lowStockProducts.forEach(product => { 
+                const total = (product.qty || 0) + (product.stock || 0);
+                const statusClass = total === 0 ? 'danger' : 'warning';
+                const statusText = total === 0 ? 'Out of Stock' : 'Low Stock';
+              %>
+                <tr>
+                  <td class="product-name-cell"><%= product.name %></td>
+                  <td><%= product.size || 'N/A' %></td>
+                  <td><%= product.barcode || 'N/A' %></td>
+                  <td><%= product.qty || 0 %></td>
+                  <td><%= product.stock || 0 %></td>
+                  <td><strong><%= total %></strong></td>
+                  <td><span class="badge <%= statusClass %>"><%= statusText %></span></td>
+                </tr>
+              <% }); %>
+            </tbody>
+          </table>
+        </div>
+      <% } %>
+
+    </div>
+  </div>
+</div>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+
+<script>
+  // Chart.js default configuration
+  Chart.defaults.font.family = "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif";
+  Chart.defaults.color = '#64748b';
+  Chart.defaults.borderColor = 'rgba(0,0,0,0.06)';
+
+  // Category Distribution Chart
+  <% if (categoryDistribution && categoryDistribution.length > 0) { %>
+  const categoryCtx = document.getElementById('categoryChart');
+  if (categoryCtx) {
+    new Chart(categoryCtx, {
+      type: 'doughnut',
+      data: {
+        labels: <%- JSON.stringify(categoryDistribution.map(c => c._id || 'Uncategorized')) %>,
+        datasets: [{
+          data: <%- JSON.stringify(categoryDistribution.map(c => c.count)) %>,
+          backgroundColor: [
+            '#667eea', '#764ba2', '#f093fb', '#4facfe',
+            '#43e97b', '#fa709a', '#fee140', '#30cfd0'
+          ],
+          borderWidth: 0
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: true,
+        plugins: {
+          legend: {
+            position: 'right',
+            labels: {
+              padding: 15,
+              boxWidth: 12,
+              boxHeight: 12,
+              usePointStyle: true
+            }
+          }
+        }
+      }
+    });
+  }
+  <% } %>
+
+  // Brand Distribution Chart
+  <% if (brandDistribution && brandDistribution.length > 0) { %>
+  const brandCtx = document.getElementById('brandChart');
+  if (brandCtx) {
+    new Chart(brandCtx, {
+      type: 'bar',
+      data: {
+        labels: <%- JSON.stringify(brandDistribution.map(b => b._id || 'Unbranded')) %>,
+        datasets: [{
+          label: 'Total Value (IQD)',
+          data: <%- JSON.stringify(brandDistribution.map(b => b.totalValue)) %>,
+          backgroundColor: 'rgba(102, 126, 234, 0.8)',
+          borderRadius: 8,
+          borderSkipped: false
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: true,
+        plugins: {
+          legend: {
+            display: false
+          }
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            grid: {
+              color: 'rgba(0,0,0,0.04)'
+            }
+          },
+          x: {
+            grid: {
+              display: false
+            }
+          }
+        }
+      }
+    });
+  }
+  <% } %>
+
+  // Location Distribution Chart
+  const locationCtx = document.getElementById('locationChart');
+  if (locationCtx) {
+    new Chart(locationCtx, {
+      type: 'pie',
+      data: {
+        labels: ['Main Warehouse', 'Store Front'],
+        datasets: [{
+          data: [<%= locationData.mainQty %>, <%= locationData.storeQty %>],
+          backgroundColor: ['#667eea', '#11998e'],
+          borderWidth: 0
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: true,
+        plugins: {
+          legend: {
+            position: 'bottom',
+            labels: {
+              padding: 15,
+              boxWidth: 12,
+              boxHeight: 12,
+              usePointStyle: true
+            }
+          }
+        }
+      }
+    });
+  }
+</script>
+
+<%- include('../layout/footer') -%>

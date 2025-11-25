@@ -1,0 +1,68 @@
+<%- include('../layout/navbar') -%>
+HIDDEN
+
+<% if(edit_suc.length > 0){%>
+    <script>
+        Swal.fire({
+            icon: 'success',
+            titel: 'Updated !',
+            text: 'Your informantion updated successfully'
+        })
+    </script>
+<%} %>
+
+<% if(order_suc.length > 0){%>
+    <script>
+        Swal.fire({
+            icon: 'success',
+            titel: 'Success',
+            text: 'Your order confirmed successfully, you can track it through your profile page'
+        })
+    </script>
+<%} %>
+
+<div class="profile">
+    <div class="header">
+        <p class="person"><ion-icon name="person-circle"></ion-icon></p>
+        <div class="info">
+            <p>Name: <span><%= user.name%></span></p>
+            <p>Phone: <span><%= user.phone%></span></p>
+            <p>Location: <span><%= user.city%></span></p>
+            <center>
+                <button onclick="window.location.href='/shop/profile/edit/<%= user.id%>'">Edit Profile</button>
+            </center>
+        </div>
+
+        <div class="btns">
+            <a id="track" href="/shop/profile/track">Current Orders</a>
+            <a id="history" href="/shop/profile">History</a>
+        </div>
+    </div>
+
+    <div class="body">
+        <div class="orders">
+            <p class="title">Orders</p>
+            <div class="order-cards">
+                <% orders.forEach(data => {%>
+                    <div class="order-card" onclick="window.location.href='/shop/profile/get-order/<%= data.id%>'">
+                            <% if(data.status == 'done'){%>
+                                <p class="status">Confirmed</p>
+                            <%} %>
+                            <% if(data.status == 'pending'){%>
+                                <p class="status">Pending</p>
+                            <%} %>
+                        <p class="order-icon"><ion-icon name="folder"></ion-icon></p>
+                        <div class="order-info">
+                            <p><%= data.name%></p>
+                            <p><%= data.phone%></p>
+                            <p><%= data.adress%></p>
+                            <p><%= data.Date%></p>
+                        </div>
+                    </div>
+                <%}) %>
+            </div>
+        </div>
+    </div>
+</div>
+
+<%- include('../layout/footer') -%>

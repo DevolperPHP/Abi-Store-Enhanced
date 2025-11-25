@@ -1,0 +1,73 @@
+<%- include("../layout/navbar") -%>
+
+<% if(err.length > 0) {%>
+    <script>
+        Swal.fire({
+            icon: 'error',
+            title: 'Faild to add permission',
+            text: 'the permission you select has already been added'
+        })
+    </script>
+<%}%>
+
+<% if(add_suc.length > 0) {%>
+    <script>
+        Swal.fire({
+            icon: 'success',
+            title: 'Sucessful',
+            text: 'Permission added successfully'
+        })
+    </script>
+<%}%>
+
+<% if(remove_suc.length > 0) {%>
+    <script>
+        Swal.fire({
+            icon: 'success',
+            title: 'Sucessful',
+            text: 'Permission removed successfully'
+        })
+    </script>
+<%}%>
+<div class="psermissions">
+    <p class="title">Permissions</p>
+
+    <table class="table table-striped container">
+        <thead>
+            <tr>
+                <th>User</th>
+                <th>Admin</th>
+                <th>Permissions</th>
+                <th>Add</th>
+                <th>Remove</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            <% users.forEach(data => {%>
+                <tr>
+                    <td><%= data.name%></td>
+                    <td>
+                        <% if(user.isAdmin == true){%>
+                            Yes
+                        <%} else {%>
+                            NO
+                        <%} %>
+                    </td>
+                    <td>
+                        <% if(data.permissions.length > 0){%>
+                            <% for (let i = 0; i < data.permissions.length; i++) {%>
+                                <%= data.permissions[i]%>,
+                            <%} %>
+                        <% } else {%>
+                            NONE
+                        <%}%>
+                    </td>
+                    <td><button class="btns add" onclick="window.location.href='/permissions/add-permission/<%= data.id%>'"><ion-icon class="icon" name="add"></ion-icon></button></td>
+                    <td><button class="remove" onclick="window.location.href='/permissions/remove-permission/<%= data.id%>'"><ion-icon class="icon" name="remove-circle-outline"></ion-icon></button></td>
+                </tr>
+            <%}) %>
+        </tbody>
+    </table>
+</div>
+<%- include("../layout/footer") -%>

@@ -1,0 +1,48 @@
+<%- include("../layout/navbar") -%>
+  <script>
+    var count = 2; // initial countdown value
+
+    function updateTimer() {
+      if (count === 0) {
+        clearInterval(timer);
+        redirectToHomePage();
+      } else {
+        Swal.update({
+          title: "Creating file in",
+          text: count + " seconds...",
+        });
+        count--;
+      }
+    }
+
+    function redirectToHomePage() {
+      Swal.fire({
+        title: "Done !",
+        text: "File successfully created",
+        icon: "success",
+        timer: 1000, // milliseconds
+        showConfirmButton: false,
+        allowOutsideClick: false,
+      }).then(function () {
+        // Replace "home.html" with the actual URL of your home page
+        window.location.href = "/localstore/dailymoney/dashboard";
+      });
+    }
+
+    var timer = setInterval(updateTimer, 1000); // update timer every 1 second (1000 milliseconds)
+
+    Swal.fire({
+      title: "Creating file in",
+      icon: 'info',
+      text: count + " seconds...",
+      timer: 3000, // milliseconds
+      showConfirmButton: false,
+      allowOutsideClick: false,
+      willOpen: function () {
+        updateTimer();
+      },
+    });
+  </script>
+
+
+<%- include("../layout/footer") -%>

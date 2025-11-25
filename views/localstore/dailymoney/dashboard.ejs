@@ -1,0 +1,35 @@
+<%- include("../layout/navbar") -%>
+<% if(err.length > 0){%>
+    <script>
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: `<%= err%>`
+        })
+    </script>
+<%} %>
+<div class="daily-money sell-dashboard">
+    <p class="title">Daily transaction</p>
+    <form action="/localstore/dailymoney/new" method="post">
+        <button class="add-btn"><ion-icon class="icon" name="add-outline"></ion-icon></button>
+    </form>
+    <br>
+    <div class="sell-cards">
+        <% dailyMoney.forEach(data => {%>
+            <div class="sell-card" onclick="window.location.href='/localstore/dailymoney/get/<%=data.id%>'">
+                <div class="flex">
+                    <p class="icon"><ion-icon name="folder"></ion-icon></p>
+                    <div class="details">
+                        <p><%= data.Date%></p>
+                        <p>Total : <%= data.total.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")%> IQD</p>
+                    </div>
+                    <% if(data.status == "pending"){%>
+                        <p class="status">Pending</p>
+                    <%} %>
+                </div>
+            </div>
+        <%}) %>
+    </div>
+</div>
+
+<%- include("../layout/footer") -%>

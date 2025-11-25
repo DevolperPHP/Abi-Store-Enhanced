@@ -1,0 +1,41 @@
+<%- include("../layout/navbar") -%>
+    <div class="items"><br><br>
+
+        <div class="cards">
+            <% products.forEach(data=> {%>
+                    <div class="card-made" onclick="window.location.href='/sell/get/<%= data.id%>'">
+                        <div class="item-image">
+                            <img src="/upload/images/<%= data.image%>" alt="">
+                        </div>
+                        <p class="title">
+                            <%= data.name%>
+                        </p>
+                        <div class="des">
+                            <div class="item-color">
+                                <p>Color : <div class="card-color" style="background-color: <%= data.color%>"></div></p>
+                            </div>
+                            <div class="item-size">
+                                <p>Size : <%= data.size%></p>
+                            </div>
+                        </div>
+    
+                        <div class="price">
+                            <p class="price-p">Price</p>
+                            <p class="sell_price">Selling</p>
+                        </div>
+                        <div class="price">
+                            <p class="price-p"><%= data.price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")%> IQD</p>
+                            <p class="sell_price"><%= data.sell_price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")%> IQD</p>
+                        </div>
+                        <% if(data.colorName){%>
+                            <div class="item-colorName">
+                                <p>Color Name: <%= data.colorName%></p>
+                            </div>
+                        <%} %>
+                    </div>
+                <%}) %>
+        </div>
+    </div>
+
+    <script src="/javascript/items.js"></script>
+    <%- include("../layout/footer") -%>

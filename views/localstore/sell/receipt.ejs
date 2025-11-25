@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Receipt</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Ubuntu&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@200;300;400;500;700;800;900&display=swap');
+
+    * {
+      font-family: 'Ubuntu', sans-serif;
+    }
+
+    @page {
+      margin: 0;
+      size: auto;
+    }
+
+    @media print {
+
+      html,
+      body {
+        margin: 0 !important;
+        padding: 0 !important;
+        height: auto !important;
+      }
+
+      body * {
+        visibility: visible;
+      }
+
+      .receipt {
+        position: relative;
+        margin: 0;
+        padding: 10px;
+        height: auto !important;
+        overflow: visible !important;
+        width: auto;
+        max-width: 100%;
+      }
+
+      table {
+        width: 100%;
+        text-align: center;
+        margin-top: 20px;
+        margin-bottom: 20px;
+      }
+
+      table,
+      td {
+        border: 1px solid #000000da;
+        border-collapse: collapse;
+        font-size: 12px;
+      }
+
+      .info {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        margin-top: -5px;
+      }
+
+      .info-gen {
+        font-size: 7px;
+        margin-top: 8px;
+      }
+
+      .info-title {
+        font-size: 20px;
+        font-weight: bold;
+      }
+
+      #qrcode {
+        margin-top: 30px;
+        display: flex;
+        justify-content: center;
+      }
+
+      #barcode {
+        margin-top: -5px;
+        transform: scale(0.8);
+        display: flex;
+        justify-content: center;
+      }
+
+      .header {
+        width: 100%;
+        display: grid;
+        justify-content: center;
+      }
+
+      .header img {
+        width: 80px;
+      }
+
+      .header p {
+        font-size: 12px;
+        font-weight: bold;
+      }
+
+      .total-section {
+        font-size: 10px;
+      }
+
+      .total-section .total {
+        font-size: 15px;
+        font-weight: 800;
+      }
+
+      .ending {
+        font-size: 13px;
+        text-align: center;
+      }
+
+      .ending p {
+        font-family: "Tajawal", sans-serif!important;
+        font-weight: 500;
+        font-style: normal;
+      }
+    }
+  </style>
+</head>
+
+<body onload="printAndRedirect()">
+  <div class="receipt">
+    <div class="header">
+      <center>
+        <img src="/images/logo.svg">
+        <p>Abi Store</p>
+      </center>
+    </div>
+    <hr>
+    <div class="info">
+      <div>
+        <p class="info-title">Receipt</p>
+      </div>
+      <div class="info-gen">
+        <p><strong>Order ID:</strong>
+          <%= order.bid %>
+        </p>
+        <p><strong>Cashier:</strong>
+          <%= order.name %>
+        </p>
+        <p><strong>Date:</strong>
+          <%= order.Date %>
+        </p>
+      </div>
+    </div>
+
+    <!-- Barcode goes here -->
+
+
+    <div id="barcode">
+      <svg id="barcode-svg"></svg>
+    </div>
+    <hr>
+    <table>
+      <tr>
+        <th>Product</th>
+        <th>Size</th>
+        <th>Qty</th>
+        <th>Price</th>
+        <th>Total</th>
+      </tr>
+      <% order.products.forEach(p=> { %>
+        <tr>
+          <td>
+            <%= p.name %>
+          </td>
+          <td>
+            <%= p.size %>
+          </td>
+          <td>
+            <%= p.qty %>
+          </td>
+          <td>
+            <%= p.price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, "," ) %>
+          </td>
+          <td>
+            <%= p.total.toString().replace(/\B(?=(\d{3})+(?!\d))/g, "," ) %> IQD
+          </td>
+        </tr>
+        <% }) %>
+    </table>
+    <hr>
+    <div class="total-section">
+      <% if(discount==false){%>
+        <p class="total">Total: <%= order.total.toString().replace(/\B(?=(\d{3})+(?!\d))/g, "," ) %> IQD</p>
+        <%} else {%>
+          <p>Sub total: <%= order.products.map(x=> x.total).reduce((a, b) =>
+              a+b).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") %> IQD</p>
+          <p>Discount: <%= (order.products.map(x=> x.total).reduce((a, b) => a+b) -
+              Number(order.total)).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")%> IQD</p>
+          <hr>
+          <p class="total">Total: <%= order.total.toString().replace(/\B(?=(\d{3})+(?!\d))/g, "," )%> IQD
+          </p>
+          <%} %>
+    </div>
+    <hr>
+    <div class="ending">
+      <p>Abi Store شكرا لشرائكم من</p>
+      <p>اختياركم الافضل للملابس الطبية </p>
+      <p>الموصل / مول عشتار - 9818 999 0770</p>
+    </div>
+    <!-- QR Code -->
+    <div id="qrcode"></div>
+  </div>
+
+  <!-- QR Code and Barcode JS Libraries -->
+  <script src="https://cdn.jsdelivr.net/npm/qrcodejs/qrcode.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
+
+  <script>
+    function printAndRedirect() {
+      generateQRCode();
+      generateBarcode();
+      window.print();
+      setTimeout(() => {
+        window.location.href = "/localstore/sell";
+      }, 1000);
+    }
+
+    fetch('/localstore/sell/clear-cart', { method: 'POST' });
+
+    function generateQRCode() {
+      const qrData = "https://www.instagram.com/abi.storre?igsh=YXB5MW05am1ic29t";
+      new QRCode(document.getElementById("qrcode"), {
+        text: qrData,
+        width: 100,
+        height: 100,
+        colorDark: "#000000",
+        colorLight: "#ffffff",
+        correctLevel: QRCode.CorrectLevel.H
+      });
+    }
+
+    function generateBarcode() {
+      JsBarcode("#barcode-svg", "<%= order.bid %>", {
+        format: "CODE128",
+        lineColor: "#000",
+        width: 2,
+        height: 40,
+        displayValue: false
+      });
+    }
+  </script>
+</body>
+
+</html>

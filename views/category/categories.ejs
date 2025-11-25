@@ -1,0 +1,49 @@
+<%- include('../layout/navbar') -%>
+
+    <div class="storage">
+        <p class="title">Categories</p>
+        <button class="add" onclick="add()" id="add"><ion-icon class="icon" name="add"></ion-icon></button>
+        <button class="add" onclick="remove()" style="display:none" onclick="hide()" id="remove"><ion-icon class="icon"
+                name="remove"></ion-icon></button>
+        <br>
+        <table class="table table-striped table-hover">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Name</th>
+                    <th>Date</th>
+                    <th>Edit</th>
+                    <th>Delete</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr style="display: none;" id="cat-form">
+                    <form action="/category/add" method="post">
+                        <td colspan="1"><input type="text" name="name" placeholder="Name"></td>
+                        <td colspan="3"><textarea cols="40" name="des" placeholder="Description"></textarea></td>
+                        <td colspan="1"><button class="btn btn-success">Add</button></td>
+                    </form>
+                </tr>
+                <% for (let i=0; i < category.length; i++) {%>
+                    <tr>
+                        <td>
+                            <%= i+1%>
+                        </td>
+                        <td>
+                            <%= category[i].name%>
+                        </td>
+                        <td>
+                            <%= category[i].Date%>
+                        </td>
+                        <td><button class="btn btn-success" onclick="window.location.href='/category/edit/<%= category[i].id%>'">Edit</button></td>
+                        <form action="/category/delete/<%= category[i].id%>?_method=DELETE" method="post">
+                        <td><button class="btn btn-danger">Delete</button></td>
+                        </form>
+                    </tr>
+                    <% } %>
+            </tbody>
+        </table>
+    </div>
+
+    <script src="/javascript/category.js"></script>
+    <%- include('../layout/footer') -%>

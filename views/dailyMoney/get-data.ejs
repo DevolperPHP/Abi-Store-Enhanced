@@ -1,0 +1,38 @@
+<%- include('../layout/navbar') -%>
+
+<div class="daily-money-data">
+    <p class="title"><%= data.Date%></p>
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Title</th>
+                <th>Cost</th>
+                <th>Remove</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            <% data.purchase.forEach(getData => {%>
+                <tr>
+                    <td><%= getData.title%></td>
+                    <td><%= getData.cost.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")%> IQD</td>
+                    <td><form action="/dailymoney/remove/<%= data.id%>/<%= getData.title%>/<%= getData.cost%>?_method=PUT" method="post">
+                        <button class="remove"><ion-icon class="icon" name="remove-outline"></ion-icon></button>
+                    </form></td>
+                </tr>
+            <%}) %>
+            <tr>
+                <form action="/dailymoney/add/<%= data.id%>?_method=PUT" method="post">
+                    <td><input type="text" name="title" placeholder="Title" required></td>
+                    <td><input type="number" name="cost" placeholder="Cost" required></td>
+                    <td><button class="confirm"><ion-icon class="icon" name="checkmark-outline"></ion-icon></button></td>
+                </form>
+            </tr>
+            <tr>
+                <td colspan="3">Total: <%= total.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")%> IQD</td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+<%- include('../layout/footer') -%>

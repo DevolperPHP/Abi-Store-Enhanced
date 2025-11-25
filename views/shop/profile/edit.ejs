@@ -1,0 +1,38 @@
+<%- include('../layout/navbar') -%>
+
+HIIDEN
+<div class="profile">
+    <div class="header">
+        <p class="person"><ion-icon name="person-circle"></ion-icon></p>
+        <div class="info">
+            <p>Name: <span><%= user.name%></span></p>
+            <p>Phone: <span><%= user.phone%></span></p>
+            <p>Location: <span><%= user.city%></span></p>
+            <center>
+                <button onclick="window.location.href='/shop/profile/edit/<%= user.id%>'">Edit Profile</button>
+            </center>
+        </div>
+
+        <div class="btns">
+            <a id="track" href="/shop/profile/track">Current Orders</a>
+            <a id="history" href="/shop/profile">History</a>
+        </div>
+    </div>
+
+    <div class="body">
+        <div class="edit">
+            <p class="title">Profile Information</p>
+            <form action="/shop/profile/edit/<%= user.id%>?_method=PUT" method="post">
+                <label for="">Name: </label><input type="text" name="name" value="<%= user.name%>" required>
+                <br>
+                <label for="">Phone: </label><input type="text" name="phone" value="<%= user.phone%>" required>
+                <br>
+                <label for="">City:</label><input type="text" name="city" value="<%= user.city%>" required>
+                <br>
+                <button>Confirm</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<%- include('../layout/footer') -%>

@@ -1,0 +1,310 @@
+<%- include('../layout/navbar') -%>
+
+<!-- Modern Dashboard Container -->
+<div class="dashboard-container">
+    <!-- Dashboard Header -->
+    <div class="dashboard-header">
+        <h1 class="dashboard-title">Storage</h1>
+        <p class="dashboard-subtitle">Inventory Management - Comprehensive control and analytics</p>
+    </div>
+
+    <!-- Quick Stats Grid -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-header">
+                <h3 class="stat-title">Total Products</h3>
+                <div class="stat-icon primary">
+                    <ion-icon name="cube-outline"></ion-icon>
+                </div>
+            </div>
+            <div class="stat-value"><%= analytics.totalProducts || 0 %></div>
+            <div class="stat-change positive">
+                <ion-icon name="add-circle-outline"></ion-icon>
+                <span>Manage Inventory</span>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-header">
+                <h3 class="stat-title">Total Value</h3>
+                <div class="stat-icon success">
+                    <ion-icon name="cash-outline"></ion-icon>
+                </div>
+            </div>
+            <div class="stat-value">IQD <%= (analytics.totalPotentialRevenue || 0).toLocaleString() %></div>
+            <div class="stat-change positive">
+                <ion-icon name="trending-up-outline"></ion-icon>
+                <span>Inventory worth</span>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-header">
+                <h3 class="stat-title">Low Stock</h3>
+                <div class="stat-icon warning">
+                    <ion-icon name="alert-circle"></ion-icon>
+                </div>
+            </div>
+            <div class="stat-value"><%= analytics.lowStockItems || 0 %></div>
+            <div class="stat-change negative">
+                <ion-icon name="warning-outline"></ion-icon>
+                <span>Need attention</span>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-header">
+                <h3 class="stat-title">Average Price</h3>
+                <div class="stat-icon primary">
+                    <ion-icon name="pricetag"></ion-icon>
+                </div>
+            </div>
+            <div class="stat-value">IQD <%= (analytics.avgSellPrice || 0).toLocaleString() %></div>
+            <div class="stat-change positive">
+                <ion-icon name="analytics-outline"></ion-icon>
+                <span>Per item average</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Controls Section -->
+    <div class="content-card">
+        <div class="card-header">
+            <h2 class="card-title">Inventory Controls</h2>
+            <button class="card-action" onclick="window.location.href='/items/add'">
+                <ion-icon name="add-circle-outline"></ion-icon>
+                Add Item
+            </button>
+        </div>
+        <div class="card-content">
+            <div class="controls-section">
+                <div class="search-controls">
+                    <div class="search-box">
+                        <ion-icon name="search-outline"></ion-icon>
+                        <input type="text" id="globalSearch" placeholder="Search products, categories, or SKU..." oninput="handleSearch(this.value)" />
+                        <button class="search-clear" onclick="clearSearch()">
+                            <ion-icon name="close-outline"></ion-icon>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="filter-controls">
+                    <div class="filter-group">
+                        <label>Sort by:</label>
+                        <select id="sortFilter" onchange="applyFilters()">
+                            <option value="">Default (Newest)</option>
+                            <option value="qty-most">Quantity (High to Low)</option>
+                            <option value="qty-less">Quantity (Low to High)</option>
+                            <option value="price-most">Price (High to Low)</option>
+                            <option value="price-less">Price (Low to High)</option>
+                            <option value="name-asc">Name (A-Z)</option>
+                            <option value="name-desc">Name (Z-A)</option>
+                        </select>
+                    </div>
+
+                    <div class="filter-group">
+                        <label>Size:</label>
+                        <select id="sizeFilter" onchange="applyFilters()">
+                            <option value="">All Sizes</option>
+                            <% size.forEach(sizeData => { %>
+                                <option value="<%= sizeData.size %>"><%= sizeData.size %></option>
+                            <% }); %>
+                        </select>
+                    </div>
+
+                    <div class="filter-group">
+                        <label>Stock Status:</label>
+                        <select id="stockFilter" onchange="applyFilters()">
+                            <option value="">All Items</option>
+                            <option value="in-stock">In Stock</option>
+                            <option value="low-stock">Low Stock (≤10)</option>
+                            <option value="out-of-stock">Out of Stock</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Products Section -->
+    <div class="content-card">
+        <div class="card-header">
+            <h2 class="card-title">Inventory Items</h2>
+            <div class="view-toggle">
+                <button class="view-btn active" data-view="grid" onclick="switchView('grid')">
+                    <ion-icon name="grid-outline"></ion-icon>
+                </button>
+                <button class="view-btn" data-view="list" onclick="switchView('list')">
+                    <ion-icon name="list-outline"></ion-icon>
+                </button>
+            </div>
+        </div>
+        <div class="card-content">
+            <% if (products && products.length > 0) { %>
+                <div class="products-grid" id="productsGrid">
+                    <% products.forEach((product, index) => {
+                        const totalStock = (product.qty || 0) + (product.stock || 0);
+                        const profit = ((product.sell_price || 0) - (product.price || 0)) * totalStock;
+                        const profitMargin = product.price > 0 ? ((product.sell_price - product.price) / product.price * 100) : 0;
+                    %>
+                        <div class="product-card" onclick="window.location.href='/items/get/<%= product._id %>'">
+                            <div class="product-image">
+                                <% if (product.image) { %>
+                                    <img src="<%= product.image %>" alt="<%= product.name %>" />
+                                <% } else { %>
+                                    <div class="no-image">
+                                        <ion-icon name="cube-outline"></ion-icon>
+                                    </div>
+                                <% } %>
+                                <div class="product-badges">
+                                    <% if (totalStock === 0) { %>
+                                        <span class="badge badge-danger">Out of Stock</span>
+                                    <% } else if (totalStock <= 10) { %>
+                                        <span class="badge badge-warning">Low Stock</span>
+                                    <% } else { %>
+                                        <span class="badge badge-success">In Stock</span>
+                                    <% } %>
+                                </div>
+                            </div>
+                            
+                            <div class="product-info">
+                                <h3 class="product-name"><%= product.name %></h3>
+                                <% if (product.colorName) { %>
+                                    <p class="product-variant">Color: <%= product.colorName %></p>
+                                <% } %>
+                                <p class="product-size">Size: <%= product.size %></p>
+                                
+                                <div class="stock-info">
+                                    <div class="stock-item">
+                                        <span class="stock-label">Main Storage:</span>
+                                        <span class="stock-value"><%= product.qty || 0 %></span>
+                                    </div>
+                                    <div class="stock-item">
+                                        <span class="stock-label">Store:</span>
+                                        <span class="stock-value"><%= product.stock || 0 %></span>
+                                    </div>
+                                    <div class="stock-total">
+                                        <span class="stock-label">Total:</span>
+                                        <span class="stock-value total"><%= totalStock %></span>
+                                    </div>
+                                </div>
+                                
+                                <div class="pricing-info">
+                                    <div class="price-item">
+                                        <span class="price-label">Cost:</span>
+                                        <span class="price-value">IQD <%= (product.price || 0).toLocaleString() %></span>
+                                    </div>
+                                    <div class="price-item">
+                                        <span class="price-label">Selling:</span>
+                                        <span class="price-value sell-price">IQD <%= (product.sell_price || 0).toLocaleString() %></span>
+                                    </div>
+                                    <% if (profit > 0) { %>
+                                        <div class="profit-info">
+                                            <span class="profit-label">Profit:</span>
+                                            <span class="profit-value">IQD <%= profit.toLocaleString() %> (<%= profitMargin.toFixed(1) %>%)</span>
+                                        </div>
+                                    <% } %>
+                                </div>
+                            </div>
+                            
+                            <div class="product-actions">
+                                <button class="action-btn edit-btn" onclick="event.stopPropagation(); editProduct('<%= product._id %>')">
+                                    <ion-icon name="create-outline"></ion-icon>
+                                </button>
+                                <button class="action-btn stock-btn" onclick="event.stopPropagation(); manageStock('<%= product._id %>')">
+                                    <ion-icon name="barcode-outline"></ion-icon>
+                                </button>
+                            </div>
+                        </div>
+                    <% }); %>
+                </div>
+            <% } else { %>
+                <div class="empty-state">
+                    <div class="empty-icon">
+                        <ion-icon name="cube-outline"></ion-icon>
+                    </div>
+                    <h3>No Products Found</h3>
+                    <p>Start by adding your first product to the inventory</p>
+                    <button class="empty-action" onclick="window.location.href='/items/add'">
+                        <ion-icon name="add-outline"></ion-icon>
+                        Add Product
+                    </button>
+                </div>
+            <% } %>
+            
+            <div class="load-more-section" id="loadMoreSection">
+                <button class="btn btn-outline load-more-btn" id="loadMoreBtn" onclick="loadMoreProducts()">
+                    <ion-icon name="arrow-down-outline"></ion-icon>
+                    Load More Products
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Utility functions
+function debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+        const later = () => {
+            clearTimeout(timeout);
+            func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+    };
+}
+
+// Search functionality
+const handleSearch = debounce((value) => {
+    if (value.length > 2) {
+        console.log('Searching:', value);
+        window.location.href = `/storage/search/${value}`;
+    } else if (value.length === 0) {
+        window.location.href = '/storage';
+    }
+}, 500);
+
+// Filter functionality
+function applyFilters() {
+    const sort = document.getElementById('sortFilter').value;
+    if (sort) window.location.href = `/storage/filter/${sort}`;
+}
+
+function clearSearch() {
+    document.getElementById('globalSearch').value = '';
+    window.location.href = '/storage';
+}
+
+function switchView(view) {
+    const buttons = document.querySelectorAll('.view-btn');
+    buttons.forEach(btn => btn.classList.remove('active'));
+    
+    const activeBtn = document.querySelector(`[data-view="${view}"]`);
+    if (activeBtn) {
+        activeBtn.classList.add('active');
+    }
+    
+    const grid = document.getElementById('productsGrid');
+    if (view === 'list') {
+        grid.style.gridTemplateColumns = '1fr';
+    } else {
+        grid.style.gridTemplateColumns = 'repeat(auto-fill, minmax(320px, 1fr))';
+    }
+}
+
+function editProduct(id) {
+    window.location.href = `/items/edit/${id}`;
+}
+
+function manageStock(id) {
+    console.log('Managing stock for product:', id);
+}
+
+function loadMoreProducts() {
+    console.log('Load more products functionality');
+}
+</script>
+
+<%- include('../layout/footer') -%>

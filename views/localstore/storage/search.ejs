@@ -1,0 +1,262 @@
+<%- include("../layout/navbar") -%>
+<% if(suc.length > 0){%>
+    <script>
+        Swal.fire({
+            icon: 'success',
+            title: 'Success',
+            text: `<%= suc%>`,
+        })
+    </script>
+<%} %>
+
+<% if(err.length > 0){%>
+    <script>
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: `<%= err%>`,
+        })
+    </script>
+<%} %>
+<div class="storage">
+  <p class="title">Storage</p>
+  <div class="tools" style="float: left; margin-left: 30px;">
+    <div class="tools-inputs">
+      <form id="searchForm" action="" method="get">
+        <div class="add">
+          <input autocomplete="off" type="text" id="searchInput" placeholder="Barcode" />
+          <button>
+            <ion-icon class="icon" name="search-outline"></ion-icon>
+          </button>
+        </div>
+      </form>
+      <div class="autocomplete" style="width:200px; margin-left: 30px;">
+        <input id="myInput" type="text" placeholder="Search for item" autocomplete="off">
+      </div>
+    </div>
+  </div>
+  <% if(item){%>
+    <div class="container">
+        <br>
+        <table class="table table-striped table-hover">
+            <tr class="tr-header">
+                <th>Name</th>
+                <th>Size</th>
+                <th>Color</th>
+                <th>Store Qty</th>
+                <th>Storage</th>
+                <th>Price</th>
+                <th>Add</th>
+                <th>Return</th>
+            </tr>
+            <tr>
+                <td><%= item.name%></td>
+                <td><%= item.size%></td>
+                <td><%= item.colorName%></td>
+                <% if(item.stock == null){%>
+                    <td>0</td>
+                <%} else {%>
+                    <td><%= item.stock%></td>
+                <%}%>
+                <td><%= item.qty%></td>
+                <td><%= item.sell_price%></td>
+                <td><button onclick="addItem()" class="add-btn"><ion-icon class="icon" name="add-outline"></ion-icon></button></td>
+                <td><button onclick="removeItem()" class="return-btn"><ion-icon class="icon" name="remove-outline"></ion-icon></button></td>
+
+            </tr>
+    </div>
+    </table>
+    <script>
+        var pathName = window.location.pathname
+
+        if(pathName.includes("/main-storage")){
+            function addItem(){
+            
+            Swal.fire({
+                icon: 'question',
+                showConfirmButton: false,
+                html:`<form action="/localstore/storage/add/<%= item.id%>?_method=PUT" method="post">
+            <input type="number" name="qty"
+                style="border: none; width: 80%; border-bottom: 1px solid #000; margin-top: 20px;" name="qty"
+                placeholder="Quantity">
+            <br><br>
+            <button
+                style="border: none; background-color: #ffdb57; padding: 5px; margin-top: 30px; color: #000; border-radius: 8px;">Confirm</button>
+            <br>
+        </form>
+        <button onclick="window.location.href='/localstore/storage/main-storage/search/<%=data.barcode%>'"
+            style="border: none; background-color: ##f0ad4e; padding: 5px; margin-top: 30px; color: #000; border-radius: 8px;">Cancel</button>`,
+            })
+        }
+    
+        function removeItem(){
+            Swal.fire({
+                icon: 'question',
+                showConfirmButton: false,
+                html:`<form action="/localstore/storage/return/<%= item.id%>?_method=PUT" method="post">
+            <input type="number" name="qty"
+                style="border: none; width: 80%; border-bottom: 1px solid #000; margin-top: 20px;" name="qty"
+                placeholder="Quantity">
+            <br><br>
+            <button
+                style="border: none; background-color: #ffdb57; padding: 5px; margin-top: 30px; color: #000; border-radius: 8px;">Confirm</button>
+            <br>
+        </form>
+        <button onclick="window.location.href='/localstore/storage/main-storage/search/<%=item.barcode%>'"
+            style="border: none; background-color: ##f0ad4e; padding: 5px; margin-top: 30px; color: #000; border-radius: 8px;">Cancel</button>`,
+            })
+        }
+        } else {
+            function addItem(){
+            
+            Swal.fire({
+                icon: 'question',
+                showConfirmButton: false,
+                html:`<form action="/localstore/storage/add/<%= item.id%>?_method=PUT" method="post">
+            <input type="number" name="qty"
+                style="border: none; width: 80%; border-bottom: 1px solid #000; margin-top: 20px;" name="qty"
+                placeholder="Quantity">
+            <br><br>
+            <button
+                style="border: none; background-color: #ffdb57; padding: 5px; margin-top: 30px; color: #000; border-radius: 8px;">Confirm</button>
+            <br>
+        </form>
+        <button onclick="window.location.href='/localstore/storage/search/<%=item.barcode%>'"
+            style="border: none; background-color: ##f0ad4e; padding: 5px; margin-top: 30px; color: #000; border-radius: 8px;">Cancel</button>`,
+            })
+        }
+    
+        function removeItem(){
+            Swal.fire({
+                icon: 'question',
+                showConfirmButton: false,
+                html:`<form action="/localstore/storage/return/<%= item.id%>?_method=PUT" method="post">
+            <input type="number" name="qty"
+                style="border: none; width: 80%; border-bottom: 1px solid #000; margin-top: 20px;" name="qty"
+                placeholder="Quantity">
+            <br><br>
+            <button
+                style="border: none; background-color: #ffdb57; padding: 5px; margin-top: 30px; color: #000; border-radius: 8px;">Confirm</button>
+            <br>
+        </form>
+        <button onclick="window.location.href='/localstore/storage/search/<%=item.barcode%>'"
+            style="border: none; background-color: ##f0ad4e; padding: 5px; margin-top: 30px; color: #000; border-radius: 8px;">Cancel</button>`,
+            })
+        }
+        }
+    </script>
+    <%} else {%>
+        <script>
+            Swal.fire({
+        icon: 'error',
+        title: 'Item not found',
+    }).then((result) => {
+        if (result.isConfirmed) {
+            window.location.href = '/localstore/storage';
+        }
+    });
+
+        </script>
+    <%} %>
+</div>
+
+<script>
+  const form = document.getElementById("searchForm");
+  const searchInput = document.getElementById("searchInput");
+
+  form.addEventListener("submit", function (event) {
+    const inputValue = searchInput.value;
+    form.action = `/localstore/storage/search/${inputValue}`;
+  });
+
+  form.addEventListener("keydown", function (event) {
+    if (event.key === "Enter") {
+      event.preventDefault(); // Prevent the default form submission
+      const inputValue = event.target.value; // Get the input value
+      const form = document.getElementById("searchForm");
+      form.action = `/localstore/storage/search/${inputValue}`; // Set form action to /search/[inputValue]
+      form.submit(); // Submit the form
+    }
+  });
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/fuse.js@6.6.2"></script>
+<script>
+  function autocomplete(inp, arr) {
+    let currentFocus;
+    const fuse = new Fuse(arr, {
+      threshold: 0.4,
+    });
+
+    inp.addEventListener("input", function () {
+      let a, b, val = this.value;
+      closeAllLists();
+      if (!val) return false;
+      currentFocus = -1;
+
+      a = document.createElement("DIV");
+      a.setAttribute("id", this.id + "autocomplete-list");
+      a.setAttribute("class", "autocomplete-items");
+      this.parentNode.appendChild(a);
+
+      const results = fuse.search(val);
+      results.forEach(({ item }) => {
+        b = document.createElement("DIV");
+        b.innerHTML = `<strong>${item.substr(0, val.length)}</strong>${item.substr(val.length)}`;
+        b.innerHTML += `<input type='hidden' value='${item}'>`;
+        b.addEventListener("click", function () {
+          window.location.href = `/localstore/storage/search-by-name/${String(this.getElementsByTagName("input")[0].value)}`
+          closeAllLists();
+        });
+        a.appendChild(b);
+      });
+    });
+
+    inp.addEventListener("keydown", function (e) {
+      let x = document.getElementById(this.id + "autocomplete-list");
+      if (x) x = x.getElementsByTagName("div");
+      if (e.keyCode == 40) {
+        currentFocus++;
+        addActive(x);
+      } else if (e.keyCode == 38) {
+        currentFocus--;
+        addActive(x);
+      } else if (e.keyCode == 13) {
+        e.preventDefault();
+        if (currentFocus > -1 && x) x[currentFocus].click();
+      }
+    });
+
+    function addActive(x) {
+      if (!x) return false;
+      removeActive(x);
+      if (currentFocus >= x.length) currentFocus = 0;
+      if (currentFocus < 0) currentFocus = x.length - 1;
+      x[currentFocus].classList.add("autocomplete-active");
+    }
+
+    function removeActive(x) {
+      for (let i = 0; i < x.length; i++) {
+        x[i].classList.remove("autocomplete-active");
+      }
+    }
+
+    function closeAllLists(elmnt) {
+      const x = document.getElementsByClassName("autocomplete-items");
+      for (let i = 0; i < x.length; i++) {
+        if (elmnt != x[i] && elmnt != inp) {
+          x[i].parentNode.removeChild(x[i]);
+        }
+      }
+    }
+
+    document.addEventListener("click", function (e) {
+      closeAllLists(e.target);
+    });
+  }
+
+  const data = "<%= data %>".split(",");
+  autocomplete(document.getElementById("myInput"), data);
+</script>
+
+<%- include("../layout/footer") -%>

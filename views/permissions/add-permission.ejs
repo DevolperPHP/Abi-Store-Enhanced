@@ -1,0 +1,71 @@
+<%- include("../layout/navbar") -%>
+
+    <script>
+        Swal.fire({
+            icon: "info",
+            showCancelButton: true,
+            showConfirmButton: false,
+            title: 'Add permission',
+            html: `
+                  <form action="/permissions/add-permission/<%= userData.id%>?_method=PUT" method="post">
+        <center>
+        <select name="selective" style="padding: 10px 40px 10px 40px; border-radius: 10px; box-shadow: 0 0 10px #00000027;">
+            <option>Items</option>
+            <option>Storage</option>
+            <option>Sell</option>
+            <option>Purchase</option>
+            <option>Cashier</option>
+        </select>
+        <br>
+    </center>
+    <button style="background-color: #5cb85c; border: none; border-radius: 5px; color: #fff;
+    font-size: 20px; margin-top: 20px; padding: 10px 10px 10px 10px">Confirm</button>
+    </form>
+                            `
+        })
+    </script>
+
+    <div class="psermissions">
+        <p class="title">Permissions</p>
+
+        <table class="table table-striped container">
+            <thead>
+                <tr>
+                    <th>User</th>
+                    <th>Admin</th>
+                    <th>Permissions</th>
+                    <th>Add</th>
+                    <th>Remove</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                <% users.forEach(data=> {%>
+                    <tr>
+                        <td>
+                            <%= data.name%>
+                        </td>
+                        <td>
+                            <% if(user.isAdmin==true){%>
+                                Yes
+                                <%} else {%>
+                                    NO
+                                    <%} %>
+                        </td>
+                        <td>
+                            <% if(data.permissions.length> 0){%>
+                                <% for (let i=0; i < data.permissions.length; i++) {%>
+                                    <%= data.permissions[i]%>,
+                                        <%} %>
+                                            <% } else {%>
+                                                NONE
+                                                <%}%>
+                        </td>
+                        <td><button class="add" onclick="window.location.href='/permissions/add-permission/<%= data.id%>'"><ion-icon class="icon" name="add"></ion-icon></button></td>
+                        <td><button class="remove" onclick="window.location.href='/permissions/remove-permission/<%= data.id%>'"><ion-icon class="icon" name="remove-circle-outline"></ion-icon></button></td>
+                    </tr>
+                    <%}) %>
+            </tbody>
+        </table>
+    </div>
+    <%- include("../layout/footer") -%>

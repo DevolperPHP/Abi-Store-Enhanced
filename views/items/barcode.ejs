@@ -1,0 +1,66 @@
+<%- include("../layout/navbar") -%>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" integrity="sha512-CNgIRecGo7nphbeZ04Sc13ka07paqdeTu0WR1IM4kNcpmBAUSHSQX0FslNhTDadL4O5SAGapGt4FodqL8My0mA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.js" integrity="sha512-is1ls2rgwpFZyixqKFEExPHVUUL+pPkBEPw47s/6NDQ4n1m6T/ySeDW3p54jp45z2EJ0RSOgilqee1WhtelXfA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+
+<div id="qrcode"></div>
+<div class="qr-text">
+    <p><%= item%></p>
+    <p><%= data.name%></p>
+    <p>Color: <%= data.colorName%></p>
+    <p>Size: <%= data.size%></p>
+
+
+</div>
+<script type="text/javascript">
+new QRCode(document.getElementById("qrcode"), "<%= item%>");
+
+</script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+    print()
+});
+</script>
+
+<style>
+
+    #qrcode{
+        margin-left: 900px;
+        margin-top: 90px;
+    }
+    @media print{
+        nav ,button{
+            visibility: hidden;
+        }
+
+        body{
+            width: 400px;
+        }
+
+        #qrcode{
+            visibility:visible;
+            width: 10mm;
+            height: fit-content;
+            margin-left: 6px;
+            position: absolute;
+            top: -160px;
+            transform: scale(0.2);
+        }
+
+        .qr-text{
+            position: absolute;
+            font-size: 10px;
+            top: 100px;
+            text-align: center;
+            margin-left: 15px;
+        }
+
+        .qr-text p{
+            margin-top: -15px;
+        }
+    }
+</style>
+
+<%- include("../layout/footer") -%>
