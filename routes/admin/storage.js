@@ -103,6 +103,7 @@ router.get("/", async (req, res) => {
 
     res.render("storage/storage-dashboard", {
             user: user,
+            err: req.flash("permission-error"),
             products: products,
             size: sizes,
             totalSell: totalSell,
@@ -215,6 +216,7 @@ router.get("/filter/qty-most", async (req, res) => {
 
     res.render("storage/storage-dashboard", {
             user: user,
+            err: req.flash("permission-error"),
             products: products,
             size: sizes,
             totalSell: totalSell,
@@ -314,6 +316,7 @@ router.get("/filter/qty-less", async (req, res) => {
 
     res.render("storage/storage-dashboard", {
             user: user,
+            err: req.flash("permission-error"),
             products: products,
             size: sizes,
             totalSell: totalSell,
@@ -413,6 +416,7 @@ router.get("/filter/cost-most", async (req, res) => {
 
     res.render("storage/storage-dashboard", {
             user: user,
+            err: req.flash("permission-error"),
             products: products,
             size: sizes,
             totalSell: totalSell,
@@ -512,6 +516,7 @@ router.get("/filter/cost-less", async (req, res) => {
 
     res.render("storage/storage-dashboard", {
             user: user,
+            err: req.flash("permission-error"),
             products: products,
             size: sizes,
             totalSell: totalSell,
@@ -611,6 +616,7 @@ router.get("/size/:size", async (req, res) => {
 
     res.render("storage/storage-dashboard", {
             user: user,
+            err: req.flash("permission-error"),
             products: products,
             size: sizes,
             totalSell: totalSell,
@@ -688,6 +694,7 @@ router.get("/search/:name", async (req, res) => {
                 }
                 res.render("storage/storage-dashboard", {
                     user: user,
+                    err: req.flash("permission-error"),
                     products: products,
                     size: size,
                     totalSell: totalSell.reduce((a, b) => a + b),
