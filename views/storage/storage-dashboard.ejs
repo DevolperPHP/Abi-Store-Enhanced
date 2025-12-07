@@ -94,15 +94,7 @@
                     <ion-icon name="download-outline"></ion-icon>
                     Export
                 </button>
-                <button class="btn-import" onclick="importInventory()">
-                    <ion-icon name="upload-outline"></ion-icon>
-                    Import
-                </button>
-                <button class="btn-bulk" onclick="showBulkActions()">
-                    <ion-icon name="checkmark-circle-outline"></ion-icon>
-                    Bulk Actions
-                </button>
-                <button class="btn-primary" onclick="window.location.href='/items/add'">
+                <button class="btn-export" onclick="window.location.href='/items/add'">
                     <ion-icon name="add-outline"></ion-icon>
                     Add Item
                 </button>
@@ -130,14 +122,6 @@
                     <button class="quick-action-btn" onclick="filterOutOfStock()">
                         <ion-icon name="close-circle-outline"></ion-icon>
                         <span>Out of Stock</span>
-                    </button>
-                    <button class="quick-action-btn" onclick="filterHighValue()">
-                        <ion-icon name="trending-up-outline"></ion-icon>
-                        <span>High Value</span>
-                    </button>
-                    <button class="quick-action-btn" onclick="showAdvancedFilters()">
-                        <ion-icon name="filter-outline"></ion-icon>
-                        <span>Advanced</span>
                     </button>
                 </div>
             </div>
@@ -237,10 +221,6 @@
                     <button class="btn-reset" onclick="resetAllFilters()">
                         <ion-icon name="refresh-outline"></ion-icon>
                         Reset
-                    </button>
-                    <button class="btn-save-filter" onclick="saveCurrentFilter()">
-                        <ion-icon name="bookmark-outline"></ion-icon>
-                        Save Filter
                     </button>
                 </div>
             </div>
@@ -581,7 +561,7 @@ const handleSearch = debounce((value) => {
     }
 }, 500);
 
-// Filter functionality
+// Filter functionality - now supports all filter combinations
 function applyFilters() {
     const sort = document.getElementById('sortFilter')?.value;
     const size = document.getElementById('sizeFilter')?.value;
@@ -589,19 +569,21 @@ function applyFilters() {
     const stock = document.getElementById('stockFilter')?.value;
     const price = document.getElementById('priceFilter')?.value;
     
-    let url = '/storage/filter/';
-    const filters = [];
+    // Build query parameters for the new filter route
+    const params = new URLSearchParams();
     
-    if (sort) filters.push(`sort:${sort}`);
-    if (size) filters.push(`size:${size}`);
-    if (category) filters.push(`category:${category}`);
-    if (stock) filters.push(`stock:${stock}`);
-    if (price) filters.push(`price:${price}`);
+    if (sort) params.append('sort', sort);
+    if (size) params.append('size', size);
+    if (category) params.append('category', category);
+    if (stock) params.append('stock', stock); // Note: backend expects 'stock' but we renamed variable to avoid conflicts
+    if (price) params.append('price', price);
     
-    if (filters.length > 0) {
-        url += filters.join(',');
-        window.location.href = url;
-    }
+    // Always include limit for consistent pagination
+    params.append('limit', '50');
+    
+    // Navigate to the new comprehensive filter route
+    const url = `/storage/filter?${params.toString()}`;
+    window.location.href = url;
 }
 
 function clearSearch() {
@@ -643,33 +625,31 @@ function switchView(view) {
     }
 }
 
-// Quick filter functions
+// Quick filter functions - now using the new filter system
 function filterLowStock() {
-    window.location.href = '/storage/filter/stock:low-stock';
+    const params = new URLSearchParams({
+        stock: 'low-stock',
+        limit: '50'
+    });
+    window.location.href = `/storage/filter?${params.toString()}`;
 }
 
 function filterOutOfStock() {
-    window.location.href = '/storage/filter/stock:out-of-stock';
+    const params = new URLSearchParams({
+        stock: 'out-of-stock',
+        limit: '50'
+    });
+    window.location.href = `/storage/filter?${params.toString()}`;
 }
 
-function filterHighValue() {
-    window.location.href = '/storage/filter/price:500000+';
-}
 
-function showAdvancedFilters() {
-    // Show advanced filter modal or expand filters
-    console.log('Advanced filters');
-}
 
 // Filter actions
 function resetAllFilters() {
     window.location.href = '/storage';
 }
 
-function saveCurrentFilter() {
-    // Save current filter configuration
-    console.log('Save filter');
-}
+
 
 // Product selection
 function toggleProductSelection(productId) {
@@ -734,30 +714,132 @@ function deleteProduct(id) {
     });
 }
 
-// Bulk actions
-function showBulkActions() {
-    if (selectedProducts.length === 0) {
+
+
+async function exportInventory() {
+    try {
+        // Show loading state
         Swal.fire({
-            icon: 'info',
-            title: 'No Products Selected',
-            text: 'Please select products to perform bulk actions.'
+            title: 'Exporting Inventory...',
+            text: 'Please wait while we generate your CSV file',
+            allowOutsideClick: false,
+            didOpen: () => {
+                Swal.showLoading()
+            }
         });
-        return;
+
+        // Fetch all products for export
+        const response = await fetch('/storage/api/export');
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        
+        if (data.products && data.products.length > 0) {
+            // Convert to CSV
+            const csv = convertToCSV(data.products);
+            
+            // Create and download file
+            downloadCSV(csv, 'inventory-export.csv');
+            
+            Swal.fire({
+                icon: 'success',
+                title: 'Export Complete!',
+                text: `${data.products.length} products exported successfully`,
+                timer: 2000,
+                showConfirmButton: false
+            });
+            
+            console.log(`Exported ${data.products.length} products to CSV`);
+        } else {
+            Swal.fire({
+                icon: 'info',
+                title: 'No Data to Export',
+                text: 'No products found to export'
+            });
+        }
+        
+    } catch (error) {
+        console.error('Export error:', error);
+        Swal.fire({
+            icon: 'error',
+            title: 'Export Failed',
+            text: 'Failed to export inventory data. Please try again.'
+        });
     }
+}
+
+function convertToCSV(products) {
+    // Define CSV headers
+    const headers = [
+        'SKU',
+        'Name', 
+        'Category',
+        'Color',
+        'Size',
+        'Cost Price (IQD)',
+        'Selling Price (IQD)',
+        'Main Storage Qty',
+        'Store Qty',
+        'Total Stock',
+        'Potential Profit (IQD)',
+        'Profit Margin (%)',
+        'Status'
+    ];
     
-    // Show bulk actions modal or dropdown
-    console.log('Bulk actions for:', selectedProducts);
+    // Convert products to CSV rows
+    const rows = products.map(product => {
+        const totalStock = (product.qty || 0) + (product.stock || 0);
+        const profit = ((product.sell_price || 0) - (product.price || 0)) * totalStock;
+        const profitMargin = product.price > 0 ? ((product.sell_price - product.price) / product.price * 100) : 0;
+        const stockStatus = totalStock === 0 ? 'Out of Stock' : totalStock <= 10 ? 'Low Stock' : 'In Stock';
+        
+        return [
+            product.sku || 'N/A',
+            product.name || 'N/A',
+            product.category || product.name || 'N/A',
+            product.colorName || product.color || 'N/A',
+            product.size || 'N/A',
+            (product.price || 0).toLocaleString(),
+            (product.sell_price || 0).toLocaleString(),
+            product.qty || 0,
+            product.stock || 0,
+            totalStock,
+            profit.toLocaleString(),
+            profitMargin.toFixed(1),
+            stockStatus
+        ];
+    });
+    
+    // Combine headers and rows
+    const csvContent = [headers, ...rows]
+        .map(row => row.map(field => `"${field}"`).join(','))
+        .join('\n');
+    
+    return csvContent;
 }
 
-function exportInventory() {
-    console.log('Exporting inventory...');
-    // Implement export functionality
+function downloadCSV(csvContent, filename) {
+    // Create blob
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    
+    // Create download link
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    
+    link.setAttribute('href', url);
+    link.setAttribute('download', filename);
+    link.style.visibility = 'hidden';
+    
+    // Add to document, click, and remove
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
 }
 
-function importInventory() {
-    console.log('Importing inventory...');
-    // Implement import functionality
-}
+
 
 function showImportDialog() {
     // Show import dialog
@@ -772,6 +854,9 @@ document.addEventListener('DOMContentLoaded', function() {
     const initialView = 'grid';
     switchView(initialView);
     
+    // Maintain filter state from URL parameters
+    maintainFilterState();
+    
     // Always enable infinite scroll for all users (50 items per scroll)
     updatePaginationInfoForAllItems();
     
@@ -784,6 +869,43 @@ document.addEventListener('DOMContentLoaded', function() {
     loadAnalyticsAsync();
     loadCategoriesAsync();
 });
+
+// Maintain filter state from URL parameters
+function maintainFilterState() {
+    const urlParams = new URLSearchParams(window.location.search);
+    
+    // Set filter dropdowns based on URL parameters
+    const sortFilter = urlParams.get('sort');
+    const sizeFilter = urlParams.get('size');
+    const categoryFilter = urlParams.get('category');
+    const stockFilter = urlParams.get('stock');
+    const priceFilter = urlParams.get('price');
+    
+    if (sortFilter) {
+        const sortSelect = document.getElementById('sortFilter');
+        if (sortSelect) sortSelect.value = sortFilter;
+    }
+    
+    if (sizeFilter) {
+        const sizeSelect = document.getElementById('sizeFilter');
+        if (sizeSelect) sizeSelect.value = sizeFilter;
+    }
+    
+    if (categoryFilter) {
+        const categorySelect = document.getElementById('categoryFilter');
+        if (categorySelect) categorySelect.value = categoryFilter;
+    }
+    
+    if (stockFilter) {
+        const stockSelect = document.getElementById('stockFilter');
+        if (stockSelect) stockSelect.value = stockFilter;
+    }
+    
+    if (priceFilter) {
+        const priceSelect = document.getElementById('priceFilter');
+        if (priceSelect) priceSelect.value = priceFilter;
+    }
+}
 
 // OPTIMIZED: Lazy load analytics data
 async function loadAnalyticsAsync() {
@@ -1118,10 +1240,13 @@ async function loadMoreProducts() {
         // Show loading state
         updateLoadingIndicator(true);
         
-        // Get current filter values
+        // Get current filter values for infinite scroll
         const searchTerm = document.getElementById('globalSearch')?.value || '';
         const category = document.getElementById('categoryFilter')?.value || '';
         const sortFilter = document.getElementById('sortFilter')?.value || '';
+        const size = document.getElementById('sizeFilter')?.value || '';
+        const stock = document.getElementById('stockFilter')?.value || '';
+        const price = document.getElementById('priceFilter')?.value || '';
         
         // Parse sort field and order
         let sortField = 'Date';
@@ -1168,14 +1293,18 @@ async function loadMoreProducts() {
             }
         }
         
-        // Build API URL with 50 items per scroll chunk for optimal UX
+        // Build API URL with all filter parameters for infinite scroll
         const params = new URLSearchParams({
             offset: infiniteScrollOffset.toString(),
             limit: '50', // Load 50 items per scroll chunk for better performance
             search: searchTerm,
             category: category,
             sortField: sortField,
-            sortOrder: sortOrder
+            sortOrder: sortOrder,
+            size: size,
+            stockStatus: stock, // Use stockStatus to match backend parameter name
+            price: price,
+            sort: sortFilter // Also pass the sort filter for enhanced sorting
         });
         
         const response = await fetch(`/storage/api/infinite-scroll?${params.toString()}`);

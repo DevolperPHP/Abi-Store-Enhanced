@@ -188,25 +188,130 @@ router.get("/api", async (req, res) => {
     }
 });
 
-// Infinite scrolling API endpoint
+// Enhanced infinite scrolling API endpoint with full filter support
 router.get("/api/infinite-scroll", async (req, res) => {
     try {
         const offset = parseInt(req.query.offset) || 0;
-        const limit = parseInt(req.query.limit) || 20;
+        const limit = parseInt(req.query.limit) || 50;
         const searchTerm = req.query.search || '';
         const category = req.query.category || '';
         const sortField = req.query.sortField || 'Date';
         const sortOrder = req.query.sortOrder === 'asc' ? 1 : -1;
+        
+        // New filter parameters
+        const size = req.query.size || '';
+        const stockStatus = req.query.stockStatus || '';
+        const price = req.query.price || '';
+        const sort = req.query.sort || '';
 
-        // Build query
+        // Build comprehensive query
         let query = {};
         
+        // Search filter
         if (searchTerm) {
             query.name = { $regex: searchTerm, $options: 'i' };
         }
         
+        // Category filter
         if (category && category !== 'all') {
-            query.category = category;
+            query.$or = [
+                { category: category },
+                { name: category }
+            ];
+        }
+        
+        // Size filter
+        if (size && size !== '') {
+            query.size = size;
+        }
+        
+        // Stock status filter
+        if (stockStatus && stockStatus !== '') {
+            switch(stockStatus) {
+                case 'in-stock':
+                    query.$expr = { 
+                        ...query.$expr,
+                        $gte: [{ $add: ["$qty", "$stock"] }, 10] 
+                    };
+                    break;
+                case 'low-stock':
+                    query.$expr = { 
+                        ...query.$expr,
+                        $and: [
+                            { $gte: [{ $add: ["$qty", "$stock"] }, 1] },
+                            { $lte: [{ $add: ["$qty", "$stock"] }, 10] }
+                        ]
+                    };
+                    break;
+                case 'out-of-stock':
+                    query.$expr = { 
+                        ...query.$expr,
+                        $eq: [{ $add: ["$qty", "$stock"] }, 0] 
+                    };
+                    break;
+                case 'overstocked':
+                    query.$expr = { 
+                        ...query.$expr,
+                        $gte: [{ $add: ["$qty", "$stock"] }, 100] 
+                    };
+                    break;
+            }
+        }
+        
+        // Price range filter
+        if (price && price !== '') {
+            switch(price) {
+                case '0-50000':
+                    query.sell_price = { $lt: 50000 };
+                    break;
+                case '50000-100000':
+                    query.sell_price = { $gte: 50000, $lt: 100000 };
+                    break;
+                case '100000-500000':
+                    query.sell_price = { $gte: 100000, $lt: 500000 };
+                    break;
+                case '500000+':
+                    query.sell_price = { $gte: 500000 };
+                    break;
+            }
+        }
+
+        // Build sort options (support both old and new sort formats)
+        let sortOptions = { Date: -1 };
+        if (sort) {
+            switch(sort) {
+                case 'qty-most':
+                    sortOptions = { qty: -1, Date: -1 };
+                    break;
+                case 'qty-less':
+                    sortOptions = { qty: 1, Date: -1 };
+                    break;
+                case 'price-most':
+                    sortOptions = { sell_price: -1, Date: -1 };
+                    break;
+                case 'price-less':
+                    sortOptions = { sell_price: 1, Date: -1 };
+                    break;
+                case 'name-asc':
+                    sortOptions = { name: 1, Date: -1 };
+                    break;
+                case 'name-desc':
+                    sortOptions = { name: -1, Date: -1 };
+                    break;
+                case 'profit-desc':
+                    sortOptions = { sell_price: -1, price: 1, Date: -1 };
+                    break;
+                case 'profit-asc':
+                    sortOptions = { price: 1, sell_price: -1, Date: -1 };
+                    break;
+                case 'updated-desc':
+                    sortOptions = { Date: -1 };
+                    break;
+                default:
+                    sortOptions = { [sortField]: sortOrder };
+            }
+        } else {
+            sortOptions = { [sortField]: sortOrder };
         }
 
         // Get total count for pagination info
@@ -215,9 +320,9 @@ router.get("/api/infinite-scroll", async (req, res) => {
         // Fetch products with pagination and minimal fields (50 per chunk for optimal UX)
         const products = await Product.find(query)
             .select('name sku size color colorName colorHex category qty stock price sell_price image barcode Date')
-            .sort({ [sortField]: sortOrder })
+            .sort(sortOptions)
             .skip(offset)
-            .limit(limit || 50); // Default to 50 items per scroll chunk
+            .limit(limit); // 50 items per scroll chunk
 
         // Calculate if there are more items
         const hasMore = offset + products.length < totalCount;
@@ -344,6 +449,385 @@ router.get("/api/categories", async (req, res) => {
 
     } catch (err) {
         console.error("Error fetching categories:", err);
+        res.status(500).json({ error: "Server Error" });
+    }
+});
+
+// COMPREHENSIVE: Advanced filtering route for all filter combinations
+router.get("/filter", async (req, res) => {
+    try {
+        const id = req.cookies.id;
+        const user = await User.findById(id);
+
+        if (!user) {
+            return res.redirect("/passport/sign-up");
+        }
+
+        const hasPermission = user.isAdmin || user.permissions.includes('Storage');
+        if (!hasPermission) {
+            req.flash("permission-error", "error");
+            return res.redirect("/");
+        }
+
+        const sizes = await Size.find({});
+        const productDataForAutocomplete = await Product.find({}, 'name size').limit(5000);
+        const uniqueArray = [
+            ...new Set(productDataForAutocomplete.map(item => `${item.name} - ${item.size}`))
+        ];
+
+        // Extract filter parameters from query string
+        const { sort, size, category, stockStatus, price, page = 1, limit = 50 } = req.query;
+        
+        // Build filter query
+        let filterQuery = {};
+        
+        // Size filter
+        if (size && size !== '') {
+            filterQuery.size = size;
+        }
+        
+        // Category filter (using name as category fallback)
+        if (category && category !== '') {
+            filterQuery.$or = [
+                { category: category },
+                { name: category }
+            ];
+        }
+        
+        // Stock status filter
+        if (stockStatus && stockStatus !== '') {
+            switch(stockStatus) {
+                case 'in-stock':
+                    filterQuery.$expr = { 
+                        ...filterQuery.$expr,
+                        $gte: [{ $add: ["$qty", "$stock"] }, 10] 
+                    };
+                    break;
+                case 'low-stock':
+                    filterQuery.$expr = { 
+                        ...filterQuery.$expr,
+                        $and: [
+                            { $gte: [{ $add: ["$qty", "$stock"] }, 1] },
+                            { $lte: [{ $add: ["$qty", "$stock"] }, 10] }
+                        ]
+                    };
+                    break;
+                case 'out-of-stock':
+                    filterQuery.$expr = { 
+                        ...filterQuery.$expr,
+                        $eq: [{ $add: ["$qty", "$stock"] }, 0] 
+                    };
+                    break;
+                case 'overstocked':
+                    filterQuery.$expr = { 
+                        ...filterQuery.$expr,
+                        $gte: [{ $add: ["$qty", "$stock"] }, 100] 
+                    };
+                    break;
+            }
+        }
+        
+        // Price range filter
+        if (price && price !== '') {
+            switch(price) {
+                case '0-50000':
+                    filterQuery.sell_price = { $lt: 50000 };
+                    break;
+                case '50000-100000':
+                    filterQuery.sell_price = { $gte: 50000, $lt: 100000 };
+                    break;
+                case '100000-500000':
+                    filterQuery.sell_price = { $gte: 100000, $lt: 500000 };
+                    break;
+                case '500000+':
+                    filterQuery.sell_price = { $gte: 500000 };
+                    break;
+            }
+        }
+
+        // Build sort options
+        let sortOptions = { Date: -1 }; // Default sort
+        if (sort) {
+            switch(sort) {
+                case 'qty-most':
+                    sortOptions = { qty: -1, Date: -1 };
+                    break;
+                case 'qty-less':
+                    sortOptions = { qty: 1, Date: -1 };
+                    break;
+                case 'price-most':
+                    sortOptions = { sell_price: -1, Date: -1 };
+                    break;
+                case 'price-less':
+                    sortOptions = { sell_price: 1, Date: -1 };
+                    break;
+                case 'name-asc':
+                    sortOptions = { name: 1, Date: -1 };
+                    break;
+                case 'name-desc':
+                    sortOptions = { name: -1, Date: -1 };
+                    break;
+                case 'profit-desc':
+                    sortOptions = { sell_price: -1, price: 1, Date: -1 };
+                    break;
+                case 'profit-asc':
+                    sortOptions = { price: 1, sell_price: -1, Date: -1 };
+                    break;
+                case 'updated-desc':
+                    sortOptions = { Date: -1 };
+                    break;
+                default:
+                    sortOptions = { Date: -1 };
+            }
+        }
+
+        // OPTIMIZED: Single efficient aggregation query for all analytics with filters
+        const analyticsData = await Product.aggregate([
+            { $match: filterQuery }, // Apply filters to analytics too
+            {
+                $facet: {
+                    mainStats: [
+                        {
+                            $group: {
+                                _id: null,
+                                totalProducts: { $sum: 1 },
+                                totalSellValue: { $sum: { $multiply: ["$qty", "$sell_price"] } },
+                                totalBuyValue: { $sum: { $multiply: ["$qty", "$price"] } },
+                                totalCashierValue: { $sum: { $multiply: ["$stock", "$sell_price"] } },
+                                totalPotentialRevenue: { $sum: { $multiply: [{ $add: ["$qty", "$stock"] }, "$sell_price"] } },
+                                totalInvestment: { $sum: { $multiply: [{ $add: ["$qty", "$stock"] }, "$price"] } },
+                                avgProductPrice: { $avg: "$price" },
+                                avgSellPrice: { $avg: "$sell_price" }
+                            }
+                        }
+                    ],
+                    stockAnalysis: [
+                        {
+                            $group: {
+                                _id: null,
+                                inStockItems: { 
+                                    $sum: { 
+                                        $cond: [{ $gt: [{ $add: ["$qty", "$stock"] }, 10] }, 1, 0] 
+                                    } 
+                                },
+                                lowStockItems: { 
+                                    $sum: { 
+                                        $cond: [{ $and: [{ $gte: [{ $add: ["$qty", "$stock"] }, 1] }, { $lte: [{ $add: ["$qty", "$stock"] }, 10] }] }, 1, 0] 
+                                    } 
+                                },
+                                outOfStockItems: { 
+                                    $sum: { 
+                                        $cond: [{ $eq: [{ $add: ["$qty", "$stock"] }, 0] }, 1, 0] 
+                                    } 
+                                },
+                                highStockItems: { 
+                                    $sum: { 
+                                        $cond: [{ $gte: [{ $add: ["$qty", "$stock"] }, 100] }, 1, 0] 
+                                    } 
+                                }
+                            }
+                        }
+                    ]
+                }
+            }
+        ]);
+
+        // Extract results from facet
+        const result = analyticsData[0] || {};
+        const analytics = result.mainStats?.[0] || {};
+        const stock = result.stockAnalysis?.[0] || {};
+        
+        const totalSell = analytics.totalSellValue || 0;
+        const totalBuy = analytics.totalBuyValue || 0;
+        const totalStore = analytics.totalCashierValue || 0;
+        const totalProducts = analytics.totalProducts || 0;
+        const totalPotentialRevenue = analytics.totalPotentialRevenue || 0;
+        const totalInvestment = analytics.totalInvestment || 0;
+        const potentialProfit = totalPotentialRevenue - totalInvestment;
+
+        // Pagination
+        const pageNum = parseInt(page) || 1;
+        const limitNum = parseInt(limit) || 50;
+        const skip = (pageNum - 1) * limitNum;
+        
+        // Get filtered products with sorting and pagination
+        const products = await Product.find(filterQuery)
+            .select('name sku size color colorName colorHex category qty stock price sell_price image barcode Date')
+            .sort(sortOptions)
+            .skip(skip)
+            .limit(limitNum);
+
+        // Get all products for category extraction (with filters applied)
+        const allProductsForCategories = await Product.find(filterQuery).select('category name').lean();
+        
+        res.render("storage/storage-dashboard", {
+            user: user,
+            err: req.flash("permission-error"),
+            products: products,
+            allProductsForCategories: allProductsForCategories,
+            size: sizes,
+            totalSell: totalSell,
+            totalBuy: totalBuy,
+            data: uniqueArray,
+            initialLimit: limitNum,
+            totalStore,
+            api: '/api/filter',
+            // OPTIMIZED: Analytics for filtered results
+            analytics: {
+                totalProducts: totalProducts,
+                totalPotentialRevenue: totalPotentialRevenue,
+                totalInvestment: totalInvestment,
+                potentialProfit: potentialProfit,
+                profitMargin: totalInvestment > 0 ? ((potentialProfit / totalInvestment) * 100).toFixed(1) : 0,
+                avgProductPrice: Math.round(analytics.avgProductPrice || 0),
+                avgSellPrice: Math.round(analytics.avgSellPrice || 0),
+                inStockItems: stock.inStockItems || 0,
+                lowStockItems: stock.lowStockItems || 0,
+                outOfStockItems: stock.outOfStockItems || 0,
+                highStockItems: stock.highStockItems || 0
+            },
+            categoryAnalysis: [], // Empty for now, can be enhanced later
+            // Pass current filter values to maintain UI state
+            currentFilters: {
+                sort: sort || '',
+                size: size || '',
+                category: category || '',
+                stockStatus: stockStatus || '',
+                price: price || ''
+            }
+        });
+
+    } catch (err) {
+        console.error("Error in filter route:", err);
+        res.status(500).send("Server error occurred.");
+    }
+});
+
+// API endpoint for filtered data
+router.get("/api/filter", async (req, res) => {
+    try {
+        const { sort, size, category, stockStatus, price, page = 1, limit = 50 } = req.query;
+        
+        // Build filter query (same logic as main filter route)
+        let filterQuery = {};
+        
+        // Size filter
+        if (size && size !== '') {
+            filterQuery.size = size;
+        }
+        
+        // Category filter
+        if (category && category !== '') {
+            filterQuery.$or = [
+                { category: category },
+                { name: category }
+            ];
+        }
+        
+        // Stock status filter
+        if (stockStatus && stockStatus !== '') {
+            switch(stockStatus) {
+                case 'in-stock':
+                    filterQuery.$expr = { 
+                        ...filterQuery.$expr,
+                        $gte: [{ $add: ["$qty", "$stock"] }, 10] 
+                    };
+                    break;
+                case 'low-stock':
+                    filterQuery.$expr = { 
+                        ...filterQuery.$expr,
+                        $and: [
+                            { $gte: [{ $add: ["$qty", "$stock"] }, 1] },
+                            { $lte: [{ $add: ["$qty", "$stock"] }, 10] }
+                        ]
+                    };
+                    break;
+                case 'out-of-stock':
+                    filterQuery.$expr = { 
+                        ...filterQuery.$expr,
+                        $eq: [{ $add: ["$qty", "$stock"] }, 0] 
+                    };
+                    break;
+                case 'overstocked':
+                    filterQuery.$expr = { 
+                        ...filterQuery.$expr,
+                        $gte: [{ $add: ["$qty", "$stock"] }, 100] 
+                    };
+                    break;
+            }
+        }
+        
+        // Price range filter
+        if (price && price !== '') {
+            switch(price) {
+                case '0-50000':
+                    filterQuery.sell_price = { $lt: 50000 };
+                    break;
+                case '50000-100000':
+                    filterQuery.sell_price = { $gte: 50000, $lt: 100000 };
+                    break;
+                case '100000-500000':
+                    filterQuery.sell_price = { $gte: 100000, $lt: 500000 };
+                    break;
+                case '500000+':
+                    filterQuery.sell_price = { $gte: 500000 };
+                    break;
+            }
+        }
+
+        // Build sort options
+        let sortOptions = { Date: -1 };
+        if (sort) {
+            switch(sort) {
+                case 'qty-most':
+                    sortOptions = { qty: -1, Date: -1 };
+                    break;
+                case 'qty-less':
+                    sortOptions = { qty: 1, Date: -1 };
+                    break;
+                case 'price-most':
+                    sortOptions = { sell_price: -1, Date: -1 };
+                    break;
+                case 'price-less':
+                    sortOptions = { sell_price: 1, Date: -1 };
+                    break;
+                case 'name-asc':
+                    sortOptions = { name: 1, Date: -1 };
+                    break;
+                case 'name-desc':
+                    sortOptions = { name: -1, Date: -1 };
+                    break;
+                case 'profit-desc':
+                    sortOptions = { sell_price: -1, price: 1, Date: -1 };
+                    break;
+                case 'profit-asc':
+                    sortOptions = { price: 1, sell_price: -1, Date: -1 };
+                    break;
+                case 'updated-desc':
+                    sortOptions = { Date: -1 };
+                    break;
+            }
+        }
+
+        const pageNum = parseInt(page) || 1;
+        const limitNum = parseInt(limit) || 50;
+        const skip = (pageNum - 1) * limitNum;
+
+        const products = await Product.find(filterQuery)
+            .select('name sku size color colorName colorHex category qty stock price sell_price image barcode Date')
+            .sort(sortOptions)
+            .skip(skip)
+            .limit(limitNum);
+
+        res.json({
+            products,
+            totalCount: products.length,
+            currentPage: pageNum,
+            totalPages: Math.ceil(products.length / limitNum)
+        });
+
+    } catch (err) {
+        console.error("Error in filter API:", err);
         res.status(500).json({ error: "Server Error" });
     }
 });
@@ -973,6 +1457,26 @@ router.get("/api/search/:name", async (req, res) => {
     } catch (err) {
         console.error("Error in search API:", err);
         res.status(500).json({ error: "Server error occurred." });
+    }
+});
+
+// Export API endpoint for CSV download
+router.get("/api/export", async (req, res) => {
+    try {
+        // Fetch all products for export (no pagination)
+        const products = await Product.find({})
+            .select('name sku size color colorName colorHex category qty stock price sell_price image barcode Date')
+            .sort({ Date: -1 });
+
+        res.json({
+            products,
+            totalCount: products.length,
+            exportDate: new Date().toISOString()
+        });
+
+    } catch (err) {
+        console.error("Error in export API:", err);
+        res.status(500).json({ error: "Server Error" });
     }
 });
 
