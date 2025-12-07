@@ -75,6 +75,76 @@
                 <span>Per item average</span>
             </div>
         </div>
+
+        <div class="stat-card">
+            <div class="stat-header">
+                <h3 class="stat-title">Out of Stock</h3>
+                <div class="stat-icon danger">
+                    <ion-icon name="close-circle-outline"></ion-icon>
+                </div>
+            </div>
+            <div class="stat-value"><%= analytics.outOfStockItems || 0 %></div>
+            <div class="stat-change negative">
+                <ion-icon name="warning-outline"></ion-icon>
+                <span>Need restocking</span>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-header">
+                <h3 class="stat-title">Potential Profit</h3>
+                <div class="stat-icon success">
+                    <ion-icon name="trending-up-outline"></ion-icon>
+                </div>
+            </div>
+            <div class="stat-value">IQD <%= (analytics.totalPotentialProfit || 0).toLocaleString() %></div>
+            <div class="stat-change positive">
+                <ion-icon name="cash-outline"></ion-icon>
+                <span>If all sold</span>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-header">
+                <h3 class="stat-title">Total Categories</h3>
+                <div class="stat-icon primary">
+                    <ion-icon name="library-outline"></ion-icon>
+                </div>
+            </div>
+            <div class="stat-value"><%= analytics.totalCategories || 0 %></div>
+            <div class="stat-change positive">
+                <ion-icon name="layers-outline"></ion-icon>
+                <span>Product diversity</span>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-header">
+                <h3 class="stat-title">Reorder Alerts</h3>
+                <div class="stat-icon warning">
+                    <ion-icon name="notifications-outline"></ion-icon>
+                </div>
+            </div>
+            <div class="stat-value"><%= analytics.reorderAlertItems || 0 %></div>
+            <div class="stat-change negative">
+                <ion-icon name="alert-outline"></ion-icon>
+                <span>Below threshold</span>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-header">
+                <h3 class="stat-title">High Value Items</h3>
+                <div class="stat-icon success">
+                    <ion-icon name="diamond-outline"></ion-icon>
+                </div>
+            </div>
+            <div class="stat-value"><%= analytics.highValueItems || 0 %></div>
+            <div class="stat-change positive">
+                <ion-icon name="star-outline"></ion-icon>
+                <span>Premium products</span>
+            </div>
+        </div>
     </div>
 
     <!-- Premium Inventory Controls -->
@@ -543,20 +613,195 @@ let observer = null;
 
 // URL parameter handling removed - using infinite scroll only
 
-// Search functionality
-const handleSearch = debounce((value) => {
+// Advanced Fuzzy Search functionality
+const handleSearch = debounce(async (value) => {
     const searchClearBtn = document.querySelector('.search-clear');
+    const searchContainer = document.querySelector('.search-box-modern');
+    
     if (searchClearBtn) {
         searchClearBtn.style.display = value.length > 0 ? 'block' : 'none';
     }
     
-    if (value.length > 2) {
-        console.log('Searching:', value);
-        window.location.href = `/storage/search/${encodeURIComponent(value)}`;
-    } else if (value.length === 0) {
-        window.location.href = '/storage';
+    if (value.length > 1) {
+        await performFuzzySearch(value);
+    } else {
+        hideSuggestions();
     }
-}, 500);
+}, 300);
+
+// Fuzzy search with Apple-style suggestions
+async function performFuzzySearch(query) {
+    try {
+        const response = await fetch(`/storage/api/search-suggestions?query=${encodeURIComponent(query)}&limit=8`);
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        displaySuggestions(data.suggestions || [], query);
+        
+    } catch (error) {
+        console.error('Search error:', error);
+        hideSuggestions();
+    }
+}
+
+// Display Apple-style suggestion dropdown
+function displaySuggestions(suggestions, query) {
+    const existingDropdown = document.getElementById('search-suggestions-dropdown');
+    if (existingDropdown) {
+        existingDropdown.remove();
+    }
+    
+    if (suggestions.length === 0) {
+        hideSuggestions();
+        return;
+    }
+    
+    const searchInput = document.getElementById('globalSearch');
+    const searchContainer = document.querySelector('.search-box-modern');
+    
+    if (!searchInput || !searchContainer) return;
+    
+    // Create dropdown
+    const dropdown = document.createElement('div');
+    dropdown.id = 'search-suggestions-dropdown';
+    dropdown.className = 'search-suggestions-dropdown';
+    
+    // Create suggestions HTML
+    const suggestionsHTML = suggestions.map((suggestion, index) => `
+        <div class="suggestion-item" data-product-id="${suggestion._id}" onclick="selectSuggestion('${suggestion._id}', '${suggestion.name.replace(/'/g, "\\'")}')">
+            <div class="suggestion-main">
+                <div class="suggestion-name">
+                    ${suggestion.highlightText}
+                </div>
+                <div class="suggestion-details">
+                    ${suggestion.displayText}
+                </div>
+            </div>
+            <div class="suggestion-meta">
+                <div class="suggestion-price">IQD ${(suggestion.sellPrice || 0).toLocaleString()}</div>
+                <div class="suggestion-stock ${suggestion.stockStatus}">
+                    ${suggestion.stock} in stock
+                </div>
+            </div>
+        </div>
+    `).join('');
+    
+    dropdown.innerHTML = `
+        <div class="suggestions-header">
+            <span class="suggestions-title">Search Results</span>
+            <span class="suggestions-count">${suggestions.length} result${suggestions.length !== 1 ? 's' : ''}</span>
+        </div>
+        <div class="suggestions-list">
+            ${suggestionsHTML}
+        </div>
+        <div class="suggestions-footer">
+            <button class="view-all-btn" onclick="viewAllResults('${query.replace(/'/g, "\\'")}')">
+                <ion-icon name="search-outline"></ion-icon>
+                View all results for "${query}"
+            </button>
+        </div>
+    `;
+    
+    // Position dropdown as fixed relative to viewport (not constrained by Inventory Controls)
+    const inputRect = searchInput.getBoundingClientRect();
+    
+    dropdown.style.position = 'fixed';
+    dropdown.style.top = `${inputRect.bottom + 8}px`;
+    dropdown.style.left = `${inputRect.left}px`;
+    dropdown.style.right = `${window.innerWidth - inputRect.right}px`;
+    dropdown.style.minWidth = '300px';
+    dropdown.style.maxWidth = '500px';
+    dropdown.style.zIndex = '9999';
+    
+    // Add to body to escape Inventory Controls container
+    document.body.appendChild(dropdown);
+    
+    // Add event listeners
+    addSuggestionEventListeners();
+}
+
+// Hide suggestions dropdown
+function hideSuggestions() {
+    const dropdown = document.getElementById('search-suggestions-dropdown');
+    if (dropdown) {
+        dropdown.remove();
+    }
+}
+
+// Add event listeners for suggestion interactions
+function addSuggestionEventListeners() {
+    const dropdown = document.getElementById('search-suggestions-dropdown');
+    if (!dropdown) return;
+    
+    // Close on click outside
+    document.addEventListener('click', function handleOutsideClick(e) {
+        if (!dropdown.contains(e.target) && !document.getElementById('globalSearch').contains(e.target)) {
+            hideSuggestions();
+            document.removeEventListener('click', handleOutsideClick);
+        }
+    });
+    
+    // Keyboard navigation
+    const searchInput = document.getElementById('globalSearch');
+    searchInput.addEventListener('keydown', function(e) {
+        const suggestions = dropdown.querySelectorAll('.suggestion-item');
+        const currentActive = dropdown.querySelector('.suggestion-item.active');
+        
+        if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            if (currentActive) {
+                currentActive.classList.remove('active');
+                const next = currentActive.nextElementSibling;
+                if (next) next.classList.add('active');
+                else suggestions[0].classList.add('active');
+            } else if (suggestions.length > 0) {
+                suggestions[0].classList.add('active');
+            }
+        } else if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            if (currentActive) {
+                currentActive.classList.remove('active');
+                const prev = currentActive.previousElementSibling;
+                if (prev) prev.classList.add('active');
+                else suggestions[suggestions.length - 1].classList.add('active');
+            } else if (suggestions.length > 0) {
+                suggestions[suggestions.length - 1].classList.add('active');
+            }
+        } else if (e.key === 'Enter') {
+            e.preventDefault();
+            if (currentActive) {
+                currentActive.click();
+            } else if (suggestions.length > 0) {
+                suggestions[0].click();
+            }
+        } else if (e.key === 'Escape') {
+            hideSuggestions();
+        }
+    });
+}
+
+// Select a suggestion
+function selectSuggestion(productId, productName) {
+    hideSuggestions();
+    
+    // Navigate to product details
+    window.location.href = `/items/get/${productId}`;
+}
+
+// View all search results
+function viewAllResults(query) {
+    hideSuggestions();
+    
+    // Use the existing filter system with search term
+    const params = new URLSearchParams({
+        search: query,
+        limit: '50'
+    });
+    window.location.href = `/storage/filter?${params.toString()}`;
+}
 
 // Filter functionality - now supports all filter combinations
 function applyFilters() {
@@ -590,6 +835,8 @@ function clearSearch() {
     if (searchInput) searchInput.value = '';
     if (searchClearBtn) searchClearBtn.style.display = 'none';
     
+    // Hide suggestions and reset to default view
+    hideSuggestions();
     window.location.href = '/storage';
 }
 
@@ -874,6 +1121,19 @@ function maintainFilterState() {
     const categoryFilter = urlParams.get('category');
     const stockFilter = urlParams.get('stock');
     const priceFilter = urlParams.get('price');
+    const searchFilter = urlParams.get('search');
+    
+    // Maintain search input value
+    if (searchFilter) {
+        const searchInput = document.getElementById('globalSearch');
+        if (searchInput) {
+            searchInput.value = searchFilter;
+            const searchClearBtn = document.querySelector('.search-clear');
+            if (searchClearBtn) {
+                searchClearBtn.style.display = 'block';
+            }
+        }
+    }
     
     if (sortFilter) {
         const sortSelect = document.getElementById('sortFilter');
@@ -947,7 +1207,7 @@ async function loadCategoriesAsync() {
     }
 }
 
-// Update dashboard statistics with loaded analytics
+// COMPREHENSIVE: Update dashboard statistics with all enhanced analytics
 function updateDashboardStats(analytics) {
     // Update stat cards with new data
     const statCards = document.querySelectorAll('.stat-card');
@@ -981,6 +1241,42 @@ function updateDashboardStats(analytics) {
                 const avgPriceEl = card.querySelector('.stat-value');
                 if (avgPriceEl && analytics.avgSellPrice !== undefined) {
                     avgPriceEl.textContent = `IQD ${analytics.avgSellPrice.toLocaleString()}`;
+                }
+                break;
+
+            // Enhanced metrics for superior dashboard
+            case 'Out of Stock':
+                const outOfStockEl = card.querySelector('.stat-value');
+                if (outOfStockEl && analytics.outOfStockItems !== undefined) {
+                    outOfStockEl.textContent = analytics.outOfStockItems.toLocaleString();
+                }
+                break;
+
+            case 'Potential Profit':
+                const potentialProfitEl = card.querySelector('.stat-value');
+                if (potentialProfitEl && analytics.totalPotentialProfit !== undefined) {
+                    potentialProfitEl.textContent = `IQD ${analytics.totalPotentialProfit.toLocaleString()}`;
+                }
+                break;
+
+            case 'Total Categories':
+                const categoriesEl = card.querySelector('.stat-value');
+                if (categoriesEl && analytics.totalCategories !== undefined) {
+                    categoriesEl.textContent = analytics.totalCategories.toLocaleString();
+                }
+                break;
+
+            case 'Reorder Alerts':
+                const reorderEl = card.querySelector('.stat-value');
+                if (reorderEl && analytics.reorderAlertItems !== undefined) {
+                    reorderEl.textContent = analytics.reorderAlertItems.toLocaleString();
+                }
+                break;
+
+            case 'High Value Items':
+                const highValueEl = card.querySelector('.stat-value');
+                if (highValueEl && analytics.highValueItems !== undefined) {
+                    highValueEl.textContent = analytics.highValueItems.toLocaleString();
                 }
                 break;
         }

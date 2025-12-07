@@ -28,11 +28,11 @@ router.get("/", async (req, res) => {
             ...new Set(productDataForAutocomplete.map(item => `${item.name} - ${item.size}`))
         ];
 
-        // OPTIMIZED: Single efficient aggregation query for all analytics
+        // OPTIMIZED: Single efficient aggregation query for all analytics with new metrics
         const analyticsData = await Product.aggregate([
             {
                 $facet: {
-                    // Main analytics in one query
+                    // Main analytics in one query with enhanced metrics
                     mainStats: [
                         {
                             $group: {
@@ -48,7 +48,7 @@ router.get("/", async (req, res) => {
                             }
                         }
                     ],
-                    // Stock analysis in same query with accurate calculations
+                    // Enhanced stock analysis with new critical metrics
                     stockAnalysis: [
                         {
                             $group: {
@@ -72,11 +72,22 @@ router.get("/", async (req, res) => {
                                     $sum: { 
                                         $cond: [{ $gte: [{ $add: ["$qty", "$stock"] }, 100] }, 1, 0] 
                                     } 
+                                },
+                                // New metrics for enhanced dashboard
+                                reorderAlertItems: { 
+                                    $sum: { 
+                                        $cond: [{ $lte: [{ $add: ["$qty", "$stock"] }, 5] }, 1, 0] 
+                                    } 
+                                },
+                                highValueItems: { 
+                                    $sum: { 
+                                        $cond: [{ $gte: ["$sell_price", 200000] }, 1, 0] 
+                                    } 
                                 }
                             }
                         }
                     ],
-                    // Top categories by value (limited to 5 for performance)
+                    // Category analysis for new totalCategories metric
                     categoryAnalysis: [
                         {
                             $group: {
@@ -95,6 +106,10 @@ router.get("/", async (req, res) => {
             }
         ]);
 
+        // Calculate total categories count separately for accuracy
+        const totalCategoriesData = await Product.distinct('name');
+        const totalCategories = totalCategoriesData.length;
+
         // Extract results from facet
         const result = analyticsData[0] || {};
         const analytics = result.mainStats?.[0] || {};
@@ -107,7 +122,7 @@ router.get("/", async (req, res) => {
         const totalProducts = analytics.totalProducts || 0;
         const totalPotentialRevenue = analytics.totalPotentialRevenue || 0;
         const totalInvestment = analytics.totalInvestment || 0;
-        const potentialProfit = totalPotentialRevenue - totalInvestment;
+        const totalPotentialProfit = totalPotentialRevenue - totalInvestment;
 
         // OPTIMIZED: Default initial load for infinite scroll experience
         const page = parseInt(req.query.page) || 1;
@@ -146,19 +161,23 @@ router.get("/", async (req, res) => {
             initialLimit: limit,
             totalStore,
             api: 'api',
-            // OPTIMIZED: Minimal analytics for initial load (loaded async later)
+            // COMPREHENSIVE: Enhanced analytics with all critical metrics for superior dashboard
             analytics: {
                 totalProducts: totalProducts,
                 totalPotentialRevenue: totalPotentialRevenue,
                 totalInvestment: totalInvestment,
-                potentialProfit: potentialProfit,
-                profitMargin: totalInvestment > 0 ? ((potentialProfit / totalInvestment) * 100).toFixed(1) : 0,
+                totalPotentialProfit: totalPotentialProfit,
+                profitMargin: totalInvestment > 0 ? ((totalPotentialProfit / totalInvestment) * 100).toFixed(1) : 0,
                 avgProductPrice: Math.round(analytics.avgProductPrice || 0),
                 avgSellPrice: Math.round(analytics.avgSellPrice || 0),
                 inStockItems: stock.inStockItems || 0,
                 lowStockItems: stock.lowStockItems || 0,
                 outOfStockItems: stock.outOfStockItems || 0,
-                highStockItems: stock.highStockItems || 0
+                highStockItems: stock.highStockItems || 0,
+                // New critical metrics for enhanced analysis
+                totalCategories: totalCategories,
+                reorderAlertItems: stock.reorderAlertItems || 0,
+                highValueItems: stock.highValueItems || 0
             },
             categoryAnalysis: categoryAnalysis // Limited to 5 for performance
         });
@@ -342,10 +361,10 @@ router.get("/api/infinite-scroll", async (req, res) => {
     }
 });
 
-// OPTIMIZED: Lazy loading analytics API
+// COMPREHENSIVE: Enhanced lazy loading analytics API with all new metrics
 router.get("/api/analytics", async (req, res) => {
     try {
-        // Efficient aggregation for analytics
+        // Enhanced aggregation for comprehensive analytics
         const analyticsData = await Product.aggregate([
             {
                 $facet: {
@@ -382,6 +401,17 @@ router.get("/api/analytics", async (req, res) => {
                                     $sum: { 
                                         $cond: [{ $gte: [{ $add: ["$qty", "$stock"] }, 100] }, 1, 0] 
                                     } 
+                                },
+                                // Enhanced metrics for superior dashboard
+                                reorderAlertItems: { 
+                                    $sum: { 
+                                        $cond: [{ $lte: [{ $add: ["$qty", "$stock"] }, 5] }, 1, 0] 
+                                    } 
+                                },
+                                highValueItems: { 
+                                    $sum: { 
+                                        $cond: [{ $gte: ["$sell_price", 200000] }, 1, 0] 
+                                    } 
                                 }
                             }
                         }
@@ -400,17 +430,26 @@ router.get("/api/analytics", async (req, res) => {
         const totalProducts = analytics.totalProducts || 0;
         const totalPotentialRevenue = analytics.totalPotentialRevenue || 0;
         const totalInvestment = analytics.totalInvestment || 0;
-        const potentialProfit = totalPotentialRevenue - totalInvestment;
+        const totalPotentialProfit = totalPotentialRevenue - totalInvestment;
+
+        // Calculate total categories for enhanced metrics
+        const totalCategoriesData = await Product.distinct('name');
+        const totalCategories = totalCategoriesData.length;
 
         res.json({
             analytics: {
                 totalProducts,
                 totalPotentialRevenue,
                 totalInvestment,
-                potentialProfit,
-                profitMargin: totalInvestment > 0 ? ((potentialProfit / totalInvestment) * 100).toFixed(1) : 0,
+                totalPotentialProfit,
+                profitMargin: totalInvestment > 0 ? ((totalPotentialProfit / totalInvestment) * 100).toFixed(1) : 0,
                 avgProductPrice: Math.round(analytics.avgProductPrice || 0),
                 avgSellPrice: Math.round(analytics.avgSellPrice || 0),
+                // Enhanced metrics
+                totalCategories: totalCategories,
+                reorderAlertItems: stock.reorderAlertItems || 0,
+                highValueItems: stock.highValueItems || 0,
+                // Original stock metrics
                 ...stock
             }
         });
@@ -476,10 +515,15 @@ router.get("/filter", async (req, res) => {
         ];
 
         // Extract filter parameters from query string
-        const { sort, size, category, stockStatus, price, page = 1, limit = 50 } = req.query;
+        const { sort, size, category, stockStatus, price, search, page = 1, limit = 50 } = req.query;
         
         // Build filter query
         let filterQuery = {};
+        
+        // Search filter
+        if (search && search !== '') {
+            filterQuery.name = { $regex: search, $options: 'i' };
+        }
         
         // Size filter
         if (size && size !== '') {
@@ -581,7 +625,7 @@ router.get("/filter", async (req, res) => {
             }
         }
 
-        // OPTIMIZED: Single efficient aggregation query for all analytics with filters
+        // COMPREHENSIVE: Enhanced aggregation query for filtered analytics with new metrics
         const analyticsData = await Product.aggregate([
             { $match: filterQuery }, // Apply filters to analytics too
             {
@@ -624,6 +668,17 @@ router.get("/filter", async (req, res) => {
                                     $sum: { 
                                         $cond: [{ $gte: [{ $add: ["$qty", "$stock"] }, 100] }, 1, 0] 
                                     } 
+                                },
+                                // Enhanced filtered metrics
+                                reorderAlertItems: { 
+                                    $sum: { 
+                                        $cond: [{ $lte: [{ $add: ["$qty", "$stock"] }, 5] }, 1, 0] 
+                                    } 
+                                },
+                                highValueItems: { 
+                                    $sum: { 
+                                        $cond: [{ $gte: ["$sell_price", 200000] }, 1, 0] 
+                                    } 
                                 }
                             }
                         }
@@ -631,6 +686,10 @@ router.get("/filter", async (req, res) => {
                 }
             }
         ]);
+
+        // Calculate filtered total categories
+        const filteredCategoriesData = await Product.distinct('name', filterQuery);
+        const totalCategories = filteredCategoriesData.length;
 
         // Extract results from facet
         const result = analyticsData[0] || {};
@@ -643,7 +702,7 @@ router.get("/filter", async (req, res) => {
         const totalProducts = analytics.totalProducts || 0;
         const totalPotentialRevenue = analytics.totalPotentialRevenue || 0;
         const totalInvestment = analytics.totalInvestment || 0;
-        const potentialProfit = totalPotentialRevenue - totalInvestment;
+        const totalPotentialProfit = totalPotentialRevenue - totalInvestment;
 
         // Pagination
         const pageNum = parseInt(page) || 1;
@@ -672,19 +731,23 @@ router.get("/filter", async (req, res) => {
             initialLimit: limitNum,
             totalStore,
             api: '/api/filter',
-            // OPTIMIZED: Analytics for filtered results
+            // COMPREHENSIVE: Enhanced analytics for filtered results with new metrics
             analytics: {
                 totalProducts: totalProducts,
                 totalPotentialRevenue: totalPotentialRevenue,
                 totalInvestment: totalInvestment,
-                potentialProfit: potentialProfit,
-                profitMargin: totalInvestment > 0 ? ((potentialProfit / totalInvestment) * 100).toFixed(1) : 0,
+                totalPotentialProfit: totalPotentialProfit,
+                profitMargin: totalInvestment > 0 ? ((totalPotentialProfit / totalInvestment) * 100).toFixed(1) : 0,
                 avgProductPrice: Math.round(analytics.avgProductPrice || 0),
                 avgSellPrice: Math.round(analytics.avgSellPrice || 0),
                 inStockItems: stock.inStockItems || 0,
                 lowStockItems: stock.lowStockItems || 0,
                 outOfStockItems: stock.outOfStockItems || 0,
-                highStockItems: stock.highStockItems || 0
+                highStockItems: stock.highStockItems || 0,
+                // Enhanced filtered metrics
+                totalCategories: totalCategories,
+                reorderAlertItems: stock.reorderAlertItems || 0,
+                highValueItems: stock.highValueItems || 0
             },
             categoryAnalysis: [], // Empty for now, can be enhanced later
             // Pass current filter values to maintain UI state
@@ -693,7 +756,8 @@ router.get("/filter", async (req, res) => {
                 size: size || '',
                 category: category || '',
                 stockStatus: stockStatus || '',
-                price: price || ''
+                price: price || '',
+                search: search || ''
             }
         });
 
@@ -1479,6 +1543,167 @@ router.get("/api/export", async (req, res) => {
         res.status(500).json({ error: "Server Error" });
     }
 });
+
+// Fuzzy Search API endpoint for real-time suggestions
+router.get("/api/search-suggestions", async (req, res) => {
+    try {
+        const query = req.query.query || '';
+        const limit = parseInt(req.query.limit) || 10;
+
+        if (query.length < 2) {
+            return res.json({ suggestions: [] });
+        }
+
+        // Get all products for fuzzy matching (limit for performance)
+        const products = await Product.find({})
+            .select('name sku size category colorName sell_price qty stock')
+            .lean();
+
+        // Fuzzy search algorithm - simple but effective
+        const suggestions = [];
+        const queryLower = query.toLowerCase();
+
+        for (const product of products) {
+            let score = 0;
+            const nameLower = (product.name || '').toLowerCase();
+            const skuLower = (product.sku || '').toLowerCase();
+            const categoryLower = (product.category || '').toLowerCase();
+            const colorLower = (product.colorName || '').toLowerCase();
+            const sizeLower = (product.size || '').toLowerCase();
+
+            // Exact match (highest score)
+            if (nameLower === queryLower) {
+                score = 100;
+            }
+            // Starts with query
+            else if (nameLower.startsWith(queryLower)) {
+                score = 90;
+            }
+            // Contains query
+            else if (nameLower.includes(queryLower)) {
+                score = 80;
+            }
+            // Fuzzy matching - calculate similarity
+            else {
+                score = calculateSimilarity(queryLower, nameLower) * 70;
+            }
+
+            // Bonus scores for other fields
+            if (skuLower.includes(queryLower)) score += 20;
+            if (categoryLower.includes(queryLower)) score += 15;
+            if (colorLower.includes(queryLower)) score += 10;
+            if (sizeLower.includes(queryLower)) score += 5;
+
+            // Only include products with reasonable match score
+            if (score > 20) {
+                const totalStock = (product.qty || 0) + (product.stock || 0);
+                const stockStatus = totalStock === 0 ? 'out-of-stock' : 
+                                  totalStock <= 10 ? 'low-stock' : 'in-stock';
+
+                suggestions.push({
+                    _id: product._id,
+                    name: product.name,
+                    sku: product.sku,
+                    size: product.size,
+                    category: product.category || product.name,
+                    color: product.colorName,
+                    sellPrice: product.sell_price,
+                    stock: totalStock,
+                    stockStatus: stockStatus,
+                    score: score,
+                    // Create display text
+                    displayText: createDisplayText(product),
+                    // Create highlight text
+                    highlightText: createHighlightText(product, query)
+                });
+            }
+        }
+
+        // Sort by score (highest first) and limit results
+        suggestions.sort((a, b) => b.score - a.score);
+        const limitedSuggestions = suggestions.slice(0, limit);
+
+        res.json({ 
+            suggestions: limitedSuggestions,
+            query: query,
+            totalResults: suggestions.length
+        });
+
+    } catch (err) {
+        console.error("Error in fuzzy search API:", err);
+        res.status(500).json({ error: "Server Error" });
+    }
+});
+
+// Helper function to calculate string similarity (Levenshtein-like)
+function calculateSimilarity(str1, str2) {
+    const longer = str1.length > str2.length ? str1 : str2;
+    const shorter = str1.length > str2.length ? str2 : str1;
+    
+    if (longer.length === 0) return 1.0;
+    
+    const editDistance = levenshteinDistance(longer, shorter);
+    return (longer.length - editDistance) / longer.length;
+}
+
+// Levenshtein distance calculation
+function levenshteinDistance(str1, str2) {
+    const matrix = [];
+    
+    for (let i = 0; i <= str2.length; i++) {
+        matrix[i] = [i];
+    }
+    
+    for (let j = 0; j <= str1.length; j++) {
+        matrix[0][j] = j;
+    }
+    
+    for (let i = 1; i <= str2.length; i++) {
+        for (let j = 1; j <= str1.length; j++) {
+            if (str2.charAt(i - 1) === str1.charAt(j - 1)) {
+                matrix[i][j] = matrix[i - 1][j - 1];
+            } else {
+                matrix[i][j] = Math.min(
+                    matrix[i - 1][j - 1] + 1,
+                    matrix[i][j - 1] + 1,
+                    matrix[i - 1][j] + 1
+                );
+            }
+        }
+    }
+    
+    return matrix[str2.length][str1.length];
+}
+
+// Helper function to create display text for suggestions
+function createDisplayText(product) {
+    const parts = [];
+    
+    if (product.name) parts.push(product.name);
+    if (product.size) parts.push(`Size: ${product.size}`);
+    if (product.colorName) parts.push(`Color: ${product.colorName}`);
+    if (product.sku) parts.push(`SKU: ${product.sku}`);
+    
+    return parts.join(' • ');
+}
+
+// Helper function to create highlight text
+function createHighlightText(product, query) {
+    const name = product.name || '';
+    const queryLower = query.toLowerCase();
+    const nameLower = name.toLowerCase();
+    
+    if (nameLower.includes(queryLower)) {
+        const index = nameLower.indexOf(queryLower);
+        const before = name.substring(0, index);
+        const match = name.substring(index, index + query.length);
+        const after = name.substring(index + query.length);
+        
+        return `${before}<mark>${match}</mark>${after}`;
+    }
+    
+    return name;
+}
 
 // Storage Analytics Route
 router.get("/analysis", async (req, res) => {

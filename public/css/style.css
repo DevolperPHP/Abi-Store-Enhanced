@@ -7486,3 +7486,242 @@ html {
         font-size: 28px;
     }
 }
+
+/* ===== APPLE-STYLE FUZZY SEARCH SUGGESTIONS ===== */
+
+/* Apple-Style Search Suggestions Dropdown */
+.search-suggestions-dropdown {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    border-radius: 12px;
+    box-shadow: 
+        0 8px 32px rgba(0, 0, 0, 0.12),
+        0 2px 8px rgba(0, 0, 0, 0.08),
+        0 0 0 0.5px rgba(255, 255, 255, 0.5) inset;
+    overflow: hidden;
+    animation: dropdownFadeIn 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    min-height: 60px;
+    /* Removed max-height to allow longer lists */
+}
+
+@keyframes dropdownFadeIn {
+    0% {
+        opacity: 0;
+        transform: translateY(-8px) scale(0.95);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+.suggestions-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px;
+    background: rgba(0, 0, 0, 0.02);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.suggestions-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: #1d1d1f;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.suggestions-count {
+    font-size: 12px;
+    color: #8e8e93;
+    font-weight: 500;
+}
+
+.suggestions-list {
+    max-height: 280px;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(0, 0, 0, 0.2) transparent;
+}
+
+.suggestions-list::-webkit-scrollbar {
+    width: 6px;
+}
+
+.suggestions-list::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.suggestions-list::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 3px;
+}
+
+.suggestions-list::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 0, 0, 0.3);
+}
+
+.suggestion-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px;
+    cursor: pointer;
+    transition: all 0.15s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.04);
+    position: relative;
+}
+
+.suggestion-item:last-child {
+    border-bottom: none;
+}
+
+.suggestion-item:hover {
+    background: rgba(0, 122, 255, 0.06);
+}
+
+.suggestion-item.active {
+    background: rgba(0, 122, 255, 0.1);
+}
+
+.suggestion-item:active {
+    background: rgba(0, 122, 255, 0.15);
+    transform: scale(0.998);
+}
+
+.suggestion-main {
+    flex: 1;
+    min-width: 0;
+}
+
+.suggestion-name {
+    font-size: 15px;
+    font-weight: 500;
+    color: #1d1d1f;
+    margin-bottom: 4px;
+    line-height: 1.3;
+}
+
+.suggestion-name mark {
+    background: rgba(0, 122, 255, 0.2);
+    color: #007AFF;
+    padding: 1px 2px;
+    border-radius: 3px;
+    font-weight: 600;
+}
+
+.suggestion-details {
+    font-size: 13px;
+    color: #8e8e93;
+    line-height: 1.4;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.suggestion-meta {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 4px;
+    margin-left: 16px;
+    flex-shrink: 0;
+}
+
+.suggestion-price {
+    font-size: 13px;
+    font-weight: 600;
+    color: #1d1d1f;
+}
+
+.suggestion-stock {
+    font-size: 11px;
+    font-weight: 500;
+    padding: 2px 6px;
+    border-radius: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+.suggestion-stock.in-stock {
+    background: rgba(52, 199, 89, 0.1);
+    color: #34C759;
+}
+
+.suggestion-stock.low-stock {
+    background: rgba(255, 149, 0, 0.1);
+    color: #FF9500;
+}
+
+.suggestion-stock.out-of-stock {
+    background: rgba(255, 59, 48, 0.1);
+    color: #FF3B30;
+}
+
+.suggestions-footer {
+    padding: 8px 16px;
+    background: rgba(0, 0, 0, 0.02);
+    border-top: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.view-all-btn {
+    width: 100%;
+    background: none;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 8px;
+    color: #007AFF;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+}
+
+.view-all-btn:hover {
+    background: rgba(0, 122, 255, 0.08);
+}
+
+.view-all-btn:active {
+    background: rgba(0, 122, 255, 0.12);
+    transform: scale(0.98);
+}
+
+.view-all-btn ion-icon {
+    font-size: 14px;
+}
+
+/* Mobile responsiveness for suggestions */
+@media (max-width: 768px) {
+    .search-suggestions-dropdown {
+        position: fixed;
+        top: auto;
+        bottom: 20px;
+        left: 16px;
+        right: 16px;
+        max-height: 60vh;
+        border-radius: 16px;
+    }
+    
+    .suggestion-item {
+        padding: 14px 16px;
+    }
+    
+    .suggestion-meta {
+        margin-left: 12px;
+    }
+    
+    .suggestion-name {
+        font-size: 16px;
+    }
+    
+    .suggestion-details {
+        font-size: 14px;
+    }
+}
