@@ -93,13 +93,15 @@ router.get("/", async (req, res) => {
         const totalInvestment = analytics.totalInvestment || 0;
         const potentialProfit = totalPotentialRevenue - totalInvestment;
 
-        const page = 1;
-        const limit = 24; // Increased for better card display
-        const skip = (page - 1) * limit;
+        // Get pagination parameters from query
+        const page = parseInt(req.query.page) || 1;
+        const limit = req.query.limit === 'all' ? 0 : (parseInt(req.query.limit) || 24);
+        const skip = limit > 0 ? (page - 1) * limit : 0;
+        
         const products = await Product.find({})
             .sort({ Date: -1 })
             .skip(skip)
-            .limit(limit);
+            .limit(limit > 0 ? limit : 0);
 
     res.render("storage/storage-dashboard", {
             user: user,
