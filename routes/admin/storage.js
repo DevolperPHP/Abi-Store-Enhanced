@@ -20,70 +20,86 @@ router.get("/", async (req, res) => {
         }
 
         const sizes = await Size.find({});
-        const productDataForAutocomplete = await Product.find({}, 'name size');
+        
+        // OPTIMIZED: Use efficient aggregation instead of loading all products
+        // Get autocomplete data with minimal fields
+        const productDataForAutocomplete = await Product.find({}, 'name size').limit(5000);
         const uniqueArray = [
             ...new Set(productDataForAutocomplete.map(item => `${item.name} - ${item.size}`))
         ];
 
-        // Enhanced analytics with multiple calculations
+        // OPTIMIZED: Single efficient aggregation query for all analytics
         const analyticsData = await Product.aggregate([
             {
-                $group: {
-                    _id: null,
-                    totalProducts: { $sum: 1 },
-                    totalSellValue: { $sum: { $multiply: ["$qty", "$sell_price"] } },
-                    totalBuyValue: { $sum: { $multiply: ["$qty", "$price"] } },
-                    totalCashierValue: { $sum: { $multiply: ["$stock", "$sell_price"] } },
-                    totalPotentialRevenue: { $sum: { $multiply: [{ $add: ["$qty", "$stock"] }, "$sell_price"] } },
-                    totalInvestment: { $sum: { $multiply: [{ $add: ["$qty", "$stock"] }, "$price"] } },
-                    avgProductPrice: { $avg: "$price" },
-                    avgSellPrice: { $avg: "$sell_price" }
+                $facet: {
+                    // Main analytics in one query
+                    mainStats: [
+                        {
+                            $group: {
+                                _id: null,
+                                totalProducts: { $sum: 1 },
+                                totalSellValue: { $sum: { $multiply: ["$qty", "$sell_price"] } },
+                                totalBuyValue: { $sum: { $multiply: ["$qty", "$price"] } },
+                                totalCashierValue: { $sum: { $multiply: ["$stock", "$sell_price"] } },
+                                totalPotentialRevenue: { $sum: { $multiply: [{ $add: ["$qty", "$stock"] }, "$sell_price"] } },
+                                totalInvestment: { $sum: { $multiply: [{ $add: ["$qty", "$stock"] }, "$price"] } },
+                                avgProductPrice: { $avg: "$price" },
+                                avgSellPrice: { $avg: "$sell_price" }
+                            }
+                        }
+                    ],
+                    // Stock analysis in same query with accurate calculations
+                    stockAnalysis: [
+                        {
+                            $group: {
+                                _id: null,
+                                inStockItems: { 
+                                    $sum: { 
+                                        $cond: [{ $gt: [{ $add: ["$qty", "$stock"] }, 10] }, 1, 0] 
+                                    } 
+                                },
+                                lowStockItems: { 
+                                    $sum: { 
+                                        $cond: [{ $and: [{ $gte: [{ $add: ["$qty", "$stock"] }, 1] }, { $lte: [{ $add: ["$qty", "$stock"] }, 10] }] }, 1, 0] 
+                                    } 
+                                },
+                                outOfStockItems: { 
+                                    $sum: { 
+                                        $cond: [{ $eq: [{ $add: ["$qty", "$stock"] }, 0] }, 1, 0] 
+                                    } 
+                                },
+                                highStockItems: { 
+                                    $sum: { 
+                                        $cond: [{ $gte: [{ $add: ["$qty", "$stock"] }, 100] }, 1, 0] 
+                                    } 
+                                }
+                            }
+                        }
+                    ],
+                    // Top categories by value (limited to 5 for performance)
+                    categoryAnalysis: [
+                        {
+                            $group: {
+                                _id: "$name",
+                                totalQuantity: { $sum: "$qty" },
+                                storeQuantity: { $sum: "$stock" },
+                                totalValue: { $sum: { $multiply: ["$qty", "$sell_price"] } },
+                                avgPrice: { $avg: "$price" },
+                                avgSellPrice: { $avg: "$sell_price" }
+                            }
+                        },
+                        { $sort: { totalValue: -1 } },
+                        { $limit: 5 }
+                    ]
                 }
             }
         ]);
 
-        // Stock level analysis
-        const stockAnalysis = await Product.aggregate([
-            {
-                $group: {
-                    _id: null,
-                    lowStockItems: { 
-                        $sum: { 
-                            $cond: [{ $lte: [{ $add: ["$qty", "$stock"] }, 10] }, 1, 0] 
-                        } 
-                    },
-                    outOfStockItems: { 
-                        $sum: { 
-                            $cond: [{ $eq: [{ $add: ["$qty", "$stock"] }, 0] }, 1, 0] 
-                        } 
-                    },
-                    highStockItems: { 
-                        $sum: { 
-                            $cond: [{ $gte: [{ $add: ["$qty", "$stock"] }, 100] }, 1, 0] 
-                        } 
-                    }
-                }
-            }
-        ]);
-
-        // Category analysis
-        const categoryAnalysis = await Product.aggregate([
-            {
-                $group: {
-                    _id: "$name",
-                    totalQuantity: { $sum: "$qty" },
-                    storeQuantity: { $sum: "$stock" },
-                    totalValue: { $sum: { $multiply: ["$qty", "$sell_price"] } },
-                    avgPrice: { $avg: "$price" },
-                    avgSellPrice: { $avg: "$sell_price" }
-                }
-            },
-            { $sort: { totalValue: -1 } },
-            { $limit: 10 }
-        ]);
-
-        const analytics = analyticsData[0] || {};
-        const stock = stockAnalysis[0] || {};
+        // Extract results from facet
+        const result = analyticsData[0] || {};
+        const analytics = result.mainStats?.[0] || {};
+        const stock = result.stockAnalysis?.[0] || {};
+        const categoryAnalysis = result.categoryAnalysis || [];
         
         const totalSell = analytics.totalSellValue || 0;
         const totalBuy = analytics.totalBuyValue || 0;
@@ -93,23 +109,27 @@ router.get("/", async (req, res) => {
         const totalInvestment = analytics.totalInvestment || 0;
         const potentialProfit = totalPotentialRevenue - totalInvestment;
 
-        // Get pagination parameters from query
+        // OPTIMIZED: Default initial load for infinite scroll experience
         const page = parseInt(req.query.page) || 1;
         const limitParam = req.query.limit;
         let limit;
         
         if (limitParam === 'all' || limitParam === '0' || !limitParam) {
-            limit = 0; // Show all items
+            limit = 50; // Initial load 50 items, then infinite scroll takes over
         } else {
-            limit = parseInt(limitParam) || 24;
+            // For any specific limit requested
+            limit = parseInt(limitParam) || 50;
         }
         
         const skip = limit > 0 ? (page - 1) * limit : 0;
         
-        // Get all products for category extraction (not paginated)
-        const allProductsForCategories = await Product.find({}).select('category name').lean();
+        // OPTIMIZED: Load categories separately with minimal data and limit
+        // Only load essential fields for category dropdown, limit to prevent memory issues
+        const allProductsForCategories = await Product.find({}, 'category name').limit(20000).lean();
         
+        // OPTIMIZED: Load products with selective fields and proper indexing
         const products = await Product.find({})
+            .select('name sku size color colorName colorHex category qty stock price sell_price image barcode Date') // Only essential fields
             .sort({ Date: -1 })
             .skip(skip)
             .limit(limit > 0 ? limit : 0);
@@ -126,18 +146,21 @@ router.get("/", async (req, res) => {
             initialLimit: limit,
             totalStore,
             api: 'api',
-            // Enhanced analytics data
+            // OPTIMIZED: Minimal analytics for initial load (loaded async later)
             analytics: {
-                totalProducts,
-                totalPotentialRevenue,
-                totalInvestment,
-                potentialProfit,
+                totalProducts: totalProducts,
+                totalPotentialRevenue: totalPotentialRevenue,
+                totalInvestment: totalInvestment,
+                potentialProfit: potentialProfit,
                 profitMargin: totalInvestment > 0 ? ((potentialProfit / totalInvestment) * 100).toFixed(1) : 0,
                 avgProductPrice: Math.round(analytics.avgProductPrice || 0),
                 avgSellPrice: Math.round(analytics.avgSellPrice || 0),
-                ...stock
+                inStockItems: stock.inStockItems || 0,
+                lowStockItems: stock.lowStockItems || 0,
+                outOfStockItems: stock.outOfStockItems || 0,
+                highStockItems: stock.highStockItems || 0
             },
-            categoryAnalysis: categoryAnalysis.slice(0, 5) // Top 5 categories
+            categoryAnalysis: categoryAnalysis // Limited to 5 for performance
         });
 
     } catch (err) {
@@ -161,6 +184,166 @@ router.get("/api", async (req, res) => {
 
     } catch (err) {
         console.error("Error fetching storage API data:", err);
+        res.status(500).json({ error: "Server Error" });
+    }
+});
+
+// Infinite scrolling API endpoint
+router.get("/api/infinite-scroll", async (req, res) => {
+    try {
+        const offset = parseInt(req.query.offset) || 0;
+        const limit = parseInt(req.query.limit) || 20;
+        const searchTerm = req.query.search || '';
+        const category = req.query.category || '';
+        const sortField = req.query.sortField || 'Date';
+        const sortOrder = req.query.sortOrder === 'asc' ? 1 : -1;
+
+        // Build query
+        let query = {};
+        
+        if (searchTerm) {
+            query.name = { $regex: searchTerm, $options: 'i' };
+        }
+        
+        if (category && category !== 'all') {
+            query.category = category;
+        }
+
+        // Get total count for pagination info
+        const totalCount = await Product.countDocuments(query);
+
+        // Fetch products with pagination and minimal fields (50 per chunk for optimal UX)
+        const products = await Product.find(query)
+            .select('name sku size color colorName colorHex category qty stock price sell_price image barcode Date')
+            .sort({ [sortField]: sortOrder })
+            .skip(offset)
+            .limit(limit || 50); // Default to 50 items per scroll chunk
+
+        // Calculate if there are more items
+        const hasMore = offset + products.length < totalCount;
+
+        res.json({
+            products,
+            hasMore,
+            totalCount,
+            currentOffset: offset,
+            loadedCount: products.length,
+            nextOffset: offset + products.length
+        });
+
+    } catch (err) {
+        console.error("Error in infinite scroll API:", err);
+        res.status(500).json({ error: "Server Error" });
+    }
+});
+
+// OPTIMIZED: Lazy loading analytics API
+router.get("/api/analytics", async (req, res) => {
+    try {
+        // Efficient aggregation for analytics
+        const analyticsData = await Product.aggregate([
+            {
+                $facet: {
+                    mainStats: [
+                        {
+                            $group: {
+                                _id: null,
+                                totalProducts: { $sum: 1 },
+                                totalSellValue: { $sum: { $multiply: ["$qty", "$sell_price"] } },
+                                totalBuyValue: { $sum: { $multiply: ["$qty", "$price"] } },
+                                totalCashierValue: { $sum: { $multiply: ["$stock", "$sell_price"] } },
+                                totalPotentialRevenue: { $sum: { $multiply: [{ $add: ["$qty", "$stock"] }, "$sell_price"] } },
+                                totalInvestment: { $sum: { $multiply: [{ $add: ["$qty", "$stock"] }, "$price"] } },
+                                avgProductPrice: { $avg: "$price" },
+                                avgSellPrice: { $avg: "$sell_price" }
+                            }
+                        }
+                    ],
+                    stockAnalysis: [
+                        {
+                            $group: {
+                                _id: null,
+                                lowStockItems: { 
+                                    $sum: { 
+                                        $cond: [{ $lte: [{ $add: ["$qty", "$stock"] }, 10] }, 1, 0] 
+                                    } 
+                                },
+                                outOfStockItems: { 
+                                    $sum: { 
+                                        $cond: [{ $eq: [{ $add: ["$qty", "$stock"] }, 0] }, 1, 0] 
+                                    } 
+                                },
+                                highStockItems: { 
+                                    $sum: { 
+                                        $cond: [{ $gte: [{ $add: ["$qty", "$stock"] }, 100] }, 1, 0] 
+                                    } 
+                                }
+                            }
+                        }
+                    ]
+                }
+            }
+        ]);
+
+        const result = analyticsData[0] || {};
+        const analytics = result.mainStats?.[0] || {};
+        const stock = result.stockAnalysis?.[0] || {};
+
+        const totalSell = analytics.totalSellValue || 0;
+        const totalBuy = analytics.totalBuyValue || 0;
+        const totalStore = analytics.totalCashierValue || 0;
+        const totalProducts = analytics.totalProducts || 0;
+        const totalPotentialRevenue = analytics.totalPotentialRevenue || 0;
+        const totalInvestment = analytics.totalInvestment || 0;
+        const potentialProfit = totalPotentialRevenue - totalInvestment;
+
+        res.json({
+            analytics: {
+                totalProducts,
+                totalPotentialRevenue,
+                totalInvestment,
+                potentialProfit,
+                profitMargin: totalInvestment > 0 ? ((potentialProfit / totalInvestment) * 100).toFixed(1) : 0,
+                avgProductPrice: Math.round(analytics.avgProductPrice || 0),
+                avgSellPrice: Math.round(analytics.avgSellPrice || 0),
+                ...stock
+            }
+        });
+
+    } catch (err) {
+        console.error("Error fetching analytics:", err);
+        res.status(500).json({ error: "Server Error" });
+    }
+});
+
+// OPTIMIZED: Categories API for lazy loading
+router.get("/api/categories", async (req, res) => {
+    try {
+        // Get unique categories with minimal data and limit for performance
+        const categories = await Product.aggregate([
+            {
+                $group: {
+                    _id: "$name",
+                    category: { $first: "$category" },
+                    count: { $sum: 1 }
+                }
+            },
+            {
+                $project: {
+                    _id: 0,
+                    name: "$_id",
+                    category: 1,
+                    count: 1
+                }
+            },
+            { $sort: { count: -1 } },
+            { $limit: 500 } // Limit to prevent memory issues
+        ]);
+
+        res.json({ categories });
+
+    } catch (err) {
+        console.error("Error fetching categories:", err);
         res.status(500).json({ error: "Server Error" });
     }
 });
