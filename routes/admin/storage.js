@@ -98,6 +98,9 @@ router.get("/", async (req, res) => {
         const limit = req.query.limit === 'all' ? 0 : (parseInt(req.query.limit) || 24);
         const skip = limit > 0 ? (page - 1) * limit : 0;
         
+        // Get all products for category extraction (not paginated)
+        const allProductsForCategories = await Product.find({}).select('category name').lean();
+        
         const products = await Product.find({})
             .sort({ Date: -1 })
             .skip(skip)
@@ -107,6 +110,7 @@ router.get("/", async (req, res) => {
             user: user,
             err: req.flash("permission-error"),
             products: products,
+            allProductsForCategories: allProductsForCategories,
             size: sizes,
             totalSell: totalSell,
             totalBuy: totalBuy,
@@ -211,6 +215,10 @@ router.get("/filter/qty-most", async (req, res) => {
         const page = 1;
         const limit = 20;
         const skip = (page - 1) * limit;
+        
+        // Get all products for category extraction
+        const allProductsForCategories = await Product.find({}).select('category name').lean();
+        
         const products = await Product.find({}).sort({ qty: -1 })
             .sort({ Date: -1 })
             .skip(skip)
@@ -220,6 +228,7 @@ router.get("/filter/qty-most", async (req, res) => {
             user: user,
             err: req.flash("permission-error"),
             products: products,
+            allProductsForCategories: allProductsForCategories,
             size: sizes,
             totalSell: totalSell,
             totalBuy: totalBuy,
@@ -311,6 +320,10 @@ router.get("/filter/qty-less", async (req, res) => {
         const page = 1;
         const limit = 20;
         const skip = (page - 1) * limit;
+        
+        // Get all products for category extraction
+        const allProductsForCategories = await Product.find({}).select('category name').lean();
+        
         const products = await Product.find({}).sort({ qty: 1 })
             .sort({ Date: -1 })
             .skip(skip)
@@ -320,6 +333,7 @@ router.get("/filter/qty-less", async (req, res) => {
             user: user,
             err: req.flash("permission-error"),
             products: products,
+            allProductsForCategories: allProductsForCategories,
             size: sizes,
             totalSell: totalSell,
             totalBuy: totalBuy,
@@ -411,6 +425,10 @@ router.get("/filter/cost-most", async (req, res) => {
         const page = 1;
         const limit = 20;
         const skip = (page - 1) * limit;
+        
+        // Get all products for category extraction
+        const allProductsForCategories = await Product.find({}).select('category name').lean();
+        
         const products = await Product.find({}).sort({ price: -1 })
             .sort({ Date: -1 })
             .skip(skip)
@@ -420,6 +438,7 @@ router.get("/filter/cost-most", async (req, res) => {
             user: user,
             err: req.flash("permission-error"),
             products: products,
+            allProductsForCategories: allProductsForCategories,
             size: sizes,
             totalSell: totalSell,
             totalBuy: totalBuy,
@@ -511,6 +530,10 @@ router.get("/filter/cost-less", async (req, res) => {
         const page = 1;
         const limit = 20;
         const skip = (page - 1) * limit;
+        
+        // Get all products for category extraction
+        const allProductsForCategories = await Product.find({}).select('category name').lean();
+        
         const products = await Product.find({}).sort({ price: 1 })
             .sort({ Date: -1 })
             .skip(skip)
@@ -520,6 +543,7 @@ router.get("/filter/cost-less", async (req, res) => {
             user: user,
             err: req.flash("permission-error"),
             products: products,
+            allProductsForCategories: allProductsForCategories,
             size: sizes,
             totalSell: totalSell,
             totalBuy: totalBuy,
@@ -611,6 +635,10 @@ router.get("/size/:size", async (req, res) => {
         const page = 1;
         const limit = 20;
         const skip = (page - 1) * limit;
+        
+        // Get all products for category extraction
+        const allProductsForCategories = await Product.find({}).select('category name').lean();
+        
         const products = await Product.find({ size: req.params.size }).sort({ qty: 1 })
             .sort({ Date: -1 })
             .skip(skip)
@@ -620,6 +648,7 @@ router.get("/size/:size", async (req, res) => {
             user: user,
             err: req.flash("permission-error"),
             products: products,
+            allProductsForCategories: allProductsForCategories,
             size: sizes,
             totalSell: totalSell,
             totalBuy: totalBuy,
@@ -694,10 +723,14 @@ router.get("/search/:name", async (req, res) => {
                 for (let i = 0; i < products.length; i++) {
                     totalBuy.push(products[i].qty * products[i].price)
                 }
+                // Get all products for category extraction
+                const allProductsForCategories = await Product.find({}).select('category name').lean();
+                
                 res.render("storage/storage-dashboard", {
                     user: user,
                     err: req.flash("permission-error"),
                     products: products,
+                    allProductsForCategories: allProductsForCategories,
                     size: size,
                     totalSell: totalSell.reduce((a, b) => a + b),
                     totalBuy: totalBuy.reduce((a, b) => a + b),
