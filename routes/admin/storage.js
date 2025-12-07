@@ -95,7 +95,15 @@ router.get("/", async (req, res) => {
 
         // Get pagination parameters from query
         const page = parseInt(req.query.page) || 1;
-        const limit = req.query.limit === 'all' ? 0 : (parseInt(req.query.limit) || 24);
+        const limitParam = req.query.limit;
+        let limit;
+        
+        if (limitParam === 'all' || limitParam === '0' || !limitParam) {
+            limit = 0; // Show all items
+        } else {
+            limit = parseInt(limitParam) || 24;
+        }
+        
         const skip = limit > 0 ? (page - 1) * limit : 0;
         
         // Get all products for category extraction (not paginated)
