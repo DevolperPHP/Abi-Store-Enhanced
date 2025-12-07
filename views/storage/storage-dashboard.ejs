@@ -333,9 +333,6 @@
                                     <button class="quick-action" onclick="event.stopPropagation(); editProduct('<%= product._id %>')" title="Edit Product">
                                         <ion-icon name="create-outline"></ion-icon>
                                     </button>
-                                    <button class="quick-action" onclick="event.stopPropagation(); duplicateProduct('<%= product._id %>')" title="Duplicate">
-                                        <ion-icon name="copy-outline"></ion-icon>
-                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -680,10 +677,7 @@ function viewProduct(id) {
     window.location.href = `/items/get/${id}`;
 }
 
-function duplicateProduct(id) {
-    // Duplicate product functionality
-    console.log('Duplicate product:', id);
-}
+
 
 function manageStock(id) {
     // Stock management functionality
@@ -1407,9 +1401,6 @@ function appendProductsToGrid(products) {
                             </button>
                             <button class="quick-action" onclick="event.stopPropagation(); editProduct('${product._id}')" title="Edit Product">
                                 <ion-icon name="create-outline"></ion-icon>
-                            </button>
-                            <button class="quick-action" onclick="event.stopPropagation(); duplicateProduct('${product._id}')" title="Duplicate">
-                                <ion-icon name="copy-outline"></ion-icon>
                             </button>
                         </div>
                     </div>

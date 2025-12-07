@@ -6591,7 +6591,7 @@ html {
 
 .price-label {
     font-size: 10px;
-    color: var(--text-secondary);
+    color: white;
     text-transform: uppercase;
     letter-spacing: 0.5px;
 }
@@ -6601,9 +6601,7 @@ html {
     font-weight: 600;
 }
 
-.price-value.cost {
-    color: var(--text-secondary);
-}
+
 
 .price-value.selling {
     color: var(--primary-color);
@@ -6625,7 +6623,7 @@ html {
 
 .profit-label {
     font-size: 10px;
-    color: var(--text-secondary);
+    color: white;
 }
 
 .profit-value {
@@ -6642,7 +6640,7 @@ html {
 
 .margin-label {
     font-size: 10px;
-    color: var(--text-secondary);
+    color: white;
 }
 
 .margin-value {
