@@ -77,31 +77,80 @@
         </div>
     </div>
 
-    <!-- Controls Section -->
-    <div class="content-card">
-        <div class="card-header">
-            <h2 class="card-title">Inventory Controls</h2>
-            <button class="card-action" onclick="window.location.href='/items/add'">
-                <ion-icon name="add-circle-outline"></ion-icon>
-                Add Item
-            </button>
+    <!-- Premium Inventory Controls -->
+    <div class="premium-inventory-controls">
+        <div class="controls-header">
+            <div class="header-content">
+                <div class="header-icon">
+                    <ion-icon name="cube-outline"></ion-icon>
+                </div>
+                <div class="header-text">
+                    <h2 class="controls-title">Inventory Controls</h2>
+                    <p class="controls-subtitle">Advanced inventory management and analytics</p>
+                </div>
+            </div>
+            <div class="header-actions">
+                <button class="btn-export" onclick="exportInventory()">
+                    <ion-icon name="download-outline"></ion-icon>
+                    Export
+                </button>
+                <button class="btn-import" onclick="importInventory()">
+                    <ion-icon name="upload-outline"></ion-icon>
+                    Import
+                </button>
+                <button class="btn-bulk" onclick="showBulkActions()">
+                    <ion-icon name="checkmark-circle-outline"></ion-icon>
+                    Bulk Actions
+                </button>
+                <button class="btn-primary" onclick="window.location.href='/items/add'">
+                    <ion-icon name="add-outline"></ion-icon>
+                    Add Item
+                </button>
+            </div>
         </div>
-        <div class="card-content">
-            <div class="controls-section">
-                <div class="search-controls">
-                    <div class="search-box">
-                        <ion-icon name="search-outline"></ion-icon>
-                        <input type="text" id="globalSearch" placeholder="Search products, categories, or SKU..." oninput="handleSearch(this.value)" />
-                        <button class="search-clear" onclick="clearSearch()">
-                            <ion-icon name="close-outline"></ion-icon>
+
+        <div class="controls-content">
+            <!-- Search and Quick Actions Row -->
+            <div class="search-row">
+                <div class="search-container">
+                    <div class="search-box-modern">
+                        <ion-icon name="search-outline" class="search-icon"></ion-icon>
+                        <input type="text" id="globalSearch" class="search-input" placeholder="Search products, SKU, categories, or brands..." oninput="handleSearch(this.value)" />
+                        <button class="search-clear" onclick="clearSearch()" style="display: none;">
+                            <ion-icon name="close-circle-outline"></ion-icon>
                         </button>
                     </div>
                 </div>
                 
-                <div class="filter-controls">
-                    <div class="filter-group">
-                        <label>Sort by:</label>
-                        <select id="sortFilter" onchange="applyFilters()">
+                <div class="quick-actions">
+                    <button class="quick-action-btn" onclick="filterLowStock()">
+                        <ion-icon name="warning-outline"></ion-icon>
+                        <span>Low Stock</span>
+                    </button>
+                    <button class="quick-action-btn" onclick="filterOutOfStock()">
+                        <ion-icon name="close-circle-outline"></ion-icon>
+                        <span>Out of Stock</span>
+                    </button>
+                    <button class="quick-action-btn" onclick="filterHighValue()">
+                        <ion-icon name="trending-up-outline"></ion-icon>
+                        <span>High Value</span>
+                    </button>
+                    <button class="quick-action-btn" onclick="showAdvancedFilters()">
+                        <ion-icon name="filter-outline"></ion-icon>
+                        <span>Advanced</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Filters Row -->
+            <div class="filters-row">
+                <div class="filter-groups">
+                    <div class="filter-group-modern">
+                        <label class="filter-label">
+                            <ion-icon name="swap-vertical-outline"></ion-icon>
+                            Sort by
+                        </label>
+                        <select id="sortFilter" class="filter-select" onchange="applyFilters()">
                             <option value="">Default (Newest)</option>
                             <option value="qty-most">Quantity (High to Low)</option>
                             <option value="qty-less">Quantity (Low to High)</option>
@@ -109,139 +158,359 @@
                             <option value="price-less">Price (Low to High)</option>
                             <option value="name-asc">Name (A-Z)</option>
                             <option value="name-desc">Name (Z-A)</option>
+                            <option value="profit-desc">Profit Margin (High to Low)</option>
+                            <option value="profit-asc">Profit Margin (Low to High)</option>
+                            <option value="updated-desc">Recently Updated</option>
                         </select>
                     </div>
 
-                    <div class="filter-group">
-                        <label>Size:</label>
-                        <select id="sizeFilter" onchange="applyFilters()">
+                    <div class="filter-group-modern">
+                        <label class="filter-label">
+                            <ion-icon name="resize-outline"></ion-icon>
+                            Size
+                        </label>
+                        <select id="sizeFilter" class="filter-select" onchange="applyFilters()">
                             <option value="">All Sizes</option>
-                            <% size.forEach(sizeData => { %>
-                                <option value="<%= sizeData.size %>"><%= sizeData.size %></option>
+                            <% if (typeof size !== 'undefined' && size && size.length > 0) { %>
+                                <% size.forEach(sizeData => { %>
+                                    <option value="<%= sizeData.size %>"><%= sizeData.size %></option>
+                                <% }); %>
+                            <% } %>
+                        </select>
+                    </div>
+
+                    <div class="filter-group-modern">
+                        <label class="filter-label">
+                            <ion-icon name="library-outline"></ion-icon>
+                            Category
+                        </label>
+                        <select id="categoryFilter" class="filter-select" onchange="applyFilters()">
+                            <option value="">All Categories</option>
+                            <% 
+                                // Get unique categories from products
+                                const uniqueCategories = [];
+                                if (products && products.length > 0) {
+                                    products.forEach(product => {
+                                        if (product.category && !uniqueCategories.includes(product.category)) {
+                                            uniqueCategories.push(product.category);
+                                        }
+                                    });
+                                }
+                                uniqueCategories.forEach(category => { 
+                            %>
+                                <option value="<%= category %>"><%= category %></option>
                             <% }); %>
                         </select>
                     </div>
 
-                    <div class="filter-group">
-                        <label>Stock Status:</label>
-                        <select id="stockFilter" onchange="applyFilters()">
+                    <div class="filter-group-modern">
+                        <label class="filter-label">
+                            <ion-icon name="pricetags-outline"></ion-icon>
+                            Stock Status
+                        </label>
+                        <select id="stockFilter" class="filter-select" onchange="applyFilters()">
                             <option value="">All Items</option>
-                            <option value="in-stock">In Stock</option>
-                            <option value="low-stock">Low Stock (≤10)</option>
+                            <option value="in-stock">In Stock (10+)</option>
+                            <option value="low-stock">Low Stock (1-10)</option>
                             <option value="out-of-stock">Out of Stock</option>
+                            <option value="overstocked">Overstocked (100+)</option>
                         </select>
                     </div>
+
+                    <div class="filter-group-modern">
+                        <label class="filter-label">
+                            <ion-icon name="cash-outline"></ion-icon>
+                            Price Range
+                        </label>
+                        <select id="priceFilter" class="filter-select" onchange="applyFilters()">
+                            <option value="">All Prices</option>
+                            <option value="0-50000">Under 50K IQD</option>
+                            <option value="50000-100000">50K - 100K IQD</option>
+                            <option value="100000-500000">100K - 500K IQD</option>
+                            <option value="500000+">Over 500K IQD</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="filter-actions">
+                    <button class="btn-reset" onclick="resetAllFilters()">
+                        <ion-icon name="refresh-outline"></ion-icon>
+                        Reset
+                    </button>
+                    <button class="btn-save-filter" onclick="saveCurrentFilter()">
+                        <ion-icon name="bookmark-outline"></ion-icon>
+                        Save Filter
+                    </button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Products Section -->
-    <div class="content-card">
-        <div class="card-header">
-            <h2 class="card-title">Inventory Items</h2>
-            <div class="view-toggle">
-                <button class="view-btn active" data-view="grid" onclick="switchView('grid')">
-                    <ion-icon name="grid-outline"></ion-icon>
-                </button>
-                <button class="view-btn" data-view="list" onclick="switchView('list')">
-                    <ion-icon name="list-outline"></ion-icon>
-                </button>
-            </div>
-        </div>
-        <div class="card-content">
-            <% if (products && products.length > 0) { %>
-                <div class="products-grid" id="productsGrid">
-                    <% products.forEach((product, index) => {
-                        const totalStock = (product.qty || 0) + (product.stock || 0);
-                        const profit = ((product.sell_price || 0) - (product.price || 0)) * totalStock;
-                        const profitMargin = product.price > 0 ? ((product.sell_price - product.price) / product.price * 100) : 0;
-                    %>
-                        <div class="product-card" onclick="window.location.href='/items/get/<%= product._id %>'">
-                            <div class="product-image">
-                                <% if (product.image) { %>
-                                    <img src="<%= product.image %>" alt="<%= product.name %>" />
-                                <% } else { %>
-                                    <div class="no-image">
-                                        <ion-icon name="cube-outline"></ion-icon>
-                                    </div>
-                                <% } %>
-                                <div class="product-badges">
-                                    <% if (totalStock === 0) { %>
-                                        <span class="badge badge-danger">Out of Stock</span>
-                                    <% } else if (totalStock <= 10) { %>
-                                        <span class="badge badge-warning">Low Stock</span>
-                                    <% } else { %>
-                                        <span class="badge badge-success">In Stock</span>
-                                    <% } %>
-                                </div>
-                            </div>
-                            
-                            <div class="product-info">
-                                <h3 class="product-name"><%= product.name %></h3>
-                                <% if (product.colorName) { %>
-                                    <p class="product-variant">Color: <%= product.colorName %></p>
-                                <% } %>
-                                <p class="product-size">Size: <%= product.size %></p>
-                                
-                                <div class="stock-info">
-                                    <div class="stock-item">
-                                        <span class="stock-label">Main Storage:</span>
-                                        <span class="stock-value"><%= product.qty || 0 %></span>
-                                    </div>
-                                    <div class="stock-item">
-                                        <span class="stock-label">Store:</span>
-                                        <span class="stock-value"><%= product.stock || 0 %></span>
-                                    </div>
-                                    <div class="stock-total">
-                                        <span class="stock-label">Total:</span>
-                                        <span class="stock-value total"><%= totalStock %></span>
-                                    </div>
-                                </div>
-                                
-                                <div class="pricing-info">
-                                    <div class="price-item">
-                                        <span class="price-label">Cost:</span>
-                                        <span class="price-value">IQD <%= (product.price || 0).toLocaleString() %></span>
-                                    </div>
-                                    <div class="price-item">
-                                        <span class="price-label">Selling:</span>
-                                        <span class="price-value sell-price">IQD <%= (product.sell_price || 0).toLocaleString() %></span>
-                                    </div>
-                                    <% if (profit > 0) { %>
-                                        <div class="profit-info">
-                                            <span class="profit-label">Profit:</span>
-                                            <span class="profit-value">IQD <%= profit.toLocaleString() %> (<%= profitMargin.toFixed(1) %>%)</span>
-                                        </div>
-                                    <% } %>
-                                </div>
-                            </div>
-                            
-                            <div class="product-actions">
-                                <button class="action-btn edit-btn" onclick="event.stopPropagation(); editProduct('<%= product._id %>')">
-                                    <ion-icon name="create-outline"></ion-icon>
-                                </button>
-                                <button class="action-btn stock-btn" onclick="event.stopPropagation(); manageStock('<%= product._id %>')">
-                                    <ion-icon name="barcode-outline"></ion-icon>
-                                </button>
-                            </div>
-                        </div>
-                    <% }); %>
+    <!-- Premium Inventory Items Section -->
+    <div class="premium-inventory-items">
+        <div class="items-header">
+            <div class="header-stats">
+                <div class="stat-item">
+                    <span class="stat-label">Total Items</span>
+                    <span class="stat-value"><%= products ? products.length : 0 %></span>
                 </div>
-            <% } else { %>
-                <div class="empty-state">
-                    <div class="empty-icon">
-                        <ion-icon name="cube-outline"></ion-icon>
-                    </div>
-                    <h3>No Products Found</h3>
-                    <p>Start by adding your first product to the inventory</p>
-                    <button class="empty-action" onclick="window.location.href='/items/add'">
-                        <ion-icon name="add-outline"></ion-icon>
-                        Add Product
+                <div class="stat-item">
+                    <span class="stat-label">In Stock</span>
+                    <span class="stat-value success">
+                        <%= products ? products.filter(p => ((p.qty || 0) + (p.stock || 0)) > 10).length : 0 %>
+                    </span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Low Stock</span>
+                    <span class="stat-value warning">
+                        <%= products ? products.filter(p => ((p.qty || 0) + (p.stock || 0)) > 0 && ((p.qty || 0) + (p.stock || 0)) <= 10).length : 0 %>
+                    </span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Out of Stock</span>
+                    <span class="stat-value danger">
+                        <%= products ? products.filter(p => ((p.qty || 0) + (p.stock || 0)) === 0).length : 0 %>
+                    </span>
+                </div>
+            </div>
+            
+            <div class="header-controls">
+                <div class="view-toggle">
+                    <button class="view-btn active" data-view="grid" onclick="switchView('grid')" title="Grid View">
+                        <ion-icon name="grid-outline"></ion-icon>
+                    </button>
+                    <button class="view-btn" data-view="list" onclick="switchView('list')" title="List View">
+                        <ion-icon name="list-outline"></ion-icon>
+                    </button>
+                    <button class="view-btn" data-view="compact" onclick="switchView('compact')" title="Compact View">
+                        <ion-icon name="apps-outline"></ion-icon>
                     </button>
                 </div>
-            <% } %>
+                
+                <div class="items-per-page">
+                    <select id="itemsPerPage" onchange="changeItemsPerPage(this.value)">
+                        <option value="20">20 per page</option>
+                        <option value="50">50 per page</option>
+                        <option value="100">100 per page</option>
+                        <option value="all">All items</option>
+                    </select>
+                </div>
+            </div>
         </div>
+
+        <% if (products && products.length > 0) { %>
+            <div class="products-container" id="productsGrid">
+                <% products.forEach((product, index) => {
+                    const totalStock = (product.qty || 0) + (product.stock || 0);
+                    const profit = ((product.sell_price || 0) - (product.price || 0)) * totalStock;
+                    const profitMargin = product.price > 0 ? ((product.sell_price - product.price) / product.price * 100) : 0;
+                    const stockStatus = totalStock === 0 ? 'out-of-stock' : totalStock <= 10 ? 'low-stock' : 'in-stock';
+                %>
+                    <div class="product-card-modern" data-product-id="<%= product._id %>">
+                        <!-- Product Selection Checkbox -->
+                        <div class="product-checkbox">
+                            <input type="checkbox" id="select-<%= product._id %>" onchange="toggleProductSelection('<%= product._id %>')">
+                            <label for="select-<%= product._id %>"></label>
+                        </div>
+                        
+                        <!-- Product Image Section -->
+                        <div class="product-image-section">
+                            <div class="image-container">
+                                <% if (product.image) { %>
+                                    <img src="<%= product.image %>" alt="<%= product.name %>" class="product-image" />
+                                <% } else { %>
+                                    <div class="no-image-placeholder">
+                                        <ion-icon name="image-outline"></ion-icon>
+                                    </div>
+                                <% } %>
+                                
+                                <!-- Status Badge -->
+                                <div class="status-badge <%= stockStatus %>">
+                                    <% if (stockStatus === 'out-of-stock') { %>
+                                        <ion-icon name="close-circle-outline"></ion-icon>
+                                        <span>Out of Stock</span>
+                                    <% } else if (stockStatus === 'low-stock') { %>
+                                        <ion-icon name="warning-outline"></ion-icon>
+                                        <span>Low Stock</span>
+                                    <% } else { %>
+                                        <ion-icon name="checkmark-circle-outline"></ion-icon>
+                                        <span>In Stock</span>
+                                    <% } %>
+                                </div>
+                                
+                                <!-- Quick Actions Overlay -->
+                                <div class="quick-actions-overlay">
+                                    <button class="quick-action" onclick="event.stopPropagation(); viewProduct('<%= product._id %>')" title="View Details">
+                                        <ion-icon name="eye-outline"></ion-icon>
+                                    </button>
+                                    <button class="quick-action" onclick="event.stopPropagation(); editProduct('<%= product._id %>')" title="Edit Product">
+                                        <ion-icon name="create-outline"></ion-icon>
+                                    </button>
+                                    <button class="quick-action" onclick="event.stopPropagation(); duplicateProduct('<%= product._id %>')" title="Duplicate">
+                                        <ion-icon name="copy-outline"></ion-icon>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Product Information -->
+                        <div class="product-info-section">
+                            <div class="product-header">
+                                <h3 class="product-name" title="<%= product.name %>"><%= product.name %></h3>
+                                <div class="product-sku">SKU: <%= product.sku || 'N/A' %></div>
+                            </div>
+                            
+                            <!-- Product Variants -->
+                            <div class="product-variants">
+                                <% if (product.colorName) { %>
+                                    <div class="variant-item">
+                                        <span class="variant-label">Color:</span>
+                                        <div class="color-info">
+                                            <% if (product.colorHex) { %>
+                                                <div class="color-dot" style="background-color: <%= product.colorHex %>"></div>
+                                            <% } %>
+                                            <span class="variant-value"><%= product.colorName %></span>
+                                        </div>
+                                    </div>
+                                <% } %>
+                                <% if (product.size) { %>
+                                    <div class="variant-item">
+                                        <span class="variant-label">Size:</span>
+                                        <span class="variant-value size-badge"><%= product.size %></span>
+                                    </div>
+                                <% } %>
+                                <% if (product.category) { %>
+                                    <div class="variant-item">
+                                        <span class="variant-label">Category:</span>
+                                        <span class="variant-value category-badge"><%= product.category %></span>
+                                    </div>
+                                <% } %>
+                            </div>
+                            
+                            <!-- Stock Information -->
+                            <div class="stock-section">
+                                <div class="stock-header">
+                                    <span class="stock-title">Inventory</span>
+                                    <div class="stock-total-display">
+                                        <span class="total-label">Total:</span>
+                                        <span class="total-value <%= stockStatus %>"><%= totalStock %></span>
+                                    </div>
+                                </div>
+                                
+                                <div class="stock-breakdown">
+                                    <div class="stock-location">
+                                        <span class="location-label">Main Storage</span>
+                                        <span class="location-value"><%= product.qty || 0 %></span>
+                                    </div>
+                                    <div class="stock-location">
+                                        <span class="location-label">Store</span>
+                                        <span class="location-value"><%= product.stock || 0 %></span>
+                                    </div>
+                                </div>
+                                
+                                <!-- Stock Progress Bar -->
+                                <div class="stock-progress">
+                                    <div class="progress-bar">
+                                        <div class="progress-fill <%= stockStatus %>" style="width: <%= Math.min((totalStock / 50) * 100, 100) %>%"></div>
+                                    </div>
+                                    <span class="progress-text"><%= totalStock %> / 50 units</span>
+                                </div>
+                            </div>
+                            
+                            <!-- Pricing Information -->
+                            <div class="pricing-section">
+                                <div class="price-grid">
+                                    <div class="price-item">
+                                        <span class="price-label">Cost Price</span>
+                                        <span class="price-value cost">IQD <%= (product.price || 0).toLocaleString() %></span>
+                                    </div>
+                                    <div class="price-item">
+                                        <span class="price-label">Selling Price</span>
+                                        <span class="price-value selling">IQD <%= (product.sell_price || 0).toLocaleString() %></span>
+                                    </div>
+                                </div>
+                                
+                                <% if (profit > 0) { %>
+                                    <div class="profit-section">
+                                        <div class="profit-info">
+                                            <span class="profit-label">Potential Profit</span>
+                                            <span class="profit-value">IQD <%= profit.toLocaleString() %></span>
+                                        </div>
+                                        <div class="profit-margin">
+                                            <span class="margin-label">Margin:</span>
+                                            <span class="margin-value <%= profitMargin >= 50 ? 'high' : profitMargin >= 20 ? 'medium' : 'low' %>">
+                                                <%= profitMargin.toFixed(1) %>%
+                                            </span>
+                                        </div>
+                                    </div>
+                                <% } %>
+                            </div>
+                        </div>
+                        
+                        <!-- Action Buttons -->
+                        <div class="product-actions">
+                            <button class="action-btn primary" onclick="event.stopPropagation(); editProduct('<%= product._id %>')">
+                                <ion-icon name="create-outline"></ion-icon>
+                                <span>Edit</span>
+                            </button>
+                            <button class="action-btn secondary" onclick="event.stopPropagation(); manageStock('<%= product._id %>')">
+                                <ion-icon name="barcode-outline"></ion-icon>
+                                <span>Stock</span>
+                            </button>
+                            <button class="action-btn tertiary" onclick="event.stopPropagation(); quickSell('<%= product._id %>')">
+                                <ion-icon name="cash-outline"></ion-icon>
+                                <span>Sell</span>
+                            </button>
+                            <button class="action-btn danger" onclick="event.stopPropagation(); deleteProduct('<%= product._id %>')">
+                                <ion-icon name="trash-outline"></ion-icon>
+                            </button>
+                        </div>
+                    </div>
+                <% }); %>
+            </div>
+            
+            <!-- Pagination -->
+            <div class="pagination-container">
+                <div class="pagination-info">
+                    Showing <span id="showingFrom">1</span> to <span id="showingTo"><%= Math.min(products.length, 20) %></span> of <span id="totalItems"><%= products.length %></span> items
+                </div>
+                <div class="pagination-controls">
+                    <button class="pagination-btn" onclick="previousPage()" disabled>
+                        <ion-icon name="chevron-back-outline"></ion-icon>
+                    </button>
+                    <div class="page-numbers" id="pageNumbers"></div>
+                    <button class="pagination-btn" onclick="nextPage()">
+                        <ion-icon name="chevron-forward-outline"></ion-icon>
+                    </button>
+                </div>
+            </div>
+            
+        <% } else { %>
+            <!-- Premium Empty State -->
+            <div class="premium-empty-state">
+                <div class="empty-illustration-premium">
+                    <div class="empty-decoration">
+                        <div class="decoration-circle"></div>
+                        <div class="decoration-circle"></div>
+                    </div>
+                    <div class="empty-icon-container">
+                        <ion-icon name="cube-outline" class="empty-icon-premium"></ion-icon>
+                    </div>
+                </div>
+                <h3 class="empty-title">No Products in Inventory</h3>
+                <p class="empty-description">Start building your inventory by adding your first product. You can import from CSV or add items manually.</p>
+                <div class="empty-actions">
+                    <button class="premium-empty-action" onclick="window.location.href='/items/add'">
+                        <ion-icon name="add-outline"></ion-icon>
+                        Add Your First Product
+                    </button>
+                    <button class="btn-secondary" onclick="showImportDialog()">
+                        <ion-icon name="download-outline"></ion-icon>
+                        Import from CSV
+                    </button>
+                </div>
+            </div>
+        <% } %>
     </div>
 </div>
 
@@ -259,11 +528,21 @@ function debounce(func, wait) {
     };
 }
 
+// Global variables
+let selectedProducts = [];
+let currentPage = 1;
+let itemsPerPage = 20;
+
 // Search functionality
 const handleSearch = debounce((value) => {
+    const searchClearBtn = document.querySelector('.search-clear');
+    if (searchClearBtn) {
+        searchClearBtn.style.display = value.length > 0 ? 'block' : 'none';
+    }
+    
     if (value.length > 2) {
         console.log('Searching:', value);
-        window.location.href = `/storage/search/${value}`;
+        window.location.href = `/storage/search/${encodeURIComponent(value)}`;
     } else if (value.length === 0) {
         window.location.href = '/storage';
     }
@@ -271,15 +550,38 @@ const handleSearch = debounce((value) => {
 
 // Filter functionality
 function applyFilters() {
-    const sort = document.getElementById('sortFilter').value;
-    if (sort) window.location.href = `/storage/filter/${sort}`;
+    const sort = document.getElementById('sortFilter')?.value;
+    const size = document.getElementById('sizeFilter')?.value;
+    const category = document.getElementById('categoryFilter')?.value;
+    const stock = document.getElementById('stockFilter')?.value;
+    const price = document.getElementById('priceFilter')?.value;
+    
+    let url = '/storage/filter/';
+    const filters = [];
+    
+    if (sort) filters.push(`sort:${sort}`);
+    if (size) filters.push(`size:${size}`);
+    if (category) filters.push(`category:${category}`);
+    if (stock) filters.push(`stock:${stock}`);
+    if (price) filters.push(`price:${price}`);
+    
+    if (filters.length > 0) {
+        url += filters.join(',');
+        window.location.href = url;
+    }
 }
 
 function clearSearch() {
-    document.getElementById('globalSearch').value = '';
+    const searchInput = document.getElementById('globalSearch');
+    const searchClearBtn = document.querySelector('.search-clear');
+    
+    if (searchInput) searchInput.value = '';
+    if (searchClearBtn) searchClearBtn.style.display = 'none';
+    
     window.location.href = '/storage';
 }
 
+// View switching
 function switchView(view) {
     const buttons = document.querySelectorAll('.view-btn');
     buttons.forEach(btn => btn.classList.remove('active'));
@@ -290,20 +592,200 @@ function switchView(view) {
     }
     
     const grid = document.getElementById('productsGrid');
-    if (view === 'list') {
-        grid.style.gridTemplateColumns = '1fr';
-    } else {
-        grid.style.gridTemplateColumns = 'repeat(auto-fill, minmax(320px, 1fr))';
+    if (grid) {
+        switch(view) {
+            case 'list':
+                grid.style.gridTemplateColumns = '1fr';
+                grid.className = 'products-container list-view';
+                break;
+            case 'compact':
+                grid.style.gridTemplateColumns = 'repeat(auto-fill, minmax(200px, 1fr))';
+                grid.className = 'products-container compact-view';
+                break;
+            default: // grid
+                grid.style.gridTemplateColumns = 'repeat(auto-fill, minmax(320px, 1fr))';
+                grid.className = 'products-container grid-view';
+                break;
+        }
     }
 }
 
+// Quick filter functions
+function filterLowStock() {
+    window.location.href = '/storage/filter/stock:low-stock';
+}
+
+function filterOutOfStock() {
+    window.location.href = '/storage/filter/stock:out-of-stock';
+}
+
+function filterHighValue() {
+    window.location.href = '/storage/filter/price:500000+';
+}
+
+function showAdvancedFilters() {
+    // Show advanced filter modal or expand filters
+    console.log('Advanced filters');
+}
+
+// Filter actions
+function resetAllFilters() {
+    window.location.href = '/storage';
+}
+
+function saveCurrentFilter() {
+    // Save current filter configuration
+    console.log('Save filter');
+}
+
+// Product selection
+function toggleProductSelection(productId) {
+    const checkbox = document.getElementById(`select-${productId}`);
+    if (checkbox.checked) {
+        if (!selectedProducts.includes(productId)) {
+            selectedProducts.push(productId);
+        }
+    } else {
+        selectedProducts = selectedProducts.filter(id => id !== productId);
+    }
+    updateBulkActionsVisibility();
+}
+
+function updateBulkActionsVisibility() {
+    const bulkActionsBtn = document.querySelector('.btn-bulk');
+    if (bulkActionsBtn) {
+        bulkActionsBtn.style.display = selectedProducts.length > 0 ? 'flex' : 'none';
+    }
+}
+
+// Product actions
 function editProduct(id) {
     window.location.href = `/items/edit/${id}`;
 }
 
-function manageStock(id) {
-    console.log('Managing stock for product:', id);
+function viewProduct(id) {
+    window.location.href = `/items/get/${id}`;
 }
+
+function duplicateProduct(id) {
+    // Duplicate product functionality
+    console.log('Duplicate product:', id);
+}
+
+function manageStock(id) {
+    // Stock management functionality
+    console.log('Managing stock for product:', id);
+    // Could open a modal or navigate to stock management page
+}
+
+function quickSell(id) {
+    // Quick sell functionality
+    console.log('Quick sell product:', id);
+    // Could open a quick sell modal
+}
+
+function deleteProduct(id) {
+    Swal.fire({
+        title: 'Delete Product',
+        text: 'Are you sure you want to delete this product? This action cannot be undone.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Yes, delete it!'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // Perform delete action
+            console.log('Deleting product:', id);
+        }
+    });
+}
+
+// Bulk actions
+function showBulkActions() {
+    if (selectedProducts.length === 0) {
+        Swal.fire({
+            icon: 'info',
+            title: 'No Products Selected',
+            text: 'Please select products to perform bulk actions.'
+        });
+        return;
+    }
+    
+    // Show bulk actions modal or dropdown
+    console.log('Bulk actions for:', selectedProducts);
+}
+
+function exportInventory() {
+    console.log('Exporting inventory...');
+    // Implement export functionality
+}
+
+function importInventory() {
+    console.log('Importing inventory...');
+    // Implement import functionality
+}
+
+function showImportDialog() {
+    // Show import dialog
+    console.log('Show import dialog');
+}
+
+// Pagination
+function changeItemsPerPage(value) {
+    itemsPerPage = value === 'all' ? -1 : parseInt(value);
+    currentPage = 1;
+    updatePagination();
+}
+
+function previousPage() {
+    if (currentPage > 1) {
+        currentPage--;
+        updatePagination();
+    }
+}
+
+function nextPage() {
+    const totalItems = document.getElementById('totalItems')?.textContent || 0;
+    const maxPage = Math.ceil(totalItems / itemsPerPage);
+    if (currentPage < maxPage) {
+        currentPage++;
+        updatePagination();
+    }
+}
+
+function updatePagination() {
+    const showingFrom = document.getElementById('showingFrom');
+    const showingTo = document.getElementById('showingTo');
+    const totalItems = parseInt(document.getElementById('totalItems')?.textContent || 0);
+    
+    if (itemsPerPage === -1) {
+        if (showingFrom) showingFrom.textContent = '1';
+        if (showingTo) showingTo.textContent = totalItems.toString();
+    } else {
+        const start = (currentPage - 1) * itemsPerPage + 1;
+        const end = Math.min(currentPage * itemsPerPage, totalItems);
+        
+        if (showingFrom) showingFrom.textContent = start.toString();
+        if (showingTo) showingTo.textContent = end.toString();
+    }
+    
+    // Update pagination controls
+    const prevBtn = document.querySelector('.pagination-btn:first-child');
+    const nextBtn = document.querySelector('.pagination-btn:last-child');
+    
+    if (prevBtn) prevBtn.disabled = currentPage === 1;
+    if (nextBtn) nextBtn.disabled = currentPage >= Math.ceil(totalItems / itemsPerPage);
+}
+
+// Initialize
+document.addEventListener('DOMContentLoaded', function() {
+    updatePagination();
+    
+    // Set initial view
+    const initialView = 'grid';
+    switchView(initialView);
+});
 </script>
 
 <%- include('../layout/footer') -%>
