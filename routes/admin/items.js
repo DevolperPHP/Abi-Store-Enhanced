@@ -33,24 +33,19 @@ router.get("/", async (req, res) => {
     try {
         const id = req.cookies.id
         const user = await User.findOne({ _id: id })
-        const uniqueProductNames = await Product.distinct('name');
-        const uniqueProducts = [];
-        const products = await Product.find({})
+
+        // Get all products - simplified approach
+        const products = await Product.find({}).sort({ Date: -1 })
         const data = products.map((item) => `${item.name} - ${item.size}`)
         const uniqueArray = [... new Set(data)]
 
-        for (const name of uniqueProductNames) {
-            const product = await Product.findOne({ name });
-            if (product) {
-                uniqueProducts.push(product);
-            }
-        }
         if (user) {
             const permission = user.permissions.includes("Items")
+            
             if (user.isAdmin == true || permission == true) {
                 res.render("items/items", {
                     user: user,
-                    products: uniqueProducts,
+                    products: products,
                     del: req.flash("delete-suc"),
                     data: uniqueArray,
                 })
@@ -58,9 +53,9 @@ router.get("/", async (req, res) => {
                 req.flash("permission-error", "error")
                 res.redirect("/")
             }
-        } else[
+        } else {
             res.redirect("/passport/sign-up")
-        ]
+        }
     } catch (err) {
         console.log(err);
     }
@@ -108,7 +103,7 @@ router.get("/filter/new", async (req, res) => {
                     user: user,
                     products: products,
                     del: req.flash("delete-suc"),
-                    data: data,
+                    data: uniqueArray,
                 })
             } else {
                 req.flash("permission-error", "error")
@@ -136,7 +131,7 @@ router.get("/filter/Old", async (req, res) => {
                     user: user,
                     products: products,
                     del: req.flash("delete-suc"),
-                    data: data,
+                    data: uniqueArray,
                 })
             } else {
                 req.flash("permission-error", "error")
@@ -717,4 +712,374 @@ router.get('/barcode/:item', async (req, res) => {
         console.log(err);
     }
 })
+
+// Bulk operations API endpoints
+router.post('/bulk-delete', async (req, res) => {
+    try {
+        const id = req.cookies.id
+        const user = await User.findOne({ _id: id })
+
+        if (user && (user.isAdmin == true || user.permissions.includes("Items"))) {
+            const { productIds } = req.body
+            
+            if (productIds && Array.isArray(productIds)) {
+                await Product.deleteMany({ _id: { $in: productIds } })
+                res.json({ success: true, message: 'Products deleted successfully' })
+            } else {
+                res.status(400).json({ success: false, message: 'Invalid product IDs' })
+            }
+        } else {
+            res.status(403).json({ success: false, message: 'Permission denied' })
+        }
+    } catch (err) {
+        console.log(err)
+        res.status(500).json({ success: false, message: 'Server error' })
+    }
+})
+
+router.post('/bulk-edit', async (req, res) => {
+    try {
+        const id = req.cookies.id
+        const user = await User.findOne({ _id: id })
+
+        if (user && (user.isAdmin == true || user.permissions.includes("Items"))) {
+            const { productIds, updates } = req.body
+            
+            if (productIds && Array.isArray(productIds) && updates) {
+                await Product.updateMany(
+                    { _id: { $in: productIds } },
+                    { $set: updates }
+                )
+                res.json({ success: true, message: 'Products updated successfully' })
+            } else {
+                res.status(400).json({ success: false, message: 'Invalid data' })
+            }
+        } else {
+            res.status(403).json({ success: false, message: 'Permission denied' })
+        }
+    } catch (err) {
+        console.log(err)
+        res.status(500).json({ success: false, message: 'Server error' })
+    }
+})
+
+// Advanced search API
+router.get('/search-advanced', async (req, res) => {
+    try {
+        const id = req.cookies.id
+        const user = await User.findOne({ _id: id })
+
+        if (user && (user.isAdmin == true || user.permissions.includes("Items"))) {
+            const { query, category, brand, size, minPrice, maxPrice, inStock } = req.query
+            
+            let searchConditions = {}
+            
+            if (query) {
+                searchConditions.$or = [
+                    { name: { $regex: query, $options: 'i' } },
+                    { brand: { $regex: query, $options: 'i' } },
+                    { category: { $regex: query, $options: 'i' } },
+                    { barcode: { $regex: query, $options: 'i' } }
+                ]
+            }
+            
+            if (category) searchConditions.category = category
+            if (brand) searchConditions.brand = brand
+            if (size) searchConditions.size = size
+            if (minPrice || maxPrice) {
+                searchConditions.sell_price = {}
+                if (minPrice) searchConditions.sell_price.$gte = parseFloat(minPrice)
+                if (maxPrice) searchConditions.sell_price.$lte = parseFloat(maxPrice)
+            }
+            if (inStock === 'true') {
+                searchConditions.qty = { $gt: 0 }
+            }
+
+            const products = await Product.find(searchConditions)
+            res.json({ success: true, products })
+        } else {
+            res.status(403).json({ success: false, message: 'Permission denied' })
+        }
+    } catch (err) {
+        console.log(err)
+        res.status(500).json({ success: false, message: 'Server error' })
+    }
+})
+
+// API endpoint for paginated items (for infinite scroll)
+router.get('/api/items', async (req, res) => {
+    try {
+        const id = req.cookies.id
+        const user = await User.findOne({ _id: id })
+
+        if (user && (user.isAdmin == true || user.permissions.includes("Items"))) {
+            const page = parseInt(req.query.page) || 1
+            const limit = parseInt(req.query.limit) || 50
+            const sort = req.query.sort || 'Date:-1'
+            const [sortField, sortOrder] = sort.split(':')
+            const sortOptions = { [sortField]: sortOrder === 'desc' ? -1 : 1 }
+
+            const skip = (page - 1) * limit
+            
+            const products = await Product.find({})
+                .sort(sortOptions)
+                .skip(skip)
+                .limit(limit)
+            
+            const total = await Product.countDocuments()
+            const hasMore = (page * limit) < total
+            
+            // Get unique data for filters
+            const allProducts = await Product.find({})
+            const data = allProducts.map((item) => `${item.name} - ${item.size}`)
+            const uniqueArray = [... new Set(data)]
+
+            res.json({
+                success: true,
+                products,
+                pagination: {
+                    currentPage: page,
+                    totalPages: Math.ceil(total / limit),
+                    totalItems: total,
+                    hasMore,
+                    itemsPerPage: limit
+                },
+                filterData: uniqueArray
+            })
+        } else {
+            res.status(403).json({ success: false, message: 'Permission denied' })
+        }
+    } catch (err) {
+        console.log(err)
+        res.status(500).json({ success: false, message: 'Server error' })
+    }
+})
+
+// API endpoint for paginated filtered items
+router.get('/api/items/filter/:type', async (req, res) => {
+    try {
+        const id = req.cookies.id
+        const user = await User.findOne({ _id: id })
+
+        if (user && (user.isAdmin == true || user.permissions.includes("Items"))) {
+            const page = parseInt(req.query.page) || 1
+            const limit = parseInt(req.query.limit) || 50
+            const filterType = req.params.type
+            const searchQuery = req.query.search
+            const category = req.query.category
+            const brand = req.query.brand
+
+            let query = {}
+            let sortOptions = { Date: -1 }
+
+            switch (filterType) {
+                case 'all':
+                    query = {}
+                    break
+                case 'new':
+                    sortOptions = { Date: -1 }
+                    break
+                case 'old':
+                    sortOptions = { Date: 1 }
+                    break
+            }
+
+            // Add search filter if provided
+            if (searchQuery && searchQuery.trim()) {
+                const [name, size] = searchQuery.split(' - ')
+                if (name && size) {
+                    query = { name: name.trim(), size: size.trim() }
+                } else {
+                    query = { name: { $regex: searchQuery.trim(), $options: 'i' } }
+                }
+            }
+
+            // Add category filter if provided
+            if (category && category.trim()) {
+                query.category = { $regex: category.trim(), $options: 'i' }
+            }
+
+            // Add brand filter if provided
+            if (brand && brand.trim()) {
+                query.brand = { $regex: brand.trim(), $options: 'i' }
+            }
+
+            const skip = (page - 1) * limit
+            
+            const products = await Product.find(query)
+                .sort(sortOptions)
+                .skip(skip)
+                .limit(limit)
+            
+            const total = await Product.countDocuments(query)
+            const hasMore = (page * limit) < total
+            
+            res.json({
+                success: true,
+                products,
+                pagination: {
+                    currentPage: page,
+                    totalPages: Math.ceil(total / limit),
+                    totalItems: total,
+                    hasMore,
+                    itemsPerPage: limit
+                }
+            })
+        } else {
+            res.status(403).json({ success: false, message: 'Permission denied' })
+        }
+    } catch (err) {
+        console.log(err)
+        res.status(500).json({ success: false, message: 'Server error' })
+    }
+})
+
+// API endpoint to get ALL categories and brands from entire database
+router.get('/api/categories-brands', async (req, res) => {
+    try {
+        const id = req.cookies.id
+        const user = await User.findOne({ _id: id })
+
+        if (user && (user.isAdmin == true || user.permissions.includes("Items"))) {
+            // Get ALL unique categories from entire database
+            const allCategories = await Product.distinct('category')
+            const categories = allCategories.filter(Boolean).sort()
+            
+            // Get ALL unique brands from entire database  
+            const allBrands = await Product.distinct('brand')
+            const brands = allBrands.filter(Boolean).sort()
+            
+            res.json({
+                success: true,
+                categories,
+                brands,
+                counts: {
+                    totalCategories: categories.length,
+                    totalBrands: brands.length
+                }
+            })
+        } else {
+            res.status(403).json({ success: false, message: 'Permission denied' })
+        }
+    } catch (err) {
+        console.log(err)
+        res.status(500).json({ success: false, message: 'Server error' })
+    }
+})
+
+// API endpoint for search with category and brand filters
+router.get('/api/items/filter/search', async (req, res) => {
+    try {
+        const id = req.cookies.id
+        const user = await User.findOne({ _id: id })
+
+        if (user && (user.isAdmin == true || user.permissions.includes("Items"))) {
+            const page = parseInt(req.query.page) || 1
+            const limit = parseInt(req.query.limit) || 50
+            const searchQuery = req.query.search
+            const category = req.query.category
+            const brand = req.query.brand
+
+            if (!searchQuery || !searchQuery.trim()) {
+                return res.status(400).json({ success: false, message: 'Search query is required' })
+            }
+
+            let query = {}
+            let sortOptions = { Date: -1 }
+
+            // Parse search query (supports "name - size" format)
+            const [name, size] = searchQuery.split(' - ')
+            if (name && size) {
+                query = { 
+                    name: { $regex: name.trim(), $options: 'i' },
+                    size: { $regex: size.trim(), $options: 'i' }
+                }
+            } else {
+                query = { 
+                    $or: [
+                        { name: { $regex: searchQuery.trim(), $options: 'i' } },
+                        { brand: { $regex: searchQuery.trim(), $options: 'i' } },
+                        { category: { $regex: searchQuery.trim(), $options: 'i' } },
+                        { barcode: { $regex: searchQuery.trim(), $options: 'i' } }
+                    ]
+                }
+            }
+
+            // Add category filter if provided
+            if (category && category.trim()) {
+                query.category = { $regex: category.trim(), $options: 'i' }
+            }
+
+            // Add brand filter if provided
+            if (brand && brand.trim()) {
+                query.brand = { $regex: brand.trim(), $options: 'i' }
+            }
+
+            const skip = (page - 1) * limit
+            
+            const products = await Product.find(query)
+                .sort(sortOptions)
+                .skip(skip)
+                .limit(limit)
+            
+            const total = await Product.countDocuments(query)
+            const hasMore = (page * limit) < total
+            
+            res.json({
+                success: true,
+                products,
+                pagination: {
+                    currentPage: page,
+                    totalPages: Math.ceil(total / limit),
+                    totalItems: total,
+                    hasMore,
+                    itemsPerPage: limit
+                }
+            })
+        } else {
+            res.status(403).json({ success: false, message: 'Permission denied' })
+        }
+    } catch (err) {
+        console.log(err)
+        res.status(500).json({ success: false, message: 'Server error' })
+    }
+})
+
+// Get product statistics
+router.get('/stats', async (req, res) => {
+    try {
+        const id = req.cookies.id
+        const user = await User.findOne({ _id: id })
+
+        if (user && (user.isAdmin == true || user.permissions.includes("Items"))) {
+            const totalProducts = await Product.countDocuments()
+            const totalCategories = await Product.distinct('category').then(cats => cats.filter(Boolean).length)
+            const totalBrands = await Product.distinct('brand').then(brands => brands.filter(Boolean).length)
+            const lowStockProducts = await Product.countDocuments({ qty: { $lt: 10 } })
+            const outOfStockProducts = await Product.countDocuments({ qty: 0 })
+            
+            const avgPrice = await Product.aggregate([
+                { $group: { _id: null, avgPrice: { $avg: '$sell_price' } } }
+            ])
+            
+            res.json({
+                success: true,
+                stats: {
+                    totalProducts,
+                    totalCategories,
+                    totalBrands,
+                    lowStockProducts,
+                    outOfStockProducts,
+                    avgPrice: Math.round(avgPrice[0]?.avgPrice || 0)
+                }
+            })
+        } else {
+            res.status(403).json({ success: false, message: 'Permission denied' })
+        }
+    } catch (err) {
+        console.log(err)
+        res.status(500).json({ success: false, message: 'Server error' })
+    }
+})
+
 module.exports = router
