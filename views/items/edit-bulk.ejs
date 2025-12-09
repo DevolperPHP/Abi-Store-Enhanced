@@ -1,0 +1,999 @@
+<%- include("../layout/navbar") -%>
+
+  <div class="add-item-page-container items-interface">
+    <!-- Subtle background pattern -->
+    <div class="background-pattern"></div>
+
+    <div class="page-header animate-fade-down">
+      <div class="header-content">
+        <div class="title-wrapper">
+          <h1 class="page-title">Bulk Edit <span class="product-name-highlight"><%= data.name%></span></h1>
+          <div class="title-accent"></div>
+        </div>
+        <p class="page-subtitle">Update product information across all variants - changes will apply to all items with this name</p>
+      </div>
+      <div class="header-actions">
+        <button class="btn-secondary" onclick="window.location.href='/items/get/<%= data.id%>'">
+          <ion-icon name="arrow-back-outline"></ion-icon> Back to Product
+        </button>
+      </div>
+    </div>
+
+    <div class="form-grid">
+      <!-- Edit Name Card -->
+      <div class="form-card animate-fade-up delay-1">
+        <div class="card-header">
+          <div class="header-icon blue-bg">
+            <ion-icon name="text-outline"></ion-icon>
+          </div>
+          <h3>Product Name</h3>
+          <span class="bulk-badge">All Variants</span>
+        </div>
+        <div class="card-body">
+          <form action="/items/edit/name-all/<%= data.id%>?_method=PUT" method="post" class="bulk-form">
+            <div class="form-group">
+              <label>Product Name</label>
+              <div class="input-wrapper">
+                <ion-icon name="pricetag-outline"></ion-icon>
+                <input type="text" name="name" value="<%= data.name%>" placeholder="Enter product name" required>
+              </div>
+              <p class="field-hint">This will update the name for all size and color variants</p>
+            </div>
+            <div class="form-actions-inline">
+              <button type="submit" class="btn-submit">
+                <ion-icon name="checkmark-circle-outline"></ion-icon> Update Name
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- Edit Pricing Card -->
+      <div class="form-card animate-fade-up delay-2">
+        <div class="card-header">
+          <div class="header-icon green-bg">
+            <ion-icon name="cash-outline"></ion-icon>
+          </div>
+          <h3>Pricing & Category</h3>
+          <span class="bulk-badge">All Variants</span>
+        </div>
+        <div class="card-body">
+          <form action="/items/edit/price-all/<%= data.id%>?_method=PUT" method="post" class="bulk-form">
+            <div class="form-row">
+              <div class="form-group">
+                <label>Cost Price (IQD)</label>
+                <div class="input-wrapper">
+                  <ion-icon name="wallet-outline"></ion-icon>
+                  <input type="number" name="price" value="<%= data.price%>" placeholder="0" min="0" required>
+                </div>
+              </div>
+              <div class="form-group">
+                <label>Selling Price (IQD)</label>
+                <div class="input-wrapper">
+                  <ion-icon name="pricetag-outline"></ion-icon>
+                  <input type="number" name="sell_price" value="<%= data.sell_price%>" placeholder="0" min="0" required>
+                </div>
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label>Brand</label>
+                <div class="input-wrapper">
+                  <ion-icon name="briefcase-outline"></ion-icon>
+                  <select name="brand" required>
+                    <option value="<%= data.brand%>" selected><%= data.brand%></option>
+                    <% brand.forEach(brandItem => { %>
+                      <option value="<%= brandItem.name%>">
+                        <%= brandItem.name%>
+                      </option>
+                    <% }) %>
+                  </select>
+                  <ion-icon name="chevron-down-outline" class="select-arrow"></ion-icon>
+                </div>
+              </div>
+              <div class="form-group">
+                <label>Category</label>
+                <div class="input-wrapper">
+                  <ion-icon name="folder-outline"></ion-icon>
+                  <select name="category" required>
+                    <option value="<%= data.category%>" selected><%= data.category%></option>
+                    <% category.forEach(categoryItem => { %>
+                      <option value="<%= categoryItem.name%>">
+                        <%= categoryItem.name%>
+                      </option>
+                    <% }) %>
+                  </select>
+                  <ion-icon name="chevron-down-outline" class="select-arrow"></ion-icon>
+                </div>
+              </div>
+            </div>
+            <p class="field-hint">This will update pricing and categorization for all variants</p>
+            <div class="form-actions-inline">
+              <button type="submit" class="btn-submit">
+                <ion-icon name="checkmark-circle-outline"></ion-icon> Update Pricing
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- Edit Image Card -->
+      <div class="form-card animate-fade-up delay-3">
+        <div class="card-header">
+          <div class="header-icon purple-bg">
+            <ion-icon name="image-outline"></ion-icon>
+          </div>
+          <h3>Product Image</h3>
+          <span class="bulk-badge-color"><%= data.colorName || 'All Colors'%></span>
+        </div>
+        <div class="card-body">
+          <form action="/items/edit/image-color-all/<%= data.id%>?_method=PUT" method="post" enctype="multipart/form-data" class="bulk-form">
+            <div class="current-image-preview">
+              <% if (data.image && data.image !== 'none' && data.image !== '/upload/images/noImage.png') { %>
+                <img src="/upload/images/<%= data.image%>" alt="Current product image" class="preview-img">
+              <% } else { %>
+                <div class="no-image-placeholder">
+                  <ion-icon name="image-outline"></ion-icon>
+                  <span>No image uploaded</span>
+                </div>
+              <% } %>
+            </div>
+
+            <div class="form-group">
+              <label>New Product Image</label>
+              <div class="file-upload-wrapper" id="dropZone">
+                <input type="file" name="image" id="fileInput" accept="image/*" hidden required>
+                <div class="upload-content">
+                  <div class="upload-icon">
+                    <ion-icon name="cloud-upload-outline"></ion-icon>
+                  </div>
+                  <p>Click to upload or drag and drop</p>
+                  <span class="upload-hint">This will update the image for all sizes with color: <%= data.colorName || 'this color'%></span>
+                  <span class="file-name" id="fileName">No file selected</span>
+                </div>
+                <div class="image-preview" id="imagePreview"></div>
+              </div>
+            </div>
+            <div class="form-actions-inline">
+              <button type="submit" class="btn-submit">
+                <ion-icon name="checkmark-circle-outline"></ion-icon> Update Image
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- Product Info Summary -->
+    <div class="info-summary animate-fade-up delay-4">
+      <div class="summary-header">
+        <ion-icon name="information-circle-outline"></ion-icon>
+        <h4>Product Summary</h4>
+      </div>
+      <div class="summary-grid">
+        <div class="summary-item">
+          <span class="summary-label">Product Name</span>
+          <span class="summary-value"><%= data.name%></span>
+        </div>
+        <div class="summary-item">
+          <span class="summary-label">Current Size</span>
+          <span class="summary-value"><%= data.size%></span>
+        </div>
+        <div class="summary-item">
+          <span class="summary-label">Current Color</span>
+          <span class="summary-value">
+            <span class="color-dot" style="background-color: <%= data.color%>;"></span>
+            <%= data.colorName || data.color%>
+          </span>
+        </div>
+        <div class="summary-item">
+          <span class="summary-label">Category</span>
+          <span class="summary-value"><%= data.category || 'Not set'%></span>
+        </div>
+        <div class="summary-item">
+          <span class="summary-label">Brand</span>
+          <span class="summary-value"><%= data.brand || 'Not set'%></span>
+        </div>
+        <div class="summary-item">
+          <span class="summary-label">Price</span>
+          <span class="summary-value price"><%= data.sell_price ? data.sell_price.toLocaleString() : '0'%> IQD</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <style>
+    /* Product Name Highlight */
+    .product-name-highlight {
+      background: linear-gradient(135deg, #007AFF, #30D158);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      font-weight: 700;
+    }
+
+    /* Edit Item Page Specific Styles */
+    .add-item-page-container {
+      margin-left: 280px;
+      margin-top: 64px;
+      padding: 24px;
+      min-height: calc(100vh - 64px);
+      background: #ffffff;
+      transition: var(--transition);
+      max-width: none;
+      width: auto;
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    /* Subtle Background Pattern */
+    .background-pattern {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-image:
+        radial-gradient(circle at 25% 25%, rgba(0, 122, 255, 0.03) 0%, transparent 50%),
+        radial-gradient(circle at 75% 75%, rgba(48, 209, 88, 0.03) 0%, transparent 50%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .add-item-page-container > * {
+      position: relative;
+      z-index: 1;
+    }
+
+    /* Page Header */
+    .page-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 32px;
+      padding-bottom: 24px;
+      border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+    }
+
+    .header-content {
+      flex: 1;
+    }
+
+    .title-wrapper {
+      position: relative;
+      display: inline-block;
+    }
+
+    .page-title {
+      font-size: 32px;
+      font-weight: 700;
+      color: #1d1d1f;
+      margin: 0 0 8px 0;
+      letter-spacing: -1px;
+      background: linear-gradient(135deg, #1d1d1f 0%, #007AFF 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      position: relative;
+    }
+
+    .title-accent {
+      position: absolute;
+      bottom: -4px;
+      left: 0;
+      width: 60px;
+      height: 3px;
+      background: linear-gradient(90deg, #007AFF, #30D158);
+      border-radius: 2px;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .page-header:hover .title-accent {
+      opacity: 1;
+    }
+
+    .page-subtitle {
+      font-size: 16px;
+      color: #8e8e93;
+      margin: 0;
+      font-weight: 400;
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 12px;
+    }
+
+    /* Apple-Inspired Form Grid */
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+      gap: 24px;
+      margin-bottom: 32px;
+      max-width: none;
+      width: 100%;
+    }
+
+    /* Premium Card Design */
+    .form-card {
+      background: #ffffff;
+      border-radius: 16px;
+      box-shadow:
+        0 1px 3px rgba(0, 0, 0, 0.1),
+        0 1px 2px rgba(0, 0, 0, 0.06);
+      overflow: hidden;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      border: 1px solid rgba(0, 0, 0, 0.04);
+      position: relative;
+    }
+
+    .form-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(0, 122, 255, 0.1), transparent);
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .form-card:hover {
+      transform: translateY(-4px);
+      box-shadow:
+        0 10px 25px rgba(0, 0, 0, 0.1),
+        0 4px 6px rgba(0, 0, 0, 0.05);
+    }
+
+    .form-card:hover::before {
+      opacity: 1;
+    }
+
+    /* Refined Card Header */
+    .card-header {
+      padding: 16px 20px 12px 20px;
+      background: linear-gradient(135deg, #fafbfc 0%, #f8f9fa 100%);
+      border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      position: relative;
+    }
+
+    .card-header::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 16px;
+      right: 16px;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(0, 122, 255, 0.2), transparent);
+    }
+
+    .header-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .blue-bg {
+      background: linear-gradient(135deg, #007AFF, #0056CC);
+      color: #ffffff;
+      box-shadow: 0 4px 12px rgba(0, 122, 255, 0.3);
+    }
+
+    .green-bg {
+      background: linear-gradient(135deg, #30D158, #1AAD52);
+      color: #ffffff;
+      box-shadow: 0 4px 12px rgba(48, 209, 88, 0.3);
+    }
+
+    .purple-bg {
+      background: linear-gradient(135deg, #AF52DE, #8E3DC7);
+      color: #ffffff;
+      box-shadow: 0 4px 12px rgba(175, 82, 222, 0.3);
+    }
+
+    .card-header h3 {
+      margin: 0;
+      font-size: 18px;
+      font-weight: 600;
+      color: #1d1d1f;
+      letter-spacing: -0.02em;
+      flex: 1;
+    }
+
+    /* Bulk Badge */
+    .bulk-badge, .bulk-badge-color {
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .bulk-badge {
+      background: linear-gradient(135deg, rgba(0, 122, 255, 0.1), rgba(0, 122, 255, 0.05));
+      color: #007AFF;
+      border: 1px solid rgba(0, 122, 255, 0.2);
+    }
+
+    .bulk-badge-color {
+      background: linear-gradient(135deg, rgba(175, 82, 222, 0.1), rgba(175, 82, 222, 0.05));
+      color: #AF52DE;
+      border: 1px solid rgba(175, 82, 222, 0.2);
+    }
+
+    /* Premium Card Body */
+    .card-body {
+      padding: 20px;
+      background: #ffffff;
+    }
+
+    /* Premium Form Elements */
+    .form-group {
+      margin-bottom: 16px;
+      position: relative;
+    }
+
+    .form-group:last-child {
+      margin-bottom: 0;
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    /* Refined Labels */
+    label {
+      display: block;
+      margin-bottom: 8px;
+      color: #1d1d1f;
+      font-size: 14px;
+      font-weight: 500;
+      letter-spacing: -0.01em;
+    }
+
+    /* Modern Input Wrappers */
+    .input-wrapper {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+
+    .input-wrapper ion-icon {
+      position: absolute;
+      left: 12px;
+      color: #8e8e93;
+      font-size: 16px;
+      pointer-events: none;
+      transition: color 0.2s ease;
+      z-index: 2;
+    }
+
+    /* Premium Input Fields */
+    .input-wrapper input,
+    .input-wrapper select,
+    .input-wrapper textarea {
+      width: 100%;
+      padding: 12px 12px 12px 42px;
+      border: 1.5px solid #e5e5e7;
+      border-radius: 10px;
+      font-size: 15px;
+      color: #1d1d1f;
+      background: #ffffff;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      appearance: none;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      letter-spacing: -0.01em;
+    }
+
+    /* Focus States */
+    .input-wrapper input:focus,
+    .input-wrapper select:focus,
+    .input-wrapper textarea:focus {
+      outline: none;
+      border-color: #007AFF;
+      box-shadow:
+        0 0 0 3px rgba(0, 122, 255, 0.1),
+        0 1px 3px rgba(0, 0, 0, 0.1);
+      background: #ffffff;
+    }
+
+    .input-wrapper input:focus + ion-icon,
+    .input-wrapper select:focus + ion-icon {
+      color: #007AFF;
+    }
+
+    /* Hover States */
+    .input-wrapper:hover input,
+    .input-wrapper:hover select {
+      border-color: #d1d1d6;
+      background: #fafafa;
+    }
+
+    /* Select Arrow */
+    .select-arrow {
+      left: auto !important;
+      right: 12px;
+      pointer-events: none;
+      color: #8e8e93;
+      font-size: 12px;
+      z-index: 1;
+    }
+
+    /* Field Hint */
+    .field-hint {
+      margin: 8px 0 0 0;
+      font-size: 12px;
+      color: #8e8e93;
+      padding-left: 4px;
+    }
+
+    /* Current Image Preview */
+    .current-image-preview {
+      margin-bottom: 16px;
+      border-radius: 12px;
+      overflow: hidden;
+      background: #f8f9fa;
+      border: 1px solid #e5e5e7;
+    }
+
+    .preview-img {
+      width: 100%;
+      height: 160px;
+      object-fit: contain;
+      display: block;
+    }
+
+    .no-image-placeholder {
+      height: 120px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: #8e8e93;
+    }
+
+    .no-image-placeholder ion-icon {
+      font-size: 36px;
+      margin-bottom: 8px;
+      opacity: 0.5;
+    }
+
+    .no-image-placeholder span {
+      font-size: 13px;
+    }
+
+    /* Premium File Upload */
+    .file-upload-wrapper {
+      border: 2px dashed #d1d1d6;
+      border-radius: 12px;
+      padding: 20px 16px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+      overflow: hidden;
+      background: linear-gradient(135deg, #fafbfc 0%, #f8f9fa 100%);
+    }
+
+    .file-upload-wrapper:hover {
+      border-color: #007AFF;
+      background: linear-gradient(135deg, rgba(0, 122, 255, 0.02) 0%, rgba(0, 122, 255, 0.01) 100%);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(0, 122, 255, 0.1);
+    }
+
+    .file-upload-wrapper.dragover {
+      border-color: #007AFF;
+      background: rgba(0, 122, 255, 0.05);
+      transform: scale(1.02);
+    }
+
+    .upload-icon {
+      font-size: 28px;
+      color: #007AFF;
+      margin-bottom: 8px;
+    }
+
+    .upload-content p {
+      margin: 0 0 4px 0;
+      font-size: 14px;
+      color: #1d1d1f;
+      font-weight: 500;
+    }
+
+    .upload-hint {
+      margin: 0;
+      font-size: 12px;
+      color: #8e8e93;
+      font-weight: 400;
+    }
+
+    .file-name {
+      display: block;
+      margin-top: 8px;
+      font-size: 12px;
+      color: #007AFF;
+      font-weight: 600;
+      padding: 4px 8px;
+      background: rgba(0, 122, 255, 0.1);
+      border-radius: 6px;
+      display: inline-block;
+    }
+
+    .image-preview {
+      display: none;
+      margin-top: 12px;
+      width: 100%;
+      height: 120px;
+      border-radius: 8px;
+      background-size: cover;
+      background-position: center;
+      border: 2px solid #e5e5e7;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    .image-preview.has-image {
+      display: block;
+    }
+
+    /* Form Actions Inline */
+    .form-actions-inline {
+      margin-top: 16px;
+      padding-top: 16px;
+      border-top: 1px solid rgba(0, 0, 0, 0.06);
+    }
+
+    /* Apple-Inspired Buttons */
+    .btn-submit,
+    .btn-secondary {
+      padding: 10px 20px;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      border: none;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+
+    .btn-submit {
+      background: linear-gradient(135deg, #007AFF, #0056CC);
+      color: #ffffff;
+      box-shadow: 0 4px 12px rgba(0, 122, 255, 0.3);
+      width: 100%;
+      justify-content: center;
+    }
+
+    .btn-submit:hover {
+      background: linear-gradient(135deg, #0056CC, #003D99);
+      box-shadow: 0 6px 16px rgba(0, 122, 255, 0.4);
+      transform: translateY(-2px);
+    }
+
+    .btn-submit:active {
+      transform: translateY(0);
+    }
+
+    .btn-secondary {
+      background: #ffffff;
+      color: #007AFF;
+      border: 1.5px solid #e5e5e7;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+
+    .btn-secondary:hover {
+      background: #f8f9fa;
+      border-color: #d1d1d6;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      transform: translateY(-1px);
+    }
+
+    /* Info Summary Section */
+    .info-summary {
+      background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+      border-radius: 16px;
+      padding: 24px;
+      border: 1px solid rgba(0, 0, 0, 0.06);
+      margin-top: 8px;
+    }
+
+    .summary-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 20px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+    }
+
+    .summary-header ion-icon {
+      font-size: 20px;
+      color: #007AFF;
+    }
+
+    .summary-header h4 {
+      margin: 0;
+      font-size: 16px;
+      font-weight: 600;
+      color: #1d1d1f;
+    }
+
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 20px;
+    }
+
+    .summary-item {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .summary-label {
+      font-size: 12px;
+      color: #8e8e93;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .summary-value {
+      font-size: 15px;
+      color: #1d1d1f;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .summary-value.price {
+      color: #30D158;
+      font-weight: 600;
+    }
+
+    .color-dot {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      border: 2px solid #ffffff;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+    }
+
+    /* Animations */
+    @keyframes fadeUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes fadeDown {
+      from {
+        opacity: 0;
+        transform: translateY(-20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .animate-fade-up {
+      animation: fadeUp 0.5s ease-out forwards;
+      opacity: 0;
+    }
+
+    .animate-fade-down {
+      animation: fadeDown 0.5s ease-out forwards;
+      opacity: 0;
+    }
+
+    .delay-1 { animation-delay: 0.1s; }
+    .delay-2 { animation-delay: 0.2s; }
+    .delay-3 { animation-delay: 0.3s; }
+    .delay-4 { animation-delay: 0.4s; }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+      .add-item-page-container {
+        margin-left: 0;
+        margin-top: 64px;
+        padding: 16px;
+      }
+
+      .page-header {
+        flex-direction: column;
+        gap: 20px;
+        text-align: center;
+      }
+
+      .page-title {
+        font-size: 26px;
+      }
+
+      .form-grid {
+        grid-template-columns: 1fr;
+        gap: 20px;
+      }
+
+      .form-row {
+        grid-template-columns: 1fr;
+      }
+
+      .summary-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @media (max-width: 480px) {
+      .add-item-page-container {
+        padding: 12px;
+      }
+
+      .page-title {
+        font-size: 22px;
+      }
+
+      .summary-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* Sidebar Collapse State */
+    body.sidebar-collapsed .add-item-page-container {
+      margin-left: 96px;
+      transition: margin-left 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+  </style>
+
+  <script>
+    // Enhanced File Upload Handling
+    const dropZone = document.getElementById('dropZone');
+    const fileInput = document.getElementById('fileInput');
+    const fileName = document.getElementById('fileName');
+    const imagePreview = document.getElementById('imagePreview');
+    const uploadContent = document.querySelector('.upload-content');
+
+    // Click to upload
+    dropZone.addEventListener('click', () => fileInput.click());
+
+    // Drag and drop events
+    dropZone.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      dropZone.classList.add('dragover');
+    });
+
+    dropZone.addEventListener('dragleave', (e) => {
+      e.preventDefault();
+      if (!dropZone.contains(e.relatedTarget)) {
+        dropZone.classList.remove('dragover');
+      }
+    });
+
+    dropZone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      dropZone.classList.remove('dragover');
+
+      if (e.dataTransfer.files.length) {
+        fileInput.files = e.dataTransfer.files;
+        handleFile(e.dataTransfer.files[0]);
+      }
+    });
+
+    // File input change
+    fileInput.addEventListener('change', () => {
+      if (fileInput.files.length) {
+        handleFile(fileInput.files[0]);
+      }
+    });
+
+    // Enhanced file handling
+    function handleFile(file) {
+      if (!file.type.startsWith('image/')) {
+        showNotification('Please select an image file', 'error');
+        return;
+      }
+
+      if (file.size > 5 * 1024 * 1024) {
+        showNotification('File size must be less than 5MB', 'error');
+        return;
+      }
+
+      fileName.textContent = file.name;
+
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        imagePreview.style.backgroundImage = `url('${e.target.result}')`;
+        imagePreview.classList.add('has-image');
+        showNotification('Image selected successfully', 'success');
+      };
+
+      reader.readAsDataURL(file);
+    }
+
+    // Notification system
+    function showNotification(message, type = 'info') {
+      const existingNotification = document.querySelector('.notification-toast');
+      if (existingNotification) {
+        existingNotification.remove();
+      }
+
+      const notification = document.createElement('div');
+      notification.className = `notification-toast ${type}`;
+      notification.innerHTML = `
+        <div class="notification-content">
+          <ion-icon name="${type === 'success' ? 'checkmark-circle' : type === 'error' ? 'alert-circle' : 'information-circle'}"></ion-icon>
+          <span>${message}</span>
+        </div>
+      `;
+
+      notification.style.cssText = `
+        position: fixed;
+        top: 80px;
+        right: 24px;
+        background: ${type === 'success' ? '#30D158' : type === 'error' ? '#FF3B30' : '#007AFF'};
+        color: white;
+        padding: 12px 20px;
+        border-radius: 12px;
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        z-index: 10000;
+        font-weight: 500;
+        font-size: 14px;
+        transform: translateX(100%);
+        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      `;
+
+      document.body.appendChild(notification);
+
+      setTimeout(() => {
+        notification.style.transform = 'translateX(0)';
+      }, 100);
+
+      setTimeout(() => {
+        notification.style.transform = 'translateX(100%)';
+        setTimeout(() => {
+          if (notification.parentNode) {
+            notification.remove();
+          }
+        }, 300);
+      }, 3000);
+    }
+
+    // Form submission feedback
+    document.querySelectorAll('.bulk-form').forEach(form => {
+      form.addEventListener('submit', function(e) {
+        const submitBtn = this.querySelector('.btn-submit');
+        submitBtn.innerHTML = '<ion-icon name="loader-outline"></ion-icon> Updating...';
+        submitBtn.style.opacity = '0.7';
+        submitBtn.style.pointerEvents = 'none';
+      });
+    });
+  </script>
+
+  <%- include("../layout/footer") -%>

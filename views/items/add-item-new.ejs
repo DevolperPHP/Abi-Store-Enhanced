@@ -1,56 +1,63 @@
 <%- include("../layout/navbar") -%>
 
-  <div class="main-content-wrapper">
-    <!-- Success/Error Notifications -->
-    <% if(suc.length> 0){ %>
-      <script>
-        Swal.fire({
-          icon: 'success',
-          title: 'Item Added Successfully',
-          text: 'The product has been added to your inventory.',
-          confirmButtonColor: '#1a73e8',
-          confirmButtonText: 'Add Another Item',
-          showCancelButton: true,
-          cancelButtonText: 'Back to Items',
-          cancelButtonColor: '#5f6368',
-          customClass: {
-            popup: 'modern-alert',
-            confirmButton: 'modern-confirm-btn',
-            cancelButton: 'modern-cancel-btn'
-          }
-        }).then((result) => {
-          if (result.dismiss === Swal.DismissReason.cancel) {
-            window.location.href = '/items';
-          }
-        });
-      </script>
-      <% } %>
+  <!-- Success/Error Notifications -->
+  <% if(suc.length> 0){ %>
+    <script>
+      Swal.fire({
+        icon: 'success',
+        title: 'Item Added Successfully',
+        text: 'The product has been added to your inventory.',
+        confirmButtonColor: '#1a73e8',
+        confirmButtonText: 'Add Another Item',
+        showCancelButton: true,
+        cancelButtonText: 'Back to Items',
+        cancelButtonColor: '#5f6368',
+        customClass: {
+          popup: 'modern-alert',
+          confirmButton: 'modern-confirm-btn',
+          cancelButton: 'modern-cancel-btn'
+        }
+      }).then((result) => {
+        if (result.dismiss === Swal.DismissReason.cancel) {
+          window.location.href = '/items';
+        }
+      });
+    </script>
+    <% } %>
 
-        <% if(err.length> 0){ %>
-          <script>
-            Swal.fire({
-              icon: 'error',
-              title: 'Duplicate Item',
-              text: 'This item has already been added to the inventory.',
-              confirmButtonColor: '#d93025',
-              customClass: {
-                popup: 'modern-alert',
-                confirmButton: 'modern-confirm-btn'
-              }
-            })
-          </script>
-          <% } %>
+  <% if(err.length> 0){ %>
+    <script>
+      Swal.fire({
+        icon: 'error',
+        title: 'Duplicate Item',
+        text: 'This item has already been added to the inventory.',
+        confirmButtonColor: '#d93025',
+        customClass: {
+          popup: 'modern-alert',
+          confirmButton: 'modern-confirm-btn'
+        }
+      })
+    </script>
+    <% } %>
 
-            <div class="add-item-container">
-              <div class="page-header animate-fade-down">
-                <div class="header-text">
-                  <h1>Add New Product</h1>
-                  <p>Create a new item in your inventory</p>
-                </div>
-                <button class="btn-secondary" onclick="window.location.href='/items'">
-                  <ion-icon name="arrow-back-outline"></ion-icon> Back to Items
-                </button>
-              </div>
+  <div class="add-item-page-container items-interface">
+    <!-- Subtle background pattern -->
+    <div class="background-pattern"></div>
+    
+    <div class="page-header animate-fade-down">
+      <div class="header-content">
+        <div class="title-wrapper">
+          <h1 class="page-title">Add New Product</h1>
+          <div class="title-accent"></div>
+        </div>
+        <p class="page-subtitle">Create a new item in your inventory with professional details</p>
+      </div>
+      <div class="header-actions">
+        <button class="btn-secondary" onclick="window.location.href='/items'">
+          <ion-icon name="arrow-back-outline"></ion-icon> Back to Items
+        </button>
+      </div>
+    </div>
 
               <form action="/items/add-item" method="post" enctype="multipart/form-data" class="add-item-form">
                 <div class="form-grid">
@@ -148,12 +155,18 @@
                             <input type="number" name="qty" placeholder="0" min="0" required>
                           </div>
                         </div>
-                        <div class="form-group">
-                          <label>Barcode</label>
-                          <div class="input-wrapper">
+                      </div>
+                      
+                      <div class="form-group">
+                        <label>Barcode</label>
+                        <div class="barcode-input-wrapper">
+                          <div class="input-wrapper barcode-input-expanded">
                             <ion-icon name="barcode-outline"></ion-icon>
-                            <input type="text" name="barcode" placeholder="Scan or enter barcode">
+                            <input type="text" name="barcode" id="barcodeInput" placeholder="Scan or enter barcode">
                           </div>
+                          <button type="button" class="barcode-generate-btn" onclick="generateBarcode()" title="Generate Random Barcode">
+                            <ion-icon name="flash-outline"></ion-icon>
+                          </button>
                         </div>
                       </div>
                     </div>
@@ -231,133 +244,230 @@
   </div>
 
   <style>
-    /* Modern Variables */
-    :root {
-      --primary: #1a73e8;
-      --primary-dark: #1557b0;
-      --secondary: #e8f0fe;
-      --surface: #ffffff;
-      --background: #f8f9fa;
-      --text-primary: #202124;
-      --text-secondary: #5f6368;
-      --border: #dadce0;
-      --success: #1e8e3e;
-      --error: #d93025;
-      --shadow-sm: 0 1px 2px 0 rgba(60, 64, 67, 0.3), 0 1px 3px 1px rgba(60, 64, 67, 0.15);
-      --shadow-md: 0 4px 6px rgba(60, 64, 67, 0.3);
-      --radius: 12px;
+    /* Add Item Page Specific Styles */
+    .add-item-page-container {
+      margin-left: 280px;
+      margin-top: 64px;
+      padding: 24px;
+      min-height: calc(100vh - 64px);
+      background: #ffffff;
+      transition: var(--transition);
+      max-width: none;
+      width: auto;
+      position: relative;
+      overflow-x: hidden;
     }
 
-    .main-content-wrapper {
-      padding: 32px;
-      background-color: var(--background);
-      min-height: 100vh;
-      margin-left: 250px;
-      /* Adjust based on sidebar width */
+    /* Subtle Background Pattern */
+    .background-pattern {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-image: 
+        radial-gradient(circle at 25% 25%, rgba(0, 122, 255, 0.03) 0%, transparent 50%),
+        radial-gradient(circle at 75% 75%, rgba(48, 209, 88, 0.03) 0%, transparent 50%);
+      pointer-events: none;
+      z-index: 0;
     }
 
-    @media (max-width: 1000px) {
-      .main-content-wrapper {
-        margin-left: 0;
-        padding: 20px;
-      }
+    .add-item-page-container > * {
+      position: relative;
+      z-index: 1;
     }
 
-    .add-item-container {
-      max-width: 1000px;
-      margin: 0 auto;
-    }
-
-    /* Header Styles */
+    /* Page Header */
     .page-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
       margin-bottom: 32px;
+      padding-bottom: 24px;
+      border-bottom: 1px solid rgba(0, 0, 0, 0.06);
     }
 
-    .header-text h1 {
-      font-size: 28px;
-      color: var(--text-primary);
+    .header-content {
+      flex: 1;
+    }
+
+    .title-wrapper {
+      position: relative;
+      display: inline-block;
+    }
+
+    .page-title {
+      font-size: 32px;
+      font-weight: 700;
+      color: #1d1d1f;
       margin: 0 0 8px 0;
-      font-weight: 500;
+      letter-spacing: -1px;
+      background: linear-gradient(135deg, #1d1d1f 0%, #007AFF 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      position: relative;
     }
 
-    .header-text p {
-      color: var(--text-secondary);
+    .title-accent {
+      position: absolute;
+      bottom: -4px;
+      left: 0;
+      width: 60px;
+      height: 3px;
+      background: linear-gradient(90deg, #007AFF, #30D158);
+      border-radius: 2px;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .page-header:hover .title-accent {
+      opacity: 1;
+    }
+
+    .page-subtitle {
+      font-size: 16px;
+      color: #8e8e93;
       margin: 0;
-      font-size: 14px;
+      font-weight: 400;
     }
 
-    /* Form Grid */
-    .form-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-      gap: 24px;
-      margin-bottom: 32px;
-    }
-
-    /* Card Styles */
-    .form-card {
-      background: var(--surface);
-      border-radius: var(--radius);
-      box-shadow: var(--shadow-sm);
-      overflow: hidden;
-      transition: transform 0.2s, box-shadow 0.2s;
-    }
-
-    .form-card:hover {
-      transform: translateY(-2px);
-      box-shadow: var(--shadow-md);
-    }
-
-    .card-header {
-      padding: 20px;
-      border-bottom: 1px solid var(--border);
+    .header-actions {
       display: flex;
-      align-items: center;
       gap: 12px;
     }
 
+    /* Apple-Inspired Form Grid */
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 24px;
+      margin-bottom: 40px;
+      max-width: none;
+      width: 100%;
+    }
+
+    /* Premium Card Design */
+    .form-card {
+      background: #ffffff;
+      border-radius: 16px;
+      box-shadow: 
+        0 1px 3px rgba(0, 0, 0, 0.1),
+        0 1px 2px rgba(0, 0, 0, 0.06);
+      overflow: hidden;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      border: 1px solid rgba(0, 0, 0, 0.04);
+      position: relative;
+    }
+
+    .form-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(0, 122, 255, 0.1), transparent);
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .form-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 
+        0 10px 25px rgba(0, 0, 0, 0.1),
+        0 4px 6px rgba(0, 0, 0, 0.05);
+    }
+
+    .form-card:hover::before {
+      opacity: 1;
+    }
+
+    /* Refined Card Header */
+    .card-header {
+      padding: 16px 20px 12px 20px;
+      background: linear-gradient(135deg, #fafbfc 0%, #f8f9fa 100%);
+      border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      position: relative;
+    }
+
+    .card-header::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 16px;
+      right: 16px;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(0, 122, 255, 0.2), transparent);
+    }
+
     .header-icon {
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 20px;
+      font-size: 16px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .header-icon::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.7));
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .form-card:hover .header-icon::before {
+      opacity: 1;
     }
 
     .blue-bg {
-      background: #e8f0fe;
-      color: #1967d2;
+      background: linear-gradient(135deg, #007AFF, #0056CC);
+      color: #ffffff;
+      box-shadow: 0 4px 12px rgba(0, 122, 255, 0.3);
     }
 
     .green-bg {
-      background: #e6f4ea;
-      color: #137333;
+      background: linear-gradient(135deg, #30D158, #1AAD52);
+      color: #ffffff;
+      box-shadow: 0 4px 12px rgba(48, 209, 88, 0.3);
     }
 
     .purple-bg {
-      background: #f3e8fd;
-      color: #9334e6;
+      background: linear-gradient(135deg, #AF52DE, #8E3DC7);
+      color: #ffffff;
+      box-shadow: 0 4px 12px rgba(175, 82, 222, 0.3);
     }
 
     .card-header h3 {
       margin: 0;
-      font-size: 16px;
-      font-weight: 500;
-      color: var(--text-primary);
+      font-size: 18px;
+      font-weight: 600;
+      color: #1d1d1f;
+      letter-spacing: -0.02em;
     }
 
+    /* Premium Card Body */
     .card-body {
-      padding: 24px;
+      padding: 16px;
+      background: #ffffff;
     }
 
-    /* Form Elements */
+    /* Premium Form Elements */
     .form-group {
-      margin-bottom: 20px;
+      margin-bottom: 12px;
+      position: relative;
     }
 
     .form-group:last-child {
@@ -367,17 +477,20 @@
     .form-row {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 16px;
+      gap: 12px;
     }
 
+    /* Refined Labels */
     label {
       display: block;
       margin-bottom: 8px;
-      color: var(--text-secondary);
-      font-size: 13px;
+      color: #1d1d1f;
+      font-size: 15px;
       font-weight: 500;
+      letter-spacing: -0.01em;
     }
 
+    /* Modern Input Wrappers */
     .input-wrapper {
       position: relative;
       display: flex;
@@ -386,111 +499,332 @@
 
     .input-wrapper ion-icon {
       position: absolute;
-      left: 12px;
-      color: var(--text-secondary);
-      font-size: 18px;
+      left: 10px;
+      color: #8e8e93;
+      font-size: 15px;
       pointer-events: none;
+      transition: color 0.2s ease;
+      z-index: 2;
     }
 
+    /* Premium Input Fields */
     .input-wrapper input,
     .input-wrapper select,
     .input-wrapper textarea {
       width: 100%;
-      padding: 10px 12px 10px 40px;
-      border: 1px solid var(--border);
+      padding: 10px 10px 10px 38px;
+      border: 1.5px solid #e5e5e7;
       border-radius: 8px;
       font-size: 14px;
-      color: var(--text-primary);
-      background: var(--surface);
-      transition: border-color 0.2s, box-shadow 0.2s;
+      color: #1d1d1f;
+      background: #ffffff;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
       appearance: none;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      letter-spacing: -0.01em;
     }
 
-    .textarea-wrapper ion-icon {
-      top: 12px;
+    .input-wrapper textarea {
+      padding: 10px 10px 10px 38px;
+      resize: vertical;
+      min-height: 80px;
+      line-height: 1.4;
     }
 
+    /* Focus States */
     .input-wrapper input:focus,
     .input-wrapper select:focus,
     .input-wrapper textarea:focus {
       outline: none;
-      border-color: var(--primary);
-      box-shadow: 0 0 0 3px rgba(26, 115, 232, 0.1);
+      border-color: #007AFF;
+      box-shadow: 
+        0 0 0 3px rgba(0, 122, 255, 0.1),
+        0 1px 3px rgba(0, 0, 0, 0.1);
+      background: #ffffff;
     }
 
+    .input-wrapper input:focus + ion-icon,
+    .input-wrapper select:focus + ion-icon,
+    .input-wrapper textarea:focus + ion-icon {
+      color: #007AFF;
+    }
+
+    /* Hover States */
+    .input-wrapper:hover input,
+    .input-wrapper:hover select,
+    .input-wrapper:hover textarea {
+      border-color: #d1d1d6;
+      background: #fafafa;
+    }
+
+    /* Placeholder Styling */
+    .input-wrapper input::placeholder,
+    .input-wrapper textarea::placeholder {
+      color: #8e8e93;
+      opacity: 1;
+    }
+
+    /* Textarea Icon Positioning */
+    .textarea-wrapper ion-icon {
+      top: 10px;
+      z-index: 1;
+    }
+
+    /* Select Arrow */
     .select-arrow {
       left: auto !important;
-      right: 12px;
+      right: 10px;
       pointer-events: none;
+      color: #8e8e93;
+      font-size: 11px;
+      z-index: 1;
     }
 
-    /* Color Picker */
+    /* Barcode Generation Components */
+    .barcode-input-wrapper {
+      display: flex;
+      gap: 8px;
+      align-items: stretch;
+    }
+
+    .barcode-input-wrapper .input-wrapper {
+      flex: 1;
+    }
+
+    .barcode-generate-btn {
+      width: 44px;
+      height: 44px;
+      border: 1.5px solid #e5e5e7;
+      border-radius: 8px;
+      background: linear-gradient(135deg, #007AFF, #0056CC);
+      color: #ffffff;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .barcode-generate-btn::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.2), transparent);
+      opacity: 0;
+      transition: opacity 0.2s ease;
+    }
+
+    .barcode-generate-btn:hover {
+      background: linear-gradient(135deg, #0056CC, #003D99);
+      box-shadow: 0 4px 12px rgba(0, 122, 255, 0.3);
+      transform: translateY(-1px);
+    }
+
+    .barcode-generate-btn:hover::before {
+      opacity: 1;
+    }
+
+    .barcode-generate-btn:active {
+      transform: translateY(0);
+      box-shadow: 0 2px 6px rgba(0, 122, 255, 0.3);
+    }
+
+    .barcode-generate-btn ion-icon {
+      font-size: 18px;
+      z-index: 1;
+    }
+
+    /* Full Width for Single Form Groups */
+    .form-row .form-group:only-child {
+      grid-column: 1 / -1;
+    }
+
+    /* Custom Select Styling */
+    .input-wrapper select {
+      cursor: pointer;
+      background-image: none;
+    }
+
+    /* Disabled State */
+    .input-wrapper input:disabled,
+    .input-wrapper select:disabled,
+    .input-wrapper textarea:disabled {
+      background: #f2f2f7;
+      color: #8e8e93;
+      cursor: not-allowed;
+      border-color: #e5e5e7;
+    }
+
+    /* Error State */
+    .input-wrapper.error input,
+    .input-wrapper.error select,
+    .input-wrapper.error textarea {
+      border-color: #ff3b30;
+      box-shadow: 0 0 0 3px rgba(255, 59, 48, 0.1);
+    }
+
+    .input-wrapper.error ion-icon {
+      color: #ff3b30;
+    }
+
+    /* Success State */
+    .input-wrapper.success input,
+    .input-wrapper.success select,
+    .input-wrapper.success textarea {
+      border-color: #30d158;
+      box-shadow: 0 0 0 3px rgba(48, 209, 88, 0.1);
+    }
+
+    .input-wrapper.success ion-icon {
+      color: #30d158;
+    }
+
+    /* Premium Color Picker */
     .color-picker-wrapper {
       display: flex;
       align-items: center;
       gap: 12px;
-      padding: 8px;
-      border: 1px solid var(--border);
+      padding: 8px 12px;
+      border: 1.5px solid #e5e5e7;
       border-radius: 8px;
+      background: #ffffff;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .color-picker-wrapper:hover {
+      border-color: #d1d1d6;
+      background: #fafafa;
+    }
+
+    .color-picker-wrapper:focus-within {
+      border-color: #007AFF;
+      box-shadow: 
+        0 0 0 3px rgba(0, 122, 255, 0.1),
+        0 1px 3px rgba(0, 0, 0, 0.1);
     }
 
     input[type="color"] {
-      width: 40px;
-      height: 40px;
+      width: 28px;
+      height: 28px;
       border: none;
-      border-radius: 4px;
+      border-radius: 6px;
       cursor: pointer;
       padding: 0;
       background: none;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+      transition: transform 0.2s ease;
+    }
+
+    input[type="color"]:hover {
+      transform: scale(1.05);
     }
 
     .color-preview {
       width: 24px;
       height: 24px;
-      border-radius: 50%;
-      border: 1px solid rgba(0, 0, 0, 0.1);
+      border-radius: 6px;
+      border: 2px solid #ffffff;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+      transition: transform 0.2s ease;
+    }
+
+    .color-preview:hover {
+      transform: scale(1.1);
     }
 
     .color-code {
-      font-family: monospace;
-      color: var(--text-secondary);
+      font-family: 'SF Mono', 'Monaco', 'Inconsolata', monospace;
+      color: #1d1d1f;
+      font-size: 12px;
+      font-weight: 500;
+      background: #f2f2f7;
+      padding: 3px 6px;
+      border-radius: 4px;
     }
 
-    /* File Upload */
+    /* Premium File Upload */
     .file-upload-wrapper {
-      border: 2px dashed var(--border);
-      border-radius: 8px;
-      padding: 24px;
+      border: 2px dashed #d1d1d6;
+      border-radius: 12px;
+      padding: 24px 16px;
       text-align: center;
       cursor: pointer;
-      transition: all 0.2s;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
       position: relative;
       overflow: hidden;
+      background: linear-gradient(135deg, #fafbfc 0%, #f8f9fa 100%);
+    }
+
+    .file-upload-wrapper::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: linear-gradient(135deg, rgba(0, 122, 255, 0.02), rgba(0, 122, 255, 0.01));
+      opacity: 0;
+      transition: opacity 0.3s ease;
     }
 
     .file-upload-wrapper:hover {
-      border-color: var(--primary);
-      background: var(--secondary);
+      border-color: #007AFF;
+      background: linear-gradient(135deg, rgba(0, 122, 255, 0.02) 0%, rgba(0, 122, 255, 0.01) 100%);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(0, 122, 255, 0.1);
+    }
+
+    .file-upload-wrapper:hover::before {
+      opacity: 1;
+    }
+
+    .file-upload-wrapper.dragover {
+      border-color: #007AFF;
+      background: rgba(0, 122, 255, 0.05);
+      transform: scale(1.02);
     }
 
     .upload-icon {
       font-size: 32px;
-      color: var(--primary);
+      color: #007AFF;
       margin-bottom: 8px;
+      transition: all 0.3s ease;
+    }
+
+    .file-upload-wrapper:hover .upload-icon {
+      transform: scale(1.1);
+      color: #0056CC;
     }
 
     .upload-content p {
-      margin: 0;
+      margin: 0 0 6px 0;
       font-size: 14px;
-      color: var(--text-secondary);
+      color: #1d1d1f;
+      font-weight: 500;
+    }
+
+    .upload-hint {
+      margin: 0;
+      font-size: 12px;
+      color: #8e8e93;
+      font-weight: 400;
     }
 
     .file-name {
       display: block;
       margin-top: 8px;
       font-size: 12px;
-      color: var(--primary);
-      font-weight: 500;
+      color: #007AFF;
+      font-weight: 600;
+      padding: 4px 8px;
+      background: rgba(0, 122, 255, 0.1);
+      border-radius: 6px;
+      display: inline-block;
     }
 
     .image-preview {
@@ -501,62 +835,188 @@
       border-radius: 8px;
       background-size: cover;
       background-position: center;
+      border: 2px solid #e5e5e7;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      position: relative;
+      overflow: hidden;
     }
 
-    /* Buttons */
+    .image-preview::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+      pointer-events: none;
+    }
+
+    .image-preview.has-image {
+      display: block;
+      animation: fadeInScale 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    @keyframes fadeInScale {
+      from {
+        opacity: 0;
+        transform: scale(0.95);
+      }
+      to {
+        opacity: 1;
+        transform: scale(1);
+      }
+    }
+
+    /* Premium Form Actions */
     .form-actions {
       display: flex;
       justify-content: flex-end;
-      gap: 16px;
+      gap: 12px;
       padding-top: 20px;
-      border-top: 1px solid var(--border);
+      border-top: 1px solid rgba(0, 0, 0, 0.06);
+      margin-top: 24px;
     }
 
+    /* Apple-Inspired Buttons */
     .btn-submit,
     .btn-secondary,
     .btn-cancel {
-      padding: 10px 24px;
-      border-radius: 20px;
-      font-size: 14px;
+      padding: 8px 18px;
+      border-radius: 8px;
+      font-size: 13px;
       font-weight: 500;
       cursor: pointer;
       display: flex;
       align-items: center;
-      gap: 8px;
-      transition: all 0.2s;
+      gap: 5px;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
       border: none;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      letter-spacing: -0.01em;
+      position: relative;
+      overflow: hidden;
     }
 
+    /* Primary Submit Button */
     .btn-submit {
-      background: var(--primary);
-      color: white;
-      box-shadow: 0 2px 4px rgba(26, 115, 232, 0.3);
+      background: linear-gradient(135deg, #007AFF, #0056CC);
+      color: #ffffff;
+      box-shadow: 
+        0 4px 12px rgba(0, 122, 255, 0.3),
+        0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .btn-submit::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.2), transparent);
+      opacity: 0;
+      transition: opacity 0.2s ease;
     }
 
     .btn-submit:hover {
-      background: var(--primary-dark);
-      box-shadow: 0 4px 8px rgba(26, 115, 232, 0.4);
-      transform: translateY(-1px);
+      background: linear-gradient(135deg, #0056CC, #003D99);
+      box-shadow: 
+        0 6px 16px rgba(0, 122, 255, 0.4),
+        0 4px 8px rgba(0, 0, 0, 0.15);
+      transform: translateY(-2px);
     }
 
+    .btn-submit:hover::before {
+      opacity: 1;
+    }
+
+    .btn-submit:active {
+      transform: translateY(0);
+      box-shadow: 
+        0 2px 8px rgba(0, 122, 255, 0.3),
+        0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Secondary Button */
     .btn-secondary {
-      background: white;
-      color: var(--primary);
-      border: 1px solid var(--border);
+      background: #ffffff;
+      color: #007AFF;
+      border: 1.5px solid #e5e5e7;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
     }
 
     .btn-secondary:hover {
-      background: var(--secondary);
+      background: #f8f9fa;
+      border-color: #d1d1d6;
+      color: #0056CC;
+      box-shadow: 
+        0 4px 12px rgba(0, 0, 0, 0.1),
+        0 2px 4px rgba(0, 0, 0, 0.05);
+      transform: translateY(-1px);
     }
 
+    .btn-secondary:active {
+      transform: translateY(0);
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Cancel Button */
     .btn-cancel {
       background: transparent;
-      color: var(--text-secondary);
+      color: #8e8e93;
+      border: 1.5px solid transparent;
     }
 
     .btn-cancel:hover {
       background: rgba(0, 0, 0, 0.05);
-      color: var(--text-primary);
+      color: #1d1d1f;
+      border-color: rgba(0, 0, 0, 0.1);
+    }
+
+    /* Button Icons */
+    .btn-submit ion-icon,
+    .btn-secondary ion-icon,
+    .btn-cancel ion-icon {
+      font-size: 16px;
+    }
+
+    /* Button Loading State */
+    .btn-submit.loading {
+      pointer-events: none;
+      opacity: 0.7;
+    }
+
+    .btn-submit.loading ion-icon {
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+
+    /* Responsive Button Layout */
+    @media (max-width: 768px) {
+      .form-actions {
+        flex-direction: column-reverse;
+        gap: 12px;
+      }
+      
+      .btn-submit,
+      .btn-secondary,
+      .btn-cancel {
+        width: 100%;
+        justify-content: center;
+        padding: 16px 24px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .form-actions {
+        padding-top: 24px;
+        margin-top: 32px;
+      }
     }
 
     /* Animations */
@@ -609,33 +1069,150 @@
     .delay-4 {
       animation-delay: 0.4s;
     }
+
+    /* Responsive Design for Sidebar States */
+    @media (max-width: 768px) {
+      .add-item-page-container {
+        margin-left: 0;
+        margin-top: 64px;
+        padding: 16px;
+      }
+      
+      .page-header {
+        flex-direction: column;
+        gap: 20px;
+        text-align: center;
+        margin-bottom: 24px;
+      }
+      
+      .page-title {
+        font-size: 28px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .add-item-page-container {
+        margin-left: 0;
+        margin-top: 64px;
+        padding: 12px;
+      }
+      
+      .page-title {
+        font-size: 24px;
+      }
+      
+      .page-subtitle {
+        font-size: 14px;
+      }
+    }
+
+    /* Sidebar Collapse State */
+    body.sidebar-collapsed .add-item-page-container {
+      margin-left: 96px;
+      transition: margin-left 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* Ensure proper form layout */
+    .add-item-form {
+      max-width: 100%;
+      width: 100%;
+    }
+
+    /* Premium Responsive Design */
+    @media (max-width: 768px) {
+      .add-item-page-container {
+        margin-left: 0 !important;
+        transition: none;
+        padding: 20px;
+      }
+      
+      .form-grid {
+        grid-template-columns: 1fr;
+        gap: 20px;
+      }
+      
+      .form-row {
+        grid-template-columns: 1fr;
+        gap: 16px;
+      }
+      
+      .page-header {
+        flex-direction: column;
+        gap: 20px;
+        text-align: center;
+        margin-bottom: 28px;
+        padding-bottom: 20px;
+      }
+      
+      .page-title {
+        font-size: 28px;
+      }
+      
+      .card-header {
+        padding: 18px 20px 14px 20px;
+      }
+      
+      .card-body {
+        padding: 20px;
+      }
+      
+      .form-group {
+        margin-bottom: 16px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .add-item-page-container {
+        margin-left: 0 !important;
+        margin-top: 64px;
+        padding: 12px;
+      }
+      
+      .page-title {
+        font-size: 24px;
+      }
+      
+      .page-subtitle {
+        font-size: 14px;
+      }
+      
+      .form-grid {
+        gap: 16px;
+      }
+      
+      .card-body {
+        padding: 20px;
+      }
+    }
   </style>
 
   <script>
-    // File Upload Handling
+    // Enhanced File Upload Handling
     const dropZone = document.getElementById('dropZone');
     const fileInput = document.getElementById('fileInput');
     const fileName = document.getElementById('fileName');
     const imagePreview = document.getElementById('imagePreview');
+    const uploadContent = document.querySelector('.upload-content');
 
+    // Click to upload
     dropZone.addEventListener('click', () => fileInput.click());
 
+    // Drag and drop events
     dropZone.addEventListener('dragover', (e) => {
       e.preventDefault();
-      dropZone.style.borderColor = 'var(--primary)';
-      dropZone.style.background = 'var(--secondary)';
+      dropZone.classList.add('dragover');
     });
 
     dropZone.addEventListener('dragleave', (e) => {
       e.preventDefault();
-      dropZone.style.borderColor = 'var(--border)';
-      dropZone.style.background = 'transparent';
+      if (!dropZone.contains(e.relatedTarget)) {
+        dropZone.classList.remove('dragover');
+      }
     });
 
     dropZone.addEventListener('drop', (e) => {
       e.preventDefault();
-      dropZone.style.borderColor = 'var(--border)';
-      dropZone.style.background = 'transparent';
+      dropZone.classList.remove('dragover');
 
       if (e.dataTransfer.files.length) {
         fileInput.files = e.dataTransfer.files;
@@ -643,32 +1220,355 @@
       }
     });
 
+    // File input change
     fileInput.addEventListener('change', () => {
       if (fileInput.files.length) {
         handleFile(fileInput.files[0]);
       }
     });
 
+    // Enhanced file handling
     function handleFile(file) {
+      // Validate file type
+      if (!file.type.startsWith('image/')) {
+        showNotification('Please select an image file', 'error');
+        return;
+      }
+
+      // Validate file size (5MB max)
+      if (file.size > 5 * 1024 * 1024) {
+        showNotification('File size must be less than 5MB', 'error');
+        return;
+      }
+
+      // Update file name display
       fileName.textContent = file.name;
+      
+      // Show loading state
+      dropZone.style.opacity = '0.7';
+      dropZone.style.pointerEvents = 'none';
+      
       const reader = new FileReader();
       reader.onload = (e) => {
+        // Create image preview
         imagePreview.style.backgroundImage = `url('${e.target.result}')`;
-        imagePreview.style.display = 'block';
-        document.querySelector('.upload-content').style.display = 'none';
+        imagePreview.classList.add('has-image');
+        
+        // Hide upload content and show preview
+        uploadContent.style.opacity = '0';
+        setTimeout(() => {
+          uploadContent.style.display = 'none';
+          imagePreview.style.display = 'block';
+          dropZone.style.opacity = '1';
+          dropZone.style.pointerEvents = 'auto';
+          
+          // Add success animation
+          dropZone.style.transform = 'scale(1.02)';
+          setTimeout(() => {
+            dropZone.style.transform = 'scale(1)';
+          }, 200);
+        }, 300);
+        
+        showNotification('Image uploaded successfully', 'success');
       };
+      
+      reader.onerror = () => {
+        showNotification('Error reading file', 'error');
+        dropZone.style.opacity = '1';
+        dropZone.style.pointerEvents = 'auto';
+      };
+      
       reader.readAsDataURL(file);
     }
 
-    // Color Picker Handling
+    // Notification system
+    function showNotification(message, type = 'info') {
+      // Remove existing notifications
+      const existingNotification = document.querySelector('.notification-toast');
+      if (existingNotification) {
+        existingNotification.remove();
+      }
+
+      // Create notification
+      const notification = document.createElement('div');
+      notification.className = `notification-toast ${type}`;
+      notification.innerHTML = `
+        <div class="notification-content">
+          <ion-icon name="${type === 'success' ? 'checkmark-circle' : type === 'error' ? 'alert-circle' : 'information-circle'}"></ion-icon>
+          <span>${message}</span>
+        </div>
+      `;
+
+      // Add styles
+      notification.style.cssText = `
+        position: fixed;
+        top: 80px;
+        right: 24px;
+        background: ${type === 'success' ? '#30D158' : type === 'error' ? '#FF3B30' : '#007AFF'};
+        color: white;
+        padding: 12px 20px;
+        border-radius: 12px;
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        z-index: 10000;
+        font-weight: 500;
+        font-size: 14px;
+        transform: translateX(100%);
+        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      `;
+
+      document.body.appendChild(notification);
+
+      // Animate in
+      setTimeout(() => {
+        notification.style.transform = 'translateX(0)';
+      }, 100);
+
+      // Auto remove
+      setTimeout(() => {
+        notification.style.transform = 'translateX(100%)';
+        setTimeout(() => {
+          if (notification.parentNode) {
+            notification.remove();
+          }
+        }, 300);
+      }, 3000);
+    }
+
+    // Enhanced Color Picker
     const colorInput = document.getElementById('colorInput');
     const colorPreview = document.getElementById('colorPreview');
     const colorCode = document.getElementById('colorCode');
 
+    // Barcode Generation Functions
+    function generateBarcode() {
+      const barcodeInput = document.getElementById('barcodeInput');
+      
+      // Generate a random barcode from multiple formats
+      const barcode = generateRandomBarcode();
+      
+      barcodeInput.value = barcode;
+      
+      // Add success animation
+      barcodeInput.style.transform = 'scale(1.02)';
+      barcodeInput.style.borderColor = '#30d158';
+      setTimeout(() => {
+        barcodeInput.style.transform = 'scale(1)';
+        barcodeInput.style.borderColor = '';
+      }, 200);
+      
+      showNotification(`Generated barcode: ${barcode}`, 'success');
+    }
+
+    function generateRandomBarcode() {
+      // Randomly choose between different professional barcode formats
+      const formats = [
+        generateEAN13,
+        generateEAN8,
+        generateUPCA,
+        generateCode128,
+        generateRandomAlphanumeric
+      ];
+      
+      const randomFormat = formats[Math.floor(Math.random() * formats.length)];
+      return randomFormat();
+    }
+
+    function generateEAN13() {
+      // Generate 12 random digits
+      let digits = '';
+      for (let i = 0; i < 12; i++) {
+        digits += Math.floor(Math.random() * 10);
+      }
+      
+      // Calculate check digit
+      let sum = 0;
+      for (let i = 0; i < 12; i++) {
+        sum += parseInt(digits[i]) * (i % 2 === 0 ? 1 : 3);
+      }
+      const checkDigit = (10 - (sum % 10)) % 10;
+      
+      return digits + checkDigit;
+    }
+
+    function generateEAN8() {
+      // Generate 7 random digits
+      let digits = '';
+      for (let i = 0; i < 7; i++) {
+        digits += Math.floor(Math.random() * 10);
+      }
+      
+      // Calculate check digit
+      let sum = 0;
+      for (let i = 0; i < 7; i++) {
+        sum += parseInt(digits[i]) * (i % 2 === 0 ? 3 : 1);
+      }
+      const checkDigit = (10 - (sum % 10)) % 10;
+      
+      return digits + checkDigit;
+    }
+
+    function generateUPCA() {
+      // Generate 11 random digits
+      let digits = '';
+      for (let i = 0; i < 11; i++) {
+        digits += Math.floor(Math.random() * 10);
+      }
+      
+      // Calculate check digit
+      let sum = 0;
+      for (let i = 0; i < 11; i++) {
+        sum += parseInt(digits[i]) * (i % 2 === 0 ? 3 : 1);
+      }
+      const checkDigit = (10 - (sum % 10)) % 10;
+      
+      return digits + checkDigit;
+    }
+
+    function generateCode128() {
+      // Generate random alphanumeric code (8-12 characters)
+      const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+      let result = '';
+      const length = 8 + Math.floor(Math.random() * 5); // 8-12 characters
+      
+      for (let i = 0; i < length; i++) {
+        result += chars.charAt(Math.floor(Math.random() * chars.length));
+      }
+      
+      return result;
+    }
+
+    function generateRandomAlphanumeric() {
+      // Generate random alphanumeric code (10-15 characters)
+      const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+      let result = '';
+      const length = 10 + Math.floor(Math.random() * 6); // 10-15 characters
+      
+      for (let i = 0; i < length; i++) {
+        result += chars.charAt(Math.floor(Math.random() * chars.length));
+      }
+      
+      return result;
+    }
+
+    // Set initial color
+    const initialColor = colorInput.value;
+    colorPreview.style.backgroundColor = initialColor;
+    colorCode.textContent = initialColor.toUpperCase();
+
     colorInput.addEventListener('input', (e) => {
       const color = e.target.value;
+      
+      // Update preview and code
       colorPreview.style.backgroundColor = color;
       colorCode.textContent = color.toUpperCase();
+      
+      // Add subtle animation
+      colorPreview.style.transform = 'scale(1.1)';
+      setTimeout(() => {
+        colorPreview.style.transform = 'scale(1)';
+      }, 150);
+    });
+
+    // Form validation enhancement
+    function validateForm() {
+      const requiredFields = document.querySelectorAll('input[required], select[required]');
+      let isValid = true;
+      
+      requiredFields.forEach(field => {
+        const wrapper = field.closest('.input-wrapper');
+        wrapper.classList.remove('error', 'success');
+        
+        if (!field.value.trim()) {
+          wrapper.classList.add('error');
+          isValid = false;
+        } else {
+          wrapper.classList.add('success');
+        }
+      });
+      
+      return isValid;
+    }
+
+    // Add real-time validation
+    document.querySelectorAll('input[required], select[required]').forEach(field => {
+      field.addEventListener('blur', () => {
+        const wrapper = field.closest('.input-wrapper');
+        wrapper.classList.remove('error', 'success');
+        
+        if (field.value.trim()) {
+          wrapper.classList.add('success');
+        } else {
+          wrapper.classList.add('error');
+        }
+      });
+      
+      field.addEventListener('input', () => {
+        if (field.value.trim()) {
+          const wrapper = field.closest('.input-wrapper');
+          wrapper.classList.remove('error');
+        }
+      });
+    });
+
+    // Form submission enhancement
+    const form = document.querySelector('.add-item-form');
+    form.addEventListener('submit', (e) => {
+      if (!validateForm()) {
+        e.preventDefault();
+        showNotification('Please fill in all required fields', 'error');
+        
+        // Focus on first error field
+        const firstError = document.querySelector('.input-wrapper.error input, .input-wrapper.error select');
+        if (firstError) {
+          firstError.focus();
+        }
+        return;
+      }
+
+      // Add loading state to submit button
+      const submitBtn = form.querySelector('.btn-submit');
+      submitBtn.classList.add('loading');
+      submitBtn.innerHTML = '<ion-icon name="loader-outline"></ion-icon> Adding Product...';
+    });
+
+    // Add smooth scroll to first error
+    function scrollToFirstError() {
+      const firstError = document.querySelector('.input-wrapper.error');
+      if (firstError) {
+        firstError.scrollIntoView({ 
+          behavior: 'smooth', 
+          block: 'center' 
+        });
+      }
+    }
+
+    // Initialize animations on load
+    document.addEventListener('DOMContentLoaded', () => {
+      // Stagger card animations
+      const cards = document.querySelectorAll('.form-card');
+      cards.forEach((card, index) => {
+        card.style.animationDelay = `${index * 0.1}s`;
+      });
+
+      // Add intersection observer for scroll animations
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            entry.target.style.opacity = '1';
+            entry.target.style.transform = 'translateY(0)';
+          }
+        });
+      }, { threshold: 0.1 });
+
+      cards.forEach(card => {
+        card.style.opacity = '0';
+        card.style.transform = 'translateY(20px)';
+        card.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+        observer.observe(card);
+      });
     });
   </script>
 

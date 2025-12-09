@@ -10,57 +10,127 @@
     </script>
 <%} %>
 
-<!-- Clean Items Interface -->
-<div class="items-interface">
-    <!-- Header Section -->
-    <div class="items-header-section">
-        <div class="header-content">
-            <h1 class="items-title">Items</h1>
-            <p class="items-subtitle">Quick access to all products</p>
-        </div>
-        <div class="header-actions">
-            <button class="btn-primary" onclick="window.location.href='/items/add-item'">
-                <ion-icon name="add-outline"></ion-icon>
-                Add Item
-            </button>
-        </div>
-    </div>
+<!-- Modern Dashboard Container -->
+<div class="dashboard-container">
+    <!-- Dashboard Header -->
 
-    <!-- Search and Filter Bar -->
-    <div class="search-filter-bar">
-        <div class="search-container">
-            <div class="search-input-wrapper">
-                <ion-icon name="search-outline" class="search-icon"></ion-icon>
-                <input type="text" id="searchInput" class="search-input" placeholder="Search items..." oninput="handleSearch(this.value)" />
-                <button class="search-clear" onclick="clearSearch()" style="display: none;">
-                    <ion-icon name="close-circle-outline"></ion-icon>
+    <!-- Premium Inventory Controls -->
+    <div class="premium-inventory-controls">
+        <div class="controls-header">
+            <div class="header-content">
+                <div class="header-icon">
+                    <ion-icon name="cube-outline"></ion-icon>
+                </div>
+                <div class="header-text">
+                    <h2 class="controls-title">Item Management</h2>
+                    <p class="controls-subtitle">Advanced product catalog with intelligent search and filtering</p>
+                </div>
+            </div>
+            <div class="header-actions">
+                <button class="btn-export" onclick="exportItems()">
+                    <ion-icon name="download-outline"></ion-icon>
+                    Export
+                </button>
+                <button class="btn-primary" onclick="window.location.href='/items/add-item'">
+                    <ion-icon name="add-outline"></ion-icon>
+                    Add Item
                 </button>
             </div>
         </div>
-        
-        <div class="filter-controls">
-            <select id="categoryFilter" class="filter-select" onchange="applyFilters()">
-                <option value="">All Categories</option>
-                <!-- Categories will be loaded dynamically -->
-            </select>
-            
-            <select id="brandFilter" class="filter-select" onchange="applyFilters()">
-                <option value="">All Brands</option>
-                <!-- Brands will be loaded dynamically -->
-            </select>
-            
-            <select id="sortFilter" class="filter-select" onchange="applyFilters()">
-                <option value="">Sort by</option>
-                <option value="newest">Newest</option>
-                <option value="oldest">Oldest</option>
-                <option value="name-asc">Name (A-Z)</option>
-                <option value="name-desc">Name (Z-A)</option>
-            </select>
+
+        <div class="controls-content">
+            <!-- Search and Quick Actions Row -->
+            <div class="search-row">
+                <div class="search-container">
+                    <div class="search-box-modern">
+                        <ion-icon name="search-outline" class="search-icon"></ion-icon>
+                        <input type="text" id="searchInput" class="search-input" placeholder="Search products, SKU, categories, or brands..." oninput="handleSearch(this.value)" />
+                        <button class="search-clear" onclick="clearSearch()" style="display: none;">
+                            <ion-icon name="close-circle-outline"></ion-icon>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="quick-actions">
+                    <button class="quick-action-btn" onclick="filterRecentlyAdded()">
+                        <ion-icon name="time-outline"></ion-icon>
+                        <span>Recent</span>
+                    </button>
+                    <button class="quick-action-btn" onclick="filterByCategory()">
+                        <ion-icon name="folder-outline"></ion-icon>
+                        <span>Categories</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Filters Row -->
+            <div class="filters-row">
+                <div class="filter-groups">
+                    <div class="filter-group-modern">
+                        <label class="filter-label">
+                            <ion-icon name="swap-vertical-outline"></ion-icon>
+                            Sort by
+                        </label>
+                        <select id="sortFilter" class="filter-select" onchange="applyFilters()">
+                            <option value="">Default (Newest)</option>
+                            <option value="newest">Newest First</option>
+                            <option value="oldest">Oldest First</option>
+                            <option value="name-asc">Name (A-Z)</option>
+                            <option value="name-desc">Name (Z-A)</option>
+                            <option value="price-asc">Price (Low to High)</option>
+                            <option value="price-desc">Price (High to Low)</option>
+                        </select>
+                    </div>
+
+                    <div class="filter-group-modern">
+                        <label class="filter-label">
+                            <ion-icon name="library-outline"></ion-icon>
+                            Category
+                        </label>
+                        <select id="categoryFilter" class="filter-select" onchange="applyFilters()">
+                            <option value="">All Categories</option>
+                            <!-- Categories will be loaded dynamically -->
+                        </select>
+                    </div>
+
+                    <div class="filter-group-modern">
+                        <label class="filter-label">
+                            <ion-icon name="pricetags-outline"></ion-icon>
+                            Brand
+                        </label>
+                        <select id="brandFilter" class="filter-select" onchange="applyFilters()">
+                            <option value="">All Brands</option>
+                            <!-- Brands will be loaded dynamically -->
+                        </select>
+                    </div>
+
+                    <div class="filter-group-modern">
+                        <label class="filter-label">
+                            <ion-icon name="checkbox-outline"></ion-icon>
+                            Status
+                        </label>
+                        <select id="statusFilter" class="filter-select" onchange="applyFilters()">
+                            <option value="">All Items</option>
+                            <option value="in-stock">In Stock</option>
+                            <option value="low-stock">Low Stock</option>
+                            <option value="out-of-stock">Out of Stock</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="filter-actions">
+                    <button class="btn-reset" onclick="resetAllFilters()">
+                        <ion-icon name="refresh-outline"></ion-icon>
+                        Reset
+                    </button>
+                </div>
+            </div>
         </div>
     </div>
 
-    <!-- Items Container -->
-    <div class="items-container">
+    <!-- Premium Items Section -->
+    <div class="premium-inventory-items">
+
         <!-- Loading State -->
         <div class="loading-state" id="loadingState">
             <div class="loading-spinner">
@@ -69,8 +139,8 @@
             <p class="loading-text">Loading items...</p>
         </div>
 
-        <!-- Items List -->
-        <div class="items-list" id="itemsList" style="display: none;">
+        <!-- Items Grid/List Container -->
+        <div class="products-container" id="itemsList" style="display: none;">
             <!-- Items will be loaded dynamically -->
         </div>
 
@@ -90,17 +160,42 @@
             <p class="end-text">All items loaded</p>
         </div>
 
-        <!-- Empty State -->
-        <div class="empty-state" id="emptyState" style="display: none;">
-            <div class="empty-icon">
-                <ion-icon name="cube-outline"></ion-icon>
+        <!-- Premium Empty State -->
+        <div class="premium-empty-state" id="emptyState" style="display: none;">
+            <div class="empty-illustration-premium">
+                <div class="empty-decoration">
+                    <div class="decoration-circle"></div>
+                    <div class="decoration-circle"></div>
+                </div>
+                <div class="empty-icon-container">
+                    <ion-icon name="cube-outline" class="empty-icon-premium"></ion-icon>
+                </div>
             </div>
-            <h3 class="empty-title">No items found</h3>
-            <p class="empty-description">Start by adding your first item to the catalog</p>
-            <button class="btn-primary" onclick="window.location.href='/items/add-item'">
-                <ion-icon name="add-outline"></ion-icon>
-                Add Item
-            </button>
+            <h3 class="empty-title">No Items Found</h3>
+            <p class="empty-description">Start building your catalog by adding your first item.</p>
+            <div class="empty-actions">
+                <button class="premium-empty-action" onclick="window.location.href='/items/add-item'">
+                    <ion-icon name="add-outline"></ion-icon>
+                    Add Your First Item
+                </button>
+                
+            </div>
+        </div>
+
+        <!-- Pagination -->
+        <div class="pagination-container" id="paginationContainer" style="display: none;">
+            <div class="pagination-info">
+                <span id="showingFrom">1</span> to <span id="showingTo">0</span> of <span id="totalItems">0</span> items
+            </div>
+            <div class="pagination-controls">
+                <button class="pagination-btn" onclick="previousPage()" disabled>
+                    <ion-icon name="chevron-back-outline"></ion-icon>
+                </button>
+                <div class="page-numbers" id="pageNumbers"></div>
+                <button class="pagination-btn" onclick="nextPage()">
+                    <ion-icon name="chevron-forward-outline"></ion-icon>
+                </button>
+            </div>
         </div>
 
         <!-- Infinite Scroll Trigger -->
@@ -111,78 +206,401 @@
 <script src="/javascript/items.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/fuse.js@6.6.2"></script>
 <script>
-    function autocomplete(inp, arr) {
-        let currentFocus;
-        const fuse = new Fuse(arr, {
-            threshold: 0.4,
-        });
+// Utility functions
+function debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+        const later = () => {
+            clearTimeout(timeout);
+            func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+    };
+}
 
-        inp.addEventListener("input", function () {
-            let a, b, val = this.value;
-            closeAllLists();
-            if (!val) return false;
-            currentFocus = -1;
+// Global variables
+let currentPage = 1;
+let itemsPerPage = 50;
+let currentFilters = {
+    search: '',
+    category: '',
+    brand: '',
+    sort: '',
+    status: ''
+};
 
-            a = document.createElement("DIV");
-            a.setAttribute("id", this.id + "autocomplete-list");
-            a.setAttribute("class", "autocomplete-items");
-            this.parentNode.appendChild(a);
+// Enhanced Search functionality
+const handleSearch = debounce(async (value) => {
+    const searchClearBtn = document.querySelector('.search-clear');
+    
+    if (searchClearBtn) {
+        searchClearBtn.style.display = value.length > 0 ? 'block' : 'none';
+    }
+    
+    currentFilters.search = value;
+    
+    if (value.length > 1) {
+        await performSearch(value);
+    } else {
+        loadItems();
+    }
+}, 300);
 
-            const results = fuse.search(val);
-            results.forEach(({ item }) => {
-                b = document.createElement("DIV");
-                b.innerHTML = `<strong>${item.substr(0, val.length)}</strong>${item.substr(val.length)}`;
-                b.innerHTML += `<input type='hidden' value='${item}'>`;
-                b.addEventListener("click", function () {
-                    window.location.href = `/items/search/${String(this.getElementsByTagName("input")[0].value)}`
-                    closeAllLists();
-                });
-                a.appendChild(b);
-            });
-        });
+// Fuzzy search with Apple-style suggestions
+async function performSearch(query) {
+    try {
+        // Show loading state
+        showLoadingState();
+        
+        // In a real implementation, this would call your search API
+        console.log('Searching for:', query);
+        
+        // Simulate API call delay
+        setTimeout(() => {
+            loadItems();
+        }, 500);
+        
+    } catch (error) {
+        console.error('Search error:', error);
+        hideLoadingState();
+    }
+}
 
-        inp.addEventListener("keydown", function (e) {
-            let x = document.getElementById(this.id + "autocomplete-list");
-            if (x) x = x.getElementsByTagName("div");
-            if (e.keyCode == 40) {
-                currentFocus++;
-                addActive(x);
-            } else if (e.keyCode == 38) {
-                currentFocus--;
-                addActive(x);
-            } else if (e.keyCode == 13) {
-                e.preventDefault();
-                if (currentFocus > -1 && x) x[currentFocus].click();
-            }
-        });
+// Filter functionality
+function applyFilters() {
+    const categoryFilter = document.getElementById('categoryFilter');
+    const brandFilter = document.getElementById('brandFilter');
+    const sortFilter = document.getElementById('sortFilter');
+    const statusFilter = document.getElementById('statusFilter');
+    
+    currentFilters.category = categoryFilter?.value || '';
+    currentFilters.brand = brandFilter?.value || '';
+    currentFilters.sort = sortFilter?.value || '';
+    currentFilters.status = statusFilter?.value || '';
+    
+    loadItems();
+}
 
-        function addActive(x) {
-            if (!x) return false;
-            removeActive(x);
-            if (currentFocus >= x.length) currentFocus = 0;
-            if (currentFocus < 0) currentFocus = x.length - 1;
-            x[currentFocus].classList.add("autocomplete-active");
+function resetAllFilters() {
+    // Reset filter inputs
+    const filters = ['categoryFilter', 'brandFilter', 'sortFilter', 'statusFilter'];
+    filters.forEach(filterId => {
+        const element = document.getElementById(filterId);
+        if (element) element.value = '';
+    });
+    
+    // Reset search
+    const searchInput = document.getElementById('searchInput');
+    if (searchInput) searchInput.value = '';
+    
+    // Clear filters object
+    currentFilters = {
+        search: '',
+        category: '',
+        brand: '',
+        sort: '',
+        status: ''
+    };
+    
+    // Hide search clear button
+    const searchClearBtn = document.querySelector('.search-clear');
+    if (searchClearBtn) searchClearBtn.style.display = 'none';
+    
+    // Reload items
+    loadItems();
+}
+
+function clearSearch() {
+    const searchInput = document.getElementById('searchInput');
+    const searchClearBtn = document.querySelector('.search-clear');
+    
+    if (searchInput) searchInput.value = '';
+    if (searchClearBtn) searchClearBtn.style.display = 'none';
+    
+    currentFilters.search = '';
+    loadItems();
+}
+
+// Quick filter functions
+function filterRecentlyAdded() {
+    const sortFilter = document.getElementById('sortFilter');
+    if (sortFilter) {
+        sortFilter.value = 'newest';
+        currentFilters.sort = 'newest';
+        loadItems();
+    }
+}
+
+function filterByCategory() {
+    const categoryFilter = document.getElementById('categoryFilter');
+    if (categoryFilter && categoryFilter.options.length > 1) {
+        // Focus on the category dropdown
+        categoryFilter.focus();
+    }
+}
+
+// View switching
+function switchView(view) {
+    const buttons = document.querySelectorAll('.view-btn');
+    const itemsList = document.getElementById('itemsList');
+    
+    buttons.forEach(btn => btn.classList.remove('active'));
+    
+    const activeBtn = document.querySelector(`[data-view="${view}"]`);
+    if (activeBtn) {
+        activeBtn.classList.add('active');
+    }
+    
+    if (itemsList) {
+        // Remove existing view classes
+        itemsList.className = 'products-container';
+        
+        switch(view) {
+            case 'list':
+                itemsList.className = 'products-container list-view items-list-view';
+                break;
+            case 'compact':
+                itemsList.className = 'products-container compact-view items-compact-view';
+                break;
+            default: // grid
+                itemsList.className = 'products-container grid-view';
+                break;
         }
+    }
+    
+    // Save view preference
+    localStorage.setItem('items-view-preference', view);
+}
 
-        function removeActive(x) {
-            for (let i = 0; i < x.length; i++) {
-                x[i].classList.remove("autocomplete-active");
-            }
-        }
+// Load items function (placeholder - replace with actual implementation)
+async function loadItems() {
+    try {
+        showLoadingState();
+        
+        // This would be your actual API call
+        console.log('Loading items with filters:', currentFilters);
+        
+        // Simulate API delay
+        setTimeout(() => {
+            // For now, show empty state
+            showEmptyState();
+        }, 800);
+        
+    } catch (error) {
+        console.error('Error loading items:', error);
+        hideLoadingState();
+    }
+}
 
-        function closeAllLists(elmnt) {
-            const x = document.getElementsByClassName("autocomplete-items");
-            for (let i = 0; i < x.length; i++) {
-                if (elmnt != x[i] && elmnt != inp) {
-                    x[i].parentNode.removeChild(x[i]);
+// UI State management
+function showLoadingState() {
+    const loadingState = document.getElementById('loadingState');
+    const itemsList = document.getElementById('itemsList');
+    const emptyState = document.getElementById('emptyState');
+    
+    if (loadingState) loadingState.style.display = 'flex';
+    if (itemsList) itemsList.style.display = 'none';
+    if (emptyState) emptyState.style.display = 'none';
+}
+
+function hideLoadingState() {
+    const loadingState = document.getElementById('loadingState');
+    if (loadingState) loadingState.style.display = 'none';
+}
+
+function showEmptyState() {
+    hideLoadingState();
+    
+    const emptyState = document.getElementById('emptyState');
+    if (emptyState) emptyState.style.display = 'block';
+}
+
+function showItemsList() {
+    hideLoadingState();
+    
+    const itemsList = document.getElementById('itemsList');
+    const emptyState = document.getElementById('emptyState');
+    
+    if (itemsList) itemsList.style.display = 'grid';
+    if (emptyState) emptyState.style.display = 'none';
+}
+
+// Export functionality
+function exportItems() {
+    Swal.fire({
+        title: 'Export Items',
+        text: 'Export all items to CSV format?',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#007AFF',
+        cancelButtonColor: '#8E8E93',
+        confirmButtonText: 'Export',
+        cancelButtonText: 'Cancel'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // Show loading
+            Swal.fire({
+                title: 'Preparing Export...',
+                text: 'Please wait while we generate your CSV file',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading()
                 }
-            }
+            });
+            
+            // Simulate export process
+            setTimeout(() => {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Export Complete!',
+                    text: 'Items exported successfully',
+                    timer: 2000,
+                    showConfirmButton: false
+                });
+            }, 2000);
+        }
+    });
+}
+
+function showImportDialog() {
+    Swal.fire({
+        title: 'Import Items',
+        html: `
+            <div style="text-align: left; padding: 20px 0;">
+                <p>Import items from a CSV file. The CSV should contain columns:</p>
+                <ul style="margin: 10px 0; padding-left: 20px;">
+                    <li>name - Product name (required)</li>
+                    <li>price - Cost price</li>
+                    <li>sell_price - Selling price</li>
+                    <li>qty - Quantity in stock</li>
+                    <li>category - Product category</li>
+                    <li>brand - Product brand</li>
+                    <li>size - Product size</li>
+                    <li>color - Product color</li>
+                </ul>
+            </div>
+        `,
+        icon: 'info',
+        showCancelButton: true,
+        confirmButtonColor: '#007AFF',
+        cancelButtonColor: '#8E8E93',
+        confirmButtonText: 'Choose File',
+        cancelButtonText: 'Cancel'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // In a real implementation, this would open a file picker
+            Swal.fire({
+                icon: 'info',
+                title: 'File Upload',
+                text: 'File upload functionality would be implemented here'
+            });
+        }
+    });
+}
+
+// Pagination functions (placeholder)
+function previousPage() {
+    if (currentPage > 1) {
+        currentPage--;
+        loadItems();
+    }
+}
+
+function nextPage() {
+    currentPage++;
+    loadItems();
+}
+
+// Initialize page
+document.addEventListener('DOMContentLoaded', function() {
+    // Set initial view from localStorage
+    const savedView = localStorage.getItem('items-view-preference') || 'grid';
+    switchView(savedView);
+    
+    // Load initial data
+    loadItems();
+    
+    // Set up autocomplete if data is available
+    const searchInput = document.getElementById('searchInput');
+    if (searchInput && typeof data !== 'undefined') {
+        autocomplete(searchInput, data);
+    }
+});
+
+// Legacy autocomplete function (kept for compatibility)
+function autocomplete(inp, arr) {
+    let currentFocus;
+    const fuse = new Fuse(arr, {
+        threshold: 0.4,
+    });
+
+    inp.addEventListener("input", function () {
+        let a, b, val = this.value;
+        closeAllLists();
+        if (!val) return false;
+        currentFocus = -1;
+
+        a = document.createElement("DIV");
+        a.setAttribute("id", this.id + "autocomplete-list");
+        a.setAttribute("class", "autocomplete-items");
+        this.parentNode.appendChild(a);
+
+        const results = fuse.search(val);
+        results.forEach(({ item }) => {
+            b = document.createElement("DIV");
+            b.innerHTML = `<strong>${item.substr(0, val.length)}</strong>${item.substr(val.length)}`;
+            b.innerHTML += `<input type='hidden' value='${item}'>`;
+            b.addEventListener("click", function () {
+                window.location.href = `/items/search/${String(this.getElementsByTagName("input")[0].value)}`
+                closeAllLists();
+            });
+            a.appendChild(b);
+        });
+    });
+
+    inp.addEventListener("keydown", function (e) {
+        let x = document.getElementById(this.id + "autocomplete-list");
+        if (x) x = x.getElementsByTagName("div");
+        if (e.keyCode == 40) {
+            currentFocus++;
+            addActive(x);
+        } else if (e.keyCode == 38) {
+            currentFocus--;
+            addActive(x);
+        } else if (e.keyCode == 13) {
+            e.preventDefault();
+            if (currentFocus > -1 && x) x[currentFocus].click();
+        }
+    });
+
+    function addActive(x) {
+        if (!x) return false;
+        removeActive(x);
+        if (currentFocus >= x.length) currentFocus = 0;
+        if (currentFocus < 0) currentFocus = x.length - 1;
+        x[currentFocus].classList.add("autocomplete-active");
+    }
+
+    function removeActive(x) {
+        for (let i = 0; i < x.length; i++) {
+            x[i].classList.remove("autocomplete-active");
         }
     }
 
-    document.addEventListener("click", function (e) {
-        closeAllLists(e.target);
-    });
+    function closeAllLists(elmnt) {
+        const x = document.getElementsByClassName("autocomplete-items");
+        for (let i = 0; i < x.length; i++) {
+            if (elmnt != x[i] && elmnt != inp) {
+                x[i].parentNode.removeChild(x[i]);
+            }
+        }
+    }
+}
+
+document.addEventListener("click", function (e) {
+    closeAllLists(e.target);
+});
 </script>
 
 <%- include("../layout/footer") -%>

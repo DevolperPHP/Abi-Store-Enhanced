@@ -657,6 +657,27 @@ router.put("/edit/name-all/:id", async (req, res) => {
 })
 
 
+router.get("/edit/bulk/:id", async (req, res) => {
+    try {
+        const id = req.cookies.id
+        const user = await User.findOne({ _id: id })
+        const categories = await Category.find({})
+        const brand = await Brand.find({})
+
+        if (user.isAdmin == true || user.permissions.includes("Items")) {
+            const data = await Product.findOne({ _id: req.params.id })
+            res.render('items/edit-bulk', {
+                data: data,
+                user: user,
+                brand: brand,
+                category: categories
+            })
+        }
+    } catch (err) {
+        console.log(err);
+    }
+})
+
 router.get("/edit/image-color-all/:id", async (req, res) => {
     try {
         const id = req.cookies.id
