@@ -330,15 +330,23 @@ router.post("/add-color/:id", upload.single('image'), async (req, res) => {
         if (user) {
             if (user.isAdmin == true || user.permissions.includes("Items")) {
 
-                const { price, sell_price, barcode, qty, color, colorName } = req.body
+                const { price, sell_price, barcode, qty, stock, color, colorName } = req.body
+                
+                // Use uploaded image if provided, otherwise copy original product image
+                let imagePath = data.image; // Default to original image
+                if (req.file) {
+                    imagePath = req.file.filename; // Use new uploaded image
+                }
+                
                 const newProduct = [
                     new Product({
                         name: data.name,
                         price: price,
                         qty: qty,
+                        stock: stock || 0, // Handle store quantity
                         barcode: barcode,
                         Date: moment().locale("ar-kw").format("l"),
-                        image: 'none',
+                        image: imagePath, // Use original or new image
                         color: color,
                         sell_price: sell_price,
                         size: data.size,
@@ -436,7 +444,7 @@ router.put("/edit/:id", upload.single("image"), async (req, res) => {
                             colorName: colorName,
                             brand: brand,
                             des: req.body.des,
-                            stock,
+                            stock: stock,
                         }
                     })
                 }
@@ -492,22 +500,55 @@ router.get("/search/:name", async (req, res) => {
         const products = await Product.find({ name: name, size: size })
         const allProducts = await Product.find({})
         const data = allProducts.map((item) => `${item.name} - ${item.size}`)
+        const uniqueProducts = [];
         const uniqueArray = [... new Set(data)]
+
+        for (const name of uniqueProductNames) {
+            const product = await Product.findOne({ name });
+            if (product) {
+                uniqueProducts.push(product);
+            }
+        }
         if (user) {
-            const permission = user.permissions.includes("Items")
-            if (user.isAdmin == true || permission == true) {
-                res.render("items/items", {
+            if (user.isAdmin == true || user.permissions.includes('Storage')) {
+                const size = await Size.find({})
+
+                const totalSell = []
+                const totalBuy = []
+                const totalStore = []
+                for (let i = 0; i < products.length; i++) {
+                    totalSell.push(products[i].qty * products[i].sell_price)
+                }
+
+                for (let i = 0; i < products.length; i++) {
+                    totalStore.push(products[i].stock * products[i].sell_price)
+                }
+
+                for (let i = 0; i < products.length; i++) {
+                    totalBuy.push(products[i].qty * products[i].price)
+                }
+                // Get all products for category extraction
+                const allProductsForCategories = await Product.find({}).select('category name').lean();
+                
+                res.render("storage/storage-dashboard", {
                     user: user,
+                    err: req.flash("permission-error"),
                     products: products,
-                    del: req.flash("delete-suc"),
+                    allProductsForCategories: allProductsForCategories,
+                    size: size,
+                    totalSell: totalSell.reduce((a, b) => a + b),
+                    totalBuy: totalBuy.reduce((a, b) => a + b),
                     data: uniqueArray,
+                    initialLimit: 1000,
+                    totalStore: totalStore.reduce((a, b) => Number(a) + Number(b)),
+                    api: `/api/search/${req.params.name}`,
                 })
             } else {
                 req.flash("permission-error", "error")
                 res.redirect("/")
             }
         } else {
-            res.redirect("sign-up")
+            res.redirect("/passport/sign-up")
         }
     } catch (err) {
         console.log(err);

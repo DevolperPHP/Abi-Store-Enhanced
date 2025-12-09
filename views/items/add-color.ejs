@@ -1,124 +1,1056 @@
 <%- include("../layout/navbar") -%>
-    <div class="item-addColor"><br><br>
-        <p class="title">Add color to <%= data.name%> - <%= data.size%>
-        </p>
-        <div class="addColor-card">
-            <img src="/upload/images/<%= data.image%>" alt="Image" style="object-fit: cover;">
-            <div class="inputs">
-                <form action="/items/add-color/<%= data.id%>" method="post" enctype="multipart/form-data">
-                    <input type="text" class="disabled" disabled="disabled" value="<%= data.name%>">
-                    <input type="text" class="disabled" value="<%= data.size%>" disabled="disabled">
-                    <div class="flex">
-                        <input type="number" placeholder="Price" value="<%= data.price%>" name="price" required>
-                        <input type="number" placeholder="Selling price" value="<%= data.sell_price%>"
-                            name="sell_price" required>
-                    </div>
-                    <div class="flex">
-                        <input type="text" id="barcode-input" placeholder="Barcode" name="barcode">
-                        <button class="barcode-btn" style="margin-top: 10px;" type="button" onclick="generate()">Generate</button>
-                    </div>
-                    <br>
-                    <div class="flex">
-                        <input type="number" placeholder="Quantity" name="qty" required>
-                        <input type="color" name="color">
-                    </div>
-                    <input type="text" name="colorName" placeholder="Color name">
-                    <br>
-                   <center><button>Add color</button></center>
-                </form>
+
+<div class="main-content-wrapper">
+    <div class="add-color-container">
+        <div class="page-header animate-fade-down">
+            <div class="header-text">
+                <h1>Add New Color Variant</h1>
+                <p>Add a new color option to <strong><%= data.name %></strong> - <%= data.size %></p>
             </div>
+            <button class="btn-secondary" onclick="window.location.href='/items/get/<%= data.id %>'">
+                <ion-icon name="arrow-back-outline"></ion-icon> Back to Product
+            </button>
         </div>
-        <br>
 
-        <div class="wave-svg">
-            <svg width="100%" height="100%" id="svg" viewBox="0 0 1440 690" xmlns="http://www.w3.org/2000/svg"
-                class="transition duration-300 ease-in-out delay-150">
-                <style>
-                    .path-0 {
-                        animation: pathAnim-0 4s;
-                        animation-timing-function: linear;
-                        animation-iteration-count: infinite;
-                    }
+        <form action="/items/add-color/<%= data.id %>" method="post" enctype="multipart/form-data" class="add-color-form">
+            <!-- Product Info Card -->
+            <div class="form-card animate-fade-up delay-1">
+                <div class="card-header">
+                    <div class="header-icon blue-bg">
+                        <ion-icon name="image-outline"></ion-icon>
+                    </div>
+                    <h3>Product Information</h3>
+                </div>
+                <div class="card-body">
+                    <div class="product-info-section">
+                        <div class="product-image">
+                            <img src="/upload/images/<%= data.image %>" alt="<%= data.name %>">
+                        </div>
+                        <div class="product-details">
+                            <div class="form-group">
+                                <label>Product Name</label>
+                                <div class="input-wrapper">
+                                    <ion-icon name="pricetag-outline"></ion-icon>
+                                    <input type="text" value="<%= data.name %>" disabled>
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Size</label>
+                                    <div class="input-wrapper">
+                                        <ion-icon name="resize-outline"></ion-icon>
+                                        <input type="text" value="<%= data.size %>" disabled>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label>Category</label>
+                                    <div class="input-wrapper">
+                                        <ion-icon name="folder-outline"></ion-icon>
+                                        <input type="text" value="<%= data.category %>" disabled>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-                    @keyframes pathAnim-0 {
-                        0% {
-                            d: path("M 0,700 C 0,700 0,233 0,233 C 29.956767879246144,245.87259681363653 59.91353575849229,258.74519362727307 111,277 C 162.0864642415077,295.25480637272693 234.30262484527708,318.8918223045444 285,302 C 335.6973751547229,285.1081776954556 364.8759648603995,227.68751715454945 393,197 C 421.1240351396005,166.31248284545055 448.1935157131246,162.35810907725786 501,148 C 553.8064842868754,133.64189092274214 632.349972287102,108.88004653641903 675,148 C 717.650027712898,187.11995346358097 724.4065951384671,290.1217047770661 764,295 C 803.5934048615329,299.8782952229339 876.0236471590296,206.63313435531654 933,168 C 989.9763528409704,129.36686564468346 1031.4988162254147,145.34575780166773 1063,154 C 1094.5011837745853,162.65424219833227 1115.9810879393115,163.98383443801256 1161,192 C 1206.0189120606885,220.01616556198744 1274.5768320173397,274.7189044462821 1325,286 C 1375.4231679826603,297.2810955537179 1407.7115839913301,265.14054777685897 1440,233 C 1440,233 1440,700 1440,700 Z");
-                        }
+            <!-- Pricing & Inventory Card -->
+            <div class="form-card animate-fade-up delay-2">
+                <div class="card-header">
+                    <div class="header-icon green-bg">
+                        <ion-icon name="cash"></ion-icon>
+                    </div>
+                    <h3>Pricing & Inventory</h3>
+                </div>
+                <div class="card-body">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Cost Price (IQD)</label>
+                            <div class="input-wrapper">
+                                <ion-icon name="wallet-outline"></ion-icon>
+                                <input type="number" name="price" value="<%= data.price %>" placeholder="0" min="0" required>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Selling Price (IQD)</label>
+                            <div class="input-wrapper">
+                                <ion-icon name="pricetag-outline"></ion-icon>
+                                <input type="number" name="sell_price" value="<%= data.sell_price %>" placeholder="0" min="0" required>
+                            </div>
+                        </div>
+                    </div>
 
-                        25% {
-                            d: path("M 0,700 C 0,700 0,233 0,233 C 31.417207496117527,256.0038727225399 62.834414992235054,279.00774544507976 109,271 C 155.16558500776495,262.99225455492024 216.07954752717728,223.97289094222086 263,227 C 309.9204524728227,230.02710905777914 342.8473948990559,275.1006907860369 381,296 C 419.1526051009441,316.8993092139631 462.5308728765988,313.6243459136314 504,279 C 545.4691271234012,244.3756540863686 585.0291135945489,178.40192555943753 631,147 C 676.9708864054511,115.59807444056248 729.352672745206,118.76795184861854 782,149 C 834.647327254794,179.23204815138146 887.5601954246272,236.52626704608838 931,254 C 974.4398045753728,271.4737329539116 1008.4065455562857,249.12697996702784 1041,229 C 1073.5934544437143,208.87302003297216 1104.8136223502308,190.9658130858002 1155,212 C 1205.1863776497692,233.0341869141998 1274.338965042791,293.00976768977137 1325,303 C 1375.661034957209,312.99023231022863 1407.8305174786046,272.9951161551143 1440,233 C 1440,233 1440,700 1440,700 Z");
-                        }
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Main Storage Quantity</label>
+                            <div class="input-wrapper">
+                                <ion-icon name="cube-outline"></ion-icon>
+                                <input type="number" name="qty" placeholder="0" min="0" required>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Store Quantity</label>
+                            <div class="input-wrapper">
+                                <ion-icon name="storefront-outline"></ion-icon>
+                                <input type="number" name="stock" placeholder="0" min="0" value="0">
+                            </div>
+                        </div>
+                    </div>
 
-                        50% {
-                            d: path("M 0,700 C 0,700 0,233 0,233 C 49.8649806363873,241.90520418119456 99.7299612727746,250.8104083623891 146,229 C 192.2700387272254,207.1895916376109 234.94513554528885,154.6635707316382 272,155 C 309.05486445471115,155.3364292683618 340.48949654606986,208.53530871105806 384,247 C 427.51050345393014,285.46469128894194 483.09687827043183,309.1951944241295 525,309 C 566.9031217295682,308.8048055758705 595.1229903722027,284.68391359242383 637,289 C 678.8770096277973,293.31608640757617 734.411160240757,326.0691512061751 779,306 C 823.588839759243,285.9308487938249 857.2323686647695,213.03948158287577 905,221 C 952.7676313352305,228.96051841712423 1014.6593651001649,317.772922462322 1057,315 C 1099.340634899835,312.227077537678 1122.130170934571,217.86882856783637 1162,192 C 1201.869829065429,166.13117143216363 1258.819951161551,208.75176326633246 1308,227 C 1357.180048838449,245.24823673366754 1398.5900244192244,239.12411836683378 1440,233 C 1440,233 1440,700 1440,700 Z");
-                        }
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Barcode</label>
+                            <div class="barcode-section">
+                                <div class="input-wrapper">
+                                    <ion-icon name="barcode-outline"></ion-icon>
+                                    <input type="text" name="barcode" id="barcode-input" placeholder="Enter barcode manually or click Generate" required>
+                                </div>
+                                <div class="barcode-actions">
+                                    <button type="button" class="barcode-generate-btn secondary" id="barcode-btn" onclick="generateBarcode()">
+                                        <div class="btn-content">
+                                            <ion-icon name="sparkles-outline" class="btn-icon"></ion-icon>
+                                            <span class="btn-text">Generate</span>
+                                        </div>
+                                        <div class="btn-ripple"></div>
+                                    </button>
+                                </div>
+                            </div>
+                            
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-                        75% {
-                            d: path("M 0,700 C 0,700 0,233 0,233 C 34.758065515769786,261.48226463072785 69.51613103153957,289.9645292614557 118,268 C 166.48386896846043,246.03547073854432 228.69354138961143,173.62414758490507 279,169 C 329.3064586103886,164.37585241509493 367.7097034100145,227.53888039892405 405,246 C 442.2902965899855,264.46111960107595 478.4676449703304,238.22033081939867 525,231 C 571.5323550296696,223.77966918060133 628.4197167086639,235.57979632348128 678,217 C 727.5802832913361,198.42020367651872 769.8534881950137,149.46048388667637 807,160 C 844.1465118049863,170.53951611332363 876.1663305112809,240.57826812981324 911,260 C 945.8336694887191,279.42173187018676 983.4811897598629,248.2264435940707 1024,218 C 1064.518810240137,187.7735564059293 1107.9089104492678,158.51595749390404 1159,164 C 1210.0910895507322,169.48404250609596 1268.8831684430663,209.70972643031314 1317,227 C 1365.1168315569337,244.29027356968686 1402.558415778467,238.64513678484343 1440,233 C 1440,233 1440,700 1440,700 Z");
-                        }
+            <!-- Color Details Card -->
+            <div class="form-card animate-fade-up delay-3">
+                <div class="card-header">
+                    <div class="header-icon purple-bg">
+                        <ion-icon name="color-palette-outline"></ion-icon>
+                    </div>
+                    <h3>Color Details</h3>
+                </div>
+                <div class="card-body">
+                    <div class="form-group">
+                        <label>Color Name</label>
+                        <div class="input-wrapper">
+                            <ion-icon name="text-outline"></ion-icon>
+                            <input type="text" name="colorName" placeholder="e.g. Midnight Blue" required>
+                        </div>
+                    </div>
 
-                        100% {
-                            d: path("M 0,700 C 0,700 0,233 0,233 C 29.956767879246144,245.87259681363653 59.91353575849229,258.74519362727307 111,277 C 162.0864642415077,295.25480637272693 234.30262484527708,318.8918223045444 285,302 C 335.6973751547229,285.1081776954556 364.8759648603995,227.68751715454945 393,197 C 421.1240351396005,166.31248284545055 448.1935157131246,162.35810907725786 501,148 C 553.8064842868754,133.64189092274214 632.349972287102,108.88004653641903 675,148 C 717.650027712898,187.11995346358097 724.4065951384671,290.1217047770661 764,295 C 803.5934048615329,299.8782952229339 876.0236471590296,206.63313435531654 933,168 C 989.9763528409704,129.36686564468346 1031.4988162254147,145.34575780166773 1063,154 C 1094.5011837745853,162.65424219833227 1115.9810879393115,163.98383443801256 1161,192 C 1206.0189120606885,220.01616556198744 1274.5768320173397,274.7189044462821 1325,286 C 1375.4231679826603,297.2810955537179 1407.7115839913301,265.14054777685897 1440,233 C 1440,233 1440,700 1440,700 Z");
-                        }
-                    }
-                </style>
-                <defs>
-                    <linearGradient id="gradient" x1="0%" y1="50%" x2="100%" y2="50%">
-                        <stop offset="5%" stop-color="#0693e3"></stop>
-                        <stop offset="95%" stop-color="#8ED1FC"></stop>
-                    </linearGradient>
-                </defs>
-                <path
-                    d="M 0,700 C 0,700 0,233 0,233 C 29.956767879246144,245.87259681363653 59.91353575849229,258.74519362727307 111,277 C 162.0864642415077,295.25480637272693 234.30262484527708,318.8918223045444 285,302 C 335.6973751547229,285.1081776954556 364.8759648603995,227.68751715454945 393,197 C 421.1240351396005,166.31248284545055 448.1935157131246,162.35810907725786 501,148 C 553.8064842868754,133.64189092274214 632.349972287102,108.88004653641903 675,148 C 717.650027712898,187.11995346358097 724.4065951384671,290.1217047770661 764,295 C 803.5934048615329,299.8782952229339 876.0236471590296,206.63313435531654 933,168 C 989.9763528409704,129.36686564468346 1031.4988162254147,145.34575780166773 1063,154 C 1094.5011837745853,162.65424219833227 1115.9810879393115,163.98383443801256 1161,192 C 1206.0189120606885,220.01616556198744 1274.5768320173397,274.7189044462821 1325,286 C 1375.4231679826603,297.2810955537179 1407.7115839913301,265.14054777685897 1440,233 C 1440,233 1440,700 1440,700 Z"
-                    stroke="none" stroke-width="0" fill="url(#gradient)" fill-opacity="0.53"
-                    class="transition-all duration-300 ease-in-out delay-150 path-0"></path>
-                <style>
-                    .path-1 {
-                        animation: pathAnim-1 4s;
-                        animation-timing-function: linear;
-                        animation-iteration-count: infinite;
-                    }
+                    <div class="form-group">
+                        <label>Color Picker</label>
+                        <div class="color-picker-wrapper">
+                            <input type="color" name="color" value="#2e86ea" id="colorInput" required>
+                            <div class="color-preview" id="colorPreview" style="background-color: #2e86ea;"></div>
+                            <span class="color-code" id="colorCode">#2E86EA</span>
+                        </div>
+                    </div>
 
-                    @keyframes pathAnim-1 {
-                        0% {
-                            d: path("M 0,700 C 0,700 0,466 0,466 C 51.360609435843315,469.8904410866289 102.72121887168663,473.78088217325785 141,463 C 179.27878112831337,452.21911782674215 204.47573394909676,426.7669123935976 249,436 C 293.52426605090324,445.2330876064024 357.3758453319262,489.15146825235206 407,522 C 456.6241546680738,554.8485317476479 492.0208847231986,576.6272145969942 536,547 C 579.9791152768014,517.3727854030058 632.5406157752794,436.33967335967094 678,419 C 723.4593842247206,401.66032664032906 761.8166521756839,448.01409196432206 807,440 C 852.1833478243161,431.98590803567794 904.1927755219851,369.6039587830408 937,395 C 969.8072244780149,420.3960412169592 983.4122457363751,533.5700729035148 1028,548 C 1072.587754263625,562.4299270964852 1148.1582415325145,478.1157496028998 1196,465 C 1243.8417584674855,451.8842503971002 1263.9547881335673,509.96692868488583 1300,522 C 1336.0452118664327,534.0330713151142 1388.0226059332163,500.0165356575571 1440,466 C 1440,466 1440,700 1440,700 Z");
-                        }
+                    <div class="form-group">
+                        <label>Product Image (Optional)</label>
+                        <div class="file-upload-wrapper" id="dropZone">
+                            <input type="file" name="image" id="fileInput" accept="image/*" hidden>
+                            <div class="upload-content">
+                                <div class="upload-icon">
+                                    <ion-icon name="cloud-upload-outline"></ion-icon>
+                                </div>
+                                <p>Click to upload or drag and drop</p>
+                                <span class="file-name" id="fileName">No file selected</span>
+                                <small class="upload-hint">Leave empty to use original product image</small>
+                            </div>
+                            <div class="image-preview" id="imagePreview"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-                        25% {
-                            d: path("M 0,700 C 0,700 0,466 0,466 C 38.72236280344737,440.6284931089622 77.44472560689474,415.2569862179243 120,400 C 162.55527439310526,384.7430137820757 208.94346037586837,379.60054823726495 258,391 C 307.05653962413163,402.39945176273505 358.78143288963184,430.3408208330161 405,458 C 451.21856711036816,485.6591791669839 491.9308080656043,513.0361684306708 534,518 C 576.0691919343957,522.9638315693292 619.495334847951,505.51450544430054 666,510 C 712.504665152049,514.4854945556995 762.087852542592,540.9058097921268 806,546 C 849.912147457408,551.0941902078732 888.1532549816811,534.8622553871926 924,507 C 959.8467450183189,479.13774461280747 993.2991275306836,439.64516865910304 1029,437 C 1064.7008724693164,434.35483134089696 1102.650234895585,468.5570699763954 1155,457 C 1207.349765104415,445.4429300236046 1274.0999328869757,388.12655143531555 1324,382 C 1373.9000671130243,375.87344856468445 1406.9500335565122,420.9367242823422 1440,466 C 1440,466 1440,700 1440,700 Z");
-                        }
-
-                        50% {
-                            d: path("M 0,700 C 0,700 0,466 0,466 C 39.11140939121934,474.5440936111588 78.22281878243868,483.0881872223177 123,471 C 167.77718121756132,458.9118127776823 218.22013426146458,426.1913447218882 259,402 C 299.7798657385354,377.8086552781118 330.89664417170303,362.14643389012946 372,402 C 413.10335582829697,441.85356610987054 464.1932890517231,537.2229197175941 513,554 C 561.8067109482769,570.7770802824059 608.3301996214045,508.9618872394944 659,510 C 709.6698003785955,511.0381127605056 764.4859124626585,574.9295313244286 809,549 C 853.5140875373415,523.0704686755714 887.7261505279615,407.31998746279123 929,404 C 970.2738494720385,400.68001253720877 1018.609485425495,509.7905188244065 1056,533 C 1093.390514574505,556.2094811755935 1119.835907770059,493.51793723958286 1163,490 C 1206.164092229941,486.48206276041714 1266.046883494269,542.137732217262 1315,548 C 1363.953116505731,553.862267782738 1401.9765582528655,509.931133891369 1440,466 C 1440,466 1440,700 1440,700 Z");
-                        }
-
-                        75% {
-                            d: path("M 0,700 C 0,700 0,466 0,466 C 52.516575500381606,466.02377465606787 105.03315100076321,466.04754931213574 149,441 C 192.9668489992368,415.95245068786426 228.38397149732873,365.83357740752484 264,385 C 299.61602850267127,404.16642259247516 335.4309630099217,492.618141057765 375,528 C 414.5690369900783,563.381858942235 457.89217646298425,545.6938583614152 508,536 C 558.1078235370157,526.3061416385848 615.0003311381413,524.6064254965744 666,520 C 716.9996688618587,515.3935745034256 762.1064989844506,507.8804396522873 804,484 C 845.8935010155494,460.1195603477127 884.573672924056,419.8718158942766 917,422 C 949.426327075944,424.1281841057234 975.5988093193255,468.6322967706063 1024,474 C 1072.4011906806745,479.3677032293937 1143.031089798643,445.5989970232983 1191,450 C 1238.968910201357,454.4010029767017 1264.276831486102,496.9717151362005 1302,506 C 1339.723168513898,515.0282848637995 1389.8615842569488,490.51414243189976 1440,466 C 1440,466 1440,700 1440,700 Z");
-                        }
-
-                        100% {
-                            d: path("M 0,700 C 0,700 0,466 0,466 C 51.360609435843315,469.8904410866289 102.72121887168663,473.78088217325785 141,463 C 179.27878112831337,452.21911782674215 204.47573394909676,426.7669123935976 249,436 C 293.52426605090324,445.2330876064024 357.3758453319262,489.15146825235206 407,522 C 456.6241546680738,554.8485317476479 492.0208847231986,576.6272145969942 536,547 C 579.9791152768014,517.3727854030058 632.5406157752794,436.33967335967094 678,419 C 723.4593842247206,401.66032664032906 761.8166521756839,448.01409196432206 807,440 C 852.1833478243161,431.98590803567794 904.1927755219851,369.6039587830408 937,395 C 969.8072244780149,420.3960412169592 983.4122457363751,533.5700729035148 1028,548 C 1072.587754263625,562.4299270964852 1148.1582415325145,478.1157496028998 1196,465 C 1243.8417584674855,451.8842503971002 1263.9547881335673,509.96692868488583 1300,522 C 1336.0452118664327,534.0330713151142 1388.0226059332163,500.0165356575571 1440,466 C 1440,466 1440,700 1440,700 Z");
-                        }
-                    }
-                </style>
-                <defs>
-                    <linearGradient id="gradient" x1="0%" y1="50%" x2="100%" y2="50%">
-                        <stop offset="5%" stop-color="#0693e3"></stop>
-                        <stop offset="95%" stop-color="#8ED1FC"></stop>
-                    </linearGradient>
-                </defs>
-                <path
-                    d="M 0,700 C 0,700 0,466 0,466 C 51.360609435843315,469.8904410866289 102.72121887168663,473.78088217325785 141,463 C 179.27878112831337,452.21911782674215 204.47573394909676,426.7669123935976 249,436 C 293.52426605090324,445.2330876064024 357.3758453319262,489.15146825235206 407,522 C 456.6241546680738,554.8485317476479 492.0208847231986,576.6272145969942 536,547 C 579.9791152768014,517.3727854030058 632.5406157752794,436.33967335967094 678,419 C 723.4593842247206,401.66032664032906 761.8166521756839,448.01409196432206 807,440 C 852.1833478243161,431.98590803567794 904.1927755219851,369.6039587830408 937,395 C 969.8072244780149,420.3960412169592 983.4122457363751,533.5700729035148 1028,548 C 1072.587754263625,562.4299270964852 1148.1582415325145,478.1157496028998 1196,465 C 1243.8417584674855,451.8842503971002 1263.9547881335673,509.96692868488583 1300,522 C 1336.0452118664327,534.0330713151142 1388.0226059332163,500.0165356575571 1440,466 C 1440,466 1440,700 1440,700 Z"
-                    stroke="none" stroke-width="0" fill="url(#gradient)" fill-opacity="1"
-                    class="transition-all duration-300 ease-in-out delay-150 path-1"></path>
-            </svg>
-        </div>
+            <div class="form-actions animate-fade-up delay-4">
+                <button type="button" class="btn-cancel" onclick="window.location.href='/items/get/<%= data.id %>'">Cancel</button>
+                <button type="submit" class="btn-submit">
+                    <ion-icon name="color-palette-outline"></ion-icon> Add Color Variant
+                </button>
+            </div>
+        </form>
     </div>
+</div>
 
-    <script>
-        function generate(){
-            var random = Math.floor(Math.random() * 10000000);
-            document.getElementById("barcode-input").value = random
+<style>
+    /* Modern Variables */
+    :root {
+        --primary: #1a73e8;
+        --primary-dark: #1557b0;
+        --secondary: #e8f0fe;
+        --surface: #ffffff;
+        --background: #f8f9fa;
+        --text-primary: #202124;
+        --text-secondary: #5f6368;
+        --border: #dadce0;
+        --success: #1e8e3e;
+        --error: #d93025;
+        --shadow-sm: 0 1px 2px 0 rgba(60,64,67,0.3), 0 1px 3px 1px rgba(60,64,67,0.15);
+        --shadow-md: 0 4px 6px rgba(60,64,67,0.3);
+        --radius: 12px;
+    }
+
+    .main-content-wrapper {
+        padding: 32px;
+        background-color: var(--background);
+        min-height: 100vh;
+        margin-left: 250px;
+    }
+
+    @media (max-width: 1000px) {
+        .main-content-wrapper {
+            margin-left: 0;
+            padding: 20px;
         }
-    </script>
-    <%- include("../layout/footer") -%>
+    }
+
+    .add-color-container {
+        max-width: 900px;
+        margin: 0 auto;
+    }
+
+    /* Header Styles */
+    .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 32px;
+    }
+
+    .header-text h1 {
+        font-size: 28px;
+        color: var(--text-primary);
+        margin: 0 0 8px 0;
+        font-weight: 500;
+    }
+
+    .header-text p {
+        color: var(--text-secondary);
+        margin: 0;
+        font-size: 14px;
+    }
+
+    .header-text strong {
+        color: var(--primary);
+        font-weight: 600;
+    }
+
+    /* Form Elements */
+    .form-card {
+        background: var(--surface);
+        border-radius: var(--radius);
+        box-shadow: var(--shadow-sm);
+        overflow: hidden;
+        transition: transform 0.2s, box-shadow 0.2s;
+        margin-bottom: 24px;
+    }
+
+    .form-card:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-md);
+    }
+
+    .card-header {
+        padding: 20px;
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .header-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 20px;
+    }
+
+    .blue-bg { background: #e8f0fe; color: #1967d2; }
+    .green-bg { background: #e6f4ea; color: #137333; }
+    .purple-bg { background: #f3e8fd; color: #9334e6; }
+
+    .card-header h3 {
+        margin: 0;
+        font-size: 16px;
+        font-weight: 500;
+        color: var(--text-primary);
+    }
+
+    .card-body {
+        padding: 24px;
+    }
+
+    .form-group {
+        margin-bottom: 20px;
+    }
+
+    .form-group:last-child {
+        margin-bottom: 0;
+    }
+
+    .form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+    }
+
+    label {
+        display: block;
+        margin-bottom: 8px;
+        color: var(--text-secondary);
+        font-size: 13px;
+        font-weight: 500;
+    }
+
+    .input-wrapper {
+        position: relative;
+        display: flex;
+        align-items: center;
+    }
+
+    .input-wrapper ion-icon {
+        position: absolute;
+        left: 12px;
+        color: var(--text-secondary);
+        font-size: 18px;
+        pointer-events: none;
+    }
+
+    .input-wrapper input,
+    .input-wrapper select {
+        width: 100%;
+        padding: 12px 12px 12px 40px;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        font-size: 14px;
+        color: var(--text-primary);
+        background: var(--surface);
+        transition: all 0.2s ease;
+        appearance: none;
+    }
+
+    .input-wrapper input:disabled {
+        background: #f5f5f5;
+        color: var(--text-secondary);
+    }
+
+    .input-wrapper input:focus,
+    .input-wrapper select:focus {
+        outline: none;
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px rgba(26, 115, 232, 0.1);
+        transform: translateY(-1px);
+    }
+
+    /* Product Info Section */
+    .product-info-section {
+        display: flex;
+        gap: 24px;
+        align-items: flex-start;
+    }
+
+    .product-image {
+        width: 120px;
+        height: 120px;
+        border-radius: 12px;
+        overflow: hidden;
+        flex-shrink: 0;
+        border: 1px solid var(--border);
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    .product-image img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .product-details {
+        flex: 1;
+    }
+
+    /* Apple-Engineered Barcode Section */
+    .barcode-section {
+        display: flex;
+        gap: 12px;
+        align-items: stretch;
+        position: relative;
+    }
+
+    .barcode-section .input-wrapper {
+        flex: 1;
+        margin-bottom: 0;
+    }
+
+    .barcode-actions {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+    }
+
+    .barcode-generate-btn {
+        position: relative;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 12px 20px;
+        cursor: pointer;
+        color: var(--text-secondary);
+        font-size: 14px;
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        overflow: hidden;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        min-width: 120px;
+        justify-content: center;
+    }
+
+    .barcode-generate-btn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        border-color: var(--primary);
+        color: var(--primary);
+        background: var(--background);
+    }
+
+    .barcode-generate-btn:active {
+        transform: translateY(0);
+        transition: all 0.15s ease;
+    }
+
+    .barcode-generate-btn.secondary {
+        background: var(--secondary);
+        border-color: var(--secondary);
+        color: var(--primary);
+    }
+
+    .barcode-generate-btn.secondary:hover {
+        background: var(--primary);
+        color: white;
+        border-color: var(--primary);
+    }
+
+    .barcode-generate-btn .btn-content {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        z-index: 2;
+        position: relative;
+    }
+
+    .barcode-generate-btn .btn-icon {
+        font-size: 16px;
+        transition: transform 0.3s ease;
+    }
+
+    .barcode-generate-btn:hover .btn-icon {
+        transform: rotate(180deg);
+    }
+
+    .barcode-generate-btn .btn-text {
+        font-weight: 500;
+        letter-spacing: 0.3px;
+    }
+
+    .barcode-generate-btn .btn-ripple {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 0;
+        height: 0;
+        background: rgba(26, 115, 232, 0.2);
+        border-radius: 50%;
+        transform: translate(-50%, -50%);
+        transition: width 0.6s, height 0.6s;
+    }
+
+    .barcode-generate-btn:active .btn-ripple {
+        width: 300px;
+        height: 300px;
+    }
+
+    .barcode-info {
+        margin-top: 12px;
+        padding: 12px 16px;
+        background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        transition: all 0.2s ease;
+    }
+
+    .barcode-info:hover {
+        background: linear-gradient(135deg, #f0f7ff 0%, #e8f0fe 100%);
+        border-color: rgba(26, 115, 232, 0.2);
+    }
+
+    .barcode-hint {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        color: var(--text-secondary);
+        font-size: 13px;
+        font-weight: 500;
+        margin: 0;
+    }
+
+    .barcode-hint ion-icon {
+        color: var(--primary);
+        font-size: 16px;
+    }
+
+    /* Barcode generation animation states */
+    .barcode-generating {
+        animation: pulse 0.6s ease-in-out;
+    }
+
+    @keyframes pulse {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.02); }
+    }
+
+    .barcode-success {
+        animation: successPulse 0.8s ease-out;
+    }
+
+    @keyframes successPulse {
+        0% {
+            box-shadow: 0 0 0 0 rgba(30, 142, 62, 0.7);
+        }
+        70% {
+            box-shadow: 0 0 0 10px rgba(30, 142, 62, 0);
+        }
+        100% {
+            box-shadow: 0 0 0 0 rgba(30, 142, 62, 0);
+        }
+    }
+
+    /* Color Picker */
+    .color-picker-wrapper {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        padding: 16px;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        background: var(--surface);
+        transition: all 0.2s ease;
+    }
+
+    .color-picker-wrapper:focus-within {
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px rgba(26, 115, 232, 0.1);
+    }
+
+    input[type="color"] {
+        width: 48px;
+        height: 48px;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        padding: 0;
+        background: none;
+        transition: transform 0.2s ease;
+    }
+
+    input[type="color"]:hover {
+        transform: scale(1.05);
+    }
+
+    .color-preview {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        border: 2px solid rgba(0,0,0,0.1);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    .color-code {
+        font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace;
+        color: var(--text-secondary);
+        font-size: 14px;
+        font-weight: 500;
+        padding: 8px 12px;
+        background: var(--background);
+        border-radius: 6px;
+        border: 1px solid var(--border);
+        letter-spacing: 0.5px;
+    }
+
+    /* File Upload */
+    .file-upload-wrapper {
+        border: 2px dashed var(--border);
+        border-radius: 12px;
+        padding: 32px;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+        background: linear-gradient(145deg, #f8f9fa 0%, #ffffff 100%);
+    }
+
+    .file-upload-wrapper:hover {
+        border-color: var(--primary);
+        background: linear-gradient(145deg, #f0f7ff 0%, #e8f0fe 100%);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(26, 115, 232, 0.15);
+    }
+
+    .upload-icon {
+        font-size: 32px;
+        color: var(--primary);
+        margin-bottom: 12px;
+        opacity: 0.8;
+        transition: all 0.2s ease;
+    }
+
+    .file-upload-wrapper:hover .upload-icon {
+        opacity: 1;
+        transform: scale(1.1);
+    }
+
+    .upload-content p {
+        margin: 0 0 8px 0;
+        font-size: 14px;
+        color: var(--text-secondary);
+        font-weight: 500;
+    }
+
+    .upload-hint {
+        display: block;
+        margin-top: 8px;
+        font-size: 12px;
+        color: var(--text-secondary);
+        opacity: 0.7;
+    }
+
+    .file-name {
+        display: block;
+        margin-top: 8px;
+        font-size: 12px;
+        color: var(--primary);
+        font-weight: 600;
+        padding: 4px 8px;
+        background: var(--secondary);
+        border-radius: 4px;
+        max-width: fit-content;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .image-preview {
+        display: none;
+        margin-top: 16px;
+        width: 100%;
+        height: 150px;
+        border-radius: 8px;
+        background-size: cover;
+        background-position: center;
+        border: 1px solid var(--border);
+    }
+
+    /* Buttons */
+    .form-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 16px;
+        padding-top: 24px;
+        border-top: 1px solid var(--border);
+    }
+
+    .btn-submit, .btn-secondary, .btn-cancel {
+        padding: 12px 24px;
+        border-radius: 20px;
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.2s ease;
+        border: none;
+        text-decoration: none;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .btn-submit {
+        background: var(--primary);
+        color: white;
+        box-shadow: 0 2px 8px rgba(26, 115, 232, 0.3);
+    }
+
+    .btn-submit:hover {
+        background: var(--primary-dark);
+        box-shadow: 0 4px 12px rgba(26, 115, 232, 0.4);
+        transform: translateY(-2px);
+    }
+
+    .btn-submit:active {
+        transform: translateY(0);
+        box-shadow: 0 2px 4px rgba(26, 115, 232, 0.3);
+    }
+
+    .btn-secondary {
+        background: white;
+        color: var(--primary);
+        border: 1px solid var(--border);
+    }
+
+    .btn-secondary:hover {
+        background: var(--secondary);
+        border-color: var(--primary);
+        transform: translateY(-1px);
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    .btn-cancel {
+        background: transparent;
+        color: var(--text-secondary);
+    }
+
+    .btn-cancel:hover {
+        background: rgba(0,0,0,0.05);
+        color: var(--text-primary);
+        transform: translateY(-1px);
+    }
+
+    /* Animations */
+    @keyframes fadeUp {
+        from { 
+            opacity: 0; 
+            transform: translateY(30px); 
+        }
+        to { 
+            opacity: 1; 
+            transform: translateY(0); 
+        }
+    }
+
+    @keyframes fadeDown {
+        from { 
+            opacity: 0; 
+            transform: translateY(-30px); 
+        }
+        to { 
+            opacity: 1; 
+            transform: translateY(0); 
+        }
+    }
+
+    .animate-fade-up {
+        animation: fadeUp 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+        opacity: 0;
+    }
+
+    .animate-fade-down {
+        animation: fadeDown 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+        opacity: 0;
+    }
+
+    .delay-1 { animation-delay: 0.1s; }
+    .delay-2 { animation-delay: 0.2s; }
+    .delay-3 { animation-delay: 0.3s; }
+    .delay-4 { animation-delay: 0.4s; }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+        .product-info-section {
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+
+        .form-row {
+            grid-template-columns: 1fr;
+        }
+
+        .page-header {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 16px;
+        }
+
+        .form-actions {
+            flex-direction: column-reverse;
+        }
+
+        .btn-submit, .btn-secondary, .btn-cancel {
+            width: 100%;
+            justify-content: center;
+        }
+
+        .barcode-section {
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .barcode-actions {
+            justify-content: center;
+            gap: 12px;
+        }
+
+        .barcode-generate-btn {
+            min-width: 140px;
+        }
+    }
+</style>
+
+<script>
+    // Enhanced Color Picker Handling
+    const colorInput = document.getElementById('colorInput');
+    const colorPreview = document.getElementById('colorPreview');
+    const colorCode = document.getElementById('colorCode');
+
+    colorInput.addEventListener('input', (e) => {
+        const color = e.target.value;
+        colorPreview.style.backgroundColor = color;
+        colorCode.textContent = color.toUpperCase();
+        
+        // Enhanced transition effect
+        colorPreview.style.transform = 'scale(1.2)';
+        colorPreview.style.boxShadow = `0 0 20px ${color}40`;
+        setTimeout(() => {
+            colorPreview.style.transform = 'scale(1)';
+            colorPreview.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)';
+        }, 200);
+    });
+
+    // Apple-Engineered Barcode Generation (Optional Helper)
+    function generateBarcode() {
+        const random = Math.floor(Math.random() * 10000000);
+        const barcodeInput = document.getElementById('barcode-input');
+        const generateBtn = document.getElementById('barcode-btn');
+        const inputWrapper = document.querySelector('.barcode-section .input-wrapper');
+        
+        // Add generation animation
+        generateBtn.classList.add('barcode-generating');
+        inputWrapper.style.transform = 'scale(0.98)';
+        
+        // Quick generation for better UX
+        setTimeout(() => {
+            barcodeInput.value = random;
+            
+            // Show success animation
+            inputWrapper.classList.add('barcode-success');
+            generateBtn.style.transform = 'scale(0.95)';
+            
+            // Reset animations
+            setTimeout(() => {
+                generateBtn.classList.remove('barcode-generating');
+                inputWrapper.style.transform = 'scale(1)';
+                inputWrapper.classList.remove('barcode-success');
+                generateBtn.style.transform = 'scale(1)';
+                
+                // Brief success indication
+                const btnIcon = generateBtn.querySelector('.btn-icon');
+                const originalIcon = btnIcon.name;
+                btnIcon.name = 'checkmark-circle-outline';
+                
+                setTimeout(() => {
+                    btnIcon.name = originalIcon;
+                }, 1500);
+                
+            }, 300);
+            
+        }, 400);
+    }
+
+    // Enhanced File Upload Handling
+    const dropZone = document.getElementById('dropZone');
+    const fileInput = document.getElementById('fileInput');
+    const fileName = document.getElementById('fileName');
+    const imagePreview = document.getElementById('imagePreview');
+
+    dropZone.addEventListener('click', () => fileInput.click());
+
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+        dropZone.addEventListener(eventName, preventDefaults, false);
+        document.body.addEventListener(eventName, preventDefaults, false);
+    });
+
+    function preventDefaults(e) {
+        e.preventDefault();
+        e.stopPropagation();
+    }
+
+    ['dragenter', 'dragover'].forEach(eventName => {
+        dropZone.addEventListener(eventName, highlight, false);
+    });
+
+    ['dragleave', 'drop'].forEach(eventName => {
+        dropZone.addEventListener(eventName, unhighlight, false);
+    });
+
+    function highlight() {
+        dropZone.style.borderColor = 'var(--primary)';
+        dropZone.style.background = 'linear-gradient(145deg, #f0f7ff 0%, #e8f0fe 100%)';
+        dropZone.style.transform = 'translateY(-2px)';
+    }
+
+    function unhighlight() {
+        dropZone.style.borderColor = 'var(--border)';
+        dropZone.style.background = 'linear-gradient(145deg, #f8f9fa 0%, #ffffff 100%)';
+        dropZone.style.transform = 'translateY(0)';
+    }
+
+    dropZone.addEventListener('drop', handleDrop, false);
+
+    function handleDrop(e) {
+        const dt = e.dataTransfer;
+        const files = dt.files;
+        handleFiles(files);
+    }
+
+    fileInput.addEventListener('change', function() {
+        handleFiles(this.files);
+    });
+
+    function handleFiles(files) {
+        if (files.length > 0) {
+            const file = files[0];
+            fileName.textContent = file.name;
+            
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                imagePreview.style.backgroundImage = `url('${e.target.result}')`;
+                imagePreview.style.display = 'block';
+                document.querySelector('.upload-content').style.opacity = '0.5';
+                
+                // Smooth reveal animation
+                imagePreview.style.transform = 'scale(0.8)';
+                imagePreview.style.opacity = '0';
+                setTimeout(() => {
+                    imagePreview.style.transform = 'scale(1)';
+                    imagePreview.style.opacity = '1';
+                }, 100);
+            };
+            reader.readAsDataURL(file);
+        }
+    }
+
+    // Enhanced Form Validation
+    document.querySelector('.add-color-form').addEventListener('submit', function(e) {
+        const colorName = document.querySelector('input[name="colorName"]').value.trim();
+        const color = document.querySelector('input[name="color"]').value;
+        const mainQty = document.querySelector('input[name="qty"]').value;
+        const storeQty = document.querySelector('input[name="stock"]').value;
+        
+        let hasError = false;
+        let errorMessage = '';
+
+        if (!colorName) {
+            errorMessage = 'Please enter a name for this color variant.';
+            hasError = true;
+        } else if (!color) {
+            errorMessage = 'Please select a color using the color picker.';
+            hasError = true;
+        } else if (!mainQty || parseInt(mainQty) < 0) {
+            errorMessage = 'Please enter a valid main storage quantity.';
+            hasError = true;
+        } else if (parseInt(storeQty) < 0) {
+            errorMessage = 'Store quantity cannot be negative.';
+            hasError = true;
+        }
+
+        if (hasError) {
+            e.preventDefault();
+            Swal.fire({
+                icon: 'warning',
+                title: 'Invalid Input',
+                text: errorMessage,
+                confirmButtonColor: '#1a73e8',
+                confirmButtonText: 'Fix It',
+                customClass: {
+                    popup: 'modern-alert',
+                    confirmButton: 'modern-confirm-btn'
+                }
+            });
+            
+            // Focus on the problematic field
+            if (!colorName) {
+                document.querySelector('input[name="colorName"]').focus();
+            } else if (!color) {
+                document.querySelector('input[name="color"]').focus();
+            } else if (!mainQty || parseInt(mainQty) < 0) {
+                document.querySelector('input[name="qty"]').focus();
+            }
+            return;
+        }
+
+        // Show loading state
+        const submitBtn = document.querySelector('.btn-submit');
+        const originalContent = submitBtn.innerHTML;
+        submitBtn.innerHTML = '<ion-icon name="refresh-outline" class="spin"></ion-icon> Adding Color...';
+        submitBtn.disabled = true;
+    });
+
+    // Enhanced keyboard shortcuts
+    document.getElementById('barcode-input').addEventListener('keydown', function(e) {
+        if (e.ctrlKey && e.key === 'g') {
+            e.preventDefault();
+            generateBarcode();
+        }
+    });
+
+    // Add global keyboard shortcut for form submission
+    document.addEventListener('keydown', function(e) {
+        if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+            e.preventDefault();
+            document.querySelector('.add-color-form').dispatchEvent(new Event('submit'));
+        }
+    });
+
+    // Add smooth scrolling for better UX
+    function smoothScrollTo(element) {
+        element.scrollIntoView({
+            behavior: 'smooth',
+            block: 'center'
+        });
+    }
+
+    // Focus management for better accessibility
+    const inputs = document.querySelectorAll('input[required]');
+    inputs.forEach(input => {
+        input.addEventListener('blur', function() {
+            if (this.value.trim() === '') {
+                this.style.borderColor = 'var(--error)';
+                this.style.boxShadow = '0 0 0 3px rgba(217, 48, 37, 0.1)';
+            } else {
+                this.style.borderColor = 'var(--border)';
+                this.style.boxShadow = 'none';
+            }
+        });
+
+        input.addEventListener('focus', function() {
+            this.style.borderColor = 'var(--primary)';
+            this.style.boxShadow = '0 0 0 3px rgba(26, 115, 232, 0.1)';
+        });
+    });
+
+    // Add loading spinner animation
+    const style = document.createElement('style');
+    style.textContent = `
+        .spin {
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+    `;
+    document.head.appendChild(style);
+</script>
+
+<%- include("../layout/footer") -%>
