@@ -393,10 +393,10 @@ nav img {
 
 .modern-sidebar {
     position: fixed;
-    top: 0px;
+    top: -10px;
     left: 0;
     width: 240px;
-    height: calc(100vh - 64px);
+    height: calc(110vh - 74px);
     border-right: 1px solid var(--border-color);
     overflow-y: auto;
     overflow-x: hidden;
@@ -673,8 +673,8 @@ body.sidebar-collapsed .collapse-toggle {
 /* ===== CLEAN ITEMS INTERFACE ===== */
 
 .items-interface {
-    margin-left: 280px;
-    margin-top: 64px;
+    margin-left: 240px;
+    margin-top: 40px;
     padding: 24px;
     min-height: calc(100vh - 64px);
     background: #ffffff;

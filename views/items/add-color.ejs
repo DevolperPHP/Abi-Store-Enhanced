@@ -1,6 +1,6 @@
 <%- include("../layout/navbar") -%>
 
-<div class="main-content-wrapper">
+<div class="items-interface">
     <div class="add-color-container">
         <div class="page-header animate-fade-down">
             <div class="header-text">
@@ -116,7 +116,12 @@
                                     </button>
                                 </div>
                             </div>
-                            
+                            <div class="barcode-info">
+                                <small class="barcode-hint">
+                                    <ion-icon name="information-circle-outline"></ion-icon>
+                                    You can enter a barcode manually or click Generate for a random one
+                                </small>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -194,23 +199,10 @@
         --radius: 12px;
     }
 
-    .main-content-wrapper {
-        padding: 32px;
-        background-color: var(--background);
-        min-height: 100vh;
-        margin-left: 250px;
-    }
-
-    @media (max-width: 1000px) {
-        .main-content-wrapper {
-            margin-left: 0;
-            padding: 20px;
-        }
-    }
-
     .add-color-container {
         max-width: 900px;
         margin: 0 auto;
+        width: 100%;
     }
 
     /* Header Styles */
@@ -523,13 +515,13 @@
     }
 
     @keyframes successPulse {
-        0% {
+        0% { 
             box-shadow: 0 0 0 0 rgba(30, 142, 62, 0.7);
         }
         70% {
             box-shadow: 0 0 0 10px rgba(30, 142, 62, 0);
         }
-        100% {
+        100% { 
             box-shadow: 0 0 0 0 rgba(30, 142, 62, 0);
         }
     }
@@ -997,7 +989,7 @@
     });
 
     // Enhanced keyboard shortcuts
-    document.getElementById('barcode-input').addEventListener('keydown', function(e) {
+    document.getElementById('barcode-input')?.addEventListener('keydown', function(e) {
         if (e.ctrlKey && e.key === 'g') {
             e.preventDefault();
             generateBarcode();
