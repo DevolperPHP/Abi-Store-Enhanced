@@ -346,7 +346,41 @@ class ItemsManager {
         const itemsHTML = products.map(product => this.createItemHTML(product)).join('');
         itemsList.innerHTML = itemsHTML;
 
+        // Trigger animation for items
+        this.animateItems();
+
         console.log(`🎨 Rendered ${products.length} items`);
+    }
+
+    animateItems() {
+        const itemRows = document.querySelectorAll('.item-row');
+        
+        // Add animation class to trigger slide-in animation
+        itemRows.forEach((row, index) => {
+            // Remove any existing animation classes
+            row.classList.remove('animate', 'finished');
+            
+            // Add animation class
+            setTimeout(() => {
+                row.classList.add('animate');
+                
+                // Remove animation class after animation completes and ensure visibility
+                setTimeout(() => {
+                    row.classList.add('finished');
+                    row.classList.remove('animate');
+                }, 600 + (index * 100)); // Animation duration + staggered delay
+            }, index * 50); // Stagger the start of each animation
+        });
+
+        // Safety fallback: ensure all items are visible after 2 seconds
+        setTimeout(() => {
+            itemRows.forEach(row => {
+                row.style.opacity = '1';
+                row.style.transform = 'translateX(0)';
+                row.classList.add('finished');
+                row.classList.remove('animate');
+            });
+        }, 2000);
     }
 
     createItemHTML(product) {

@@ -1,0 +1,719 @@
+/* ===== ANIMATION KEYFRAMES ===== */
+
+/* Slide In Animations */
+@keyframes slideInLeft {
+    from {
+        opacity: 0;
+        transform: translateX(-30px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes slideInRight {
+    from {
+        opacity: 0;
+        transform: translateX(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+/* Fade Animations */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes fadeInDown {
+    from {
+        opacity: 0;
+        transform: translate3d(0, -100%, 0);
+    }
+
+    to {
+        opacity: 1;
+        transform: translate3d(0, 0, 0);
+    }
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes fadeOutUp {
+    from {
+        opacity: 1;
+    }
+
+    to {
+        opacity: 0;
+        transform: translate3d(0, -100%, 0);
+    }
+}
+
+/* Pulse Animation */
+@keyframes pulse {
+    0% {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(1.05);
+    }
+
+    100% {
+        transform: scale(1);
+    }
+}
+
+/* Spinning Animation */
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Shimmer Effect */
+@keyframes shimmer {
+    0% {
+        background-position: -200px 0;
+    }
+
+    100% {
+        background-position: calc(200px + 100%) 0;
+    }
+}
+
+/* Float Animation */
+@keyframes float {
+    0%, 100% {
+        transform: translateY(0px);
+    }
+
+    50% {
+        transform: translateY(-10px);
+    }
+}
+
+/* Dropdown Fade In */
+@keyframes dropdownFadeIn {
+    0% {
+        opacity: 0;
+        transform: translateY(-8px) scale(0.95);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+/* ===== ANIMATION CLASSES ===== */
+
+/* Loading States */
+.loading-shimmer {
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200px 100%;
+    animation: shimmer 1.5s infinite;
+}
+
+.spinning {
+    animation: spin 1s linear infinite;
+}
+
+/* Scroll Animations */
+.scroll-fade-in {
+    opacity: 0;
+    transform: translateY(20px);
+    transition: all 0.6s ease-out;
+}
+
+.scroll-fade-in.visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* Hover Animations */
+.stat-card:hover .stat-icon {
+    animation: pulse 0.6s ease-in-out;
+}
+
+.nav-item:hover {
+    transform: translateX(4px);
+}
+
+.nav-item.active:hover {
+    transform: translateX(0);
+}
+
+/* Card Entrance Animations */
+.stat-card {
+    animation: fadeInUp 0.6s ease-out forwards;
+    opacity: 0;
+}
+
+.stat-card:nth-child(1) {
+    animation-delay: 0.1s;
+}
+
+.stat-card:nth-child(2) {
+    animation-delay: 0.2s;
+}
+
+.stat-card:nth-child(3) {
+    animation-delay: 0.3s;
+}
+
+.stat-card:nth-child(4) {
+    animation-delay: 0.4s;
+}
+
+.content-card {
+    animation: fadeInUp 0.8s ease-out forwards;
+    opacity: 0;
+}
+
+.content-card:nth-child(2) {
+    animation-delay: 0.2s;
+}
+
+.content-card:nth-child(3) {
+    animation-delay: 0.4s;
+}
+
+.content-card:nth-child(4) {
+    animation-delay: 0.6s;
+}
+
+/* Smooth Transitions for Interactive Elements */
+button,
+.nav-item,
+.stat-card,
+.content-card {
+    will-change: transform;
+}
+
+/* Focus States for Accessibility */
+.nav-item:focus,
+button:focus,
+.nav-profile:focus {
+    outline: 2px solid var(--primary-color);
+    outline-offset: 2px;
+}
+
+/* Loading State for Charts */
+.chart-container::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(90deg, transparent, rgba(0, 122, 255, 0.1), transparent);
+    animation: shimmer 2s infinite;
+    border-radius: 8px;
+}
+
+/* Enhanced Active States */
+.nav-item.active {
+    position: relative;
+}
+
+/* Improved Button Interactions */
+button {
+    position: relative;
+    overflow: hidden;
+}
+
+button::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    transition: width 0.6s, height 0.6s;
+}
+
+button:active::before {
+    width: 300px;
+    height: 300px;
+}
+
+/* ===== MODERN ANIMATION COMPONENTS ===== */
+
+/* Apple-Style Search Suggestions Dropdown */
+.search-suggestions-dropdown {
+    animation: dropdownFadeIn 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+/* Notification Badge Animation */
+.notification-badge {
+    animation: pulse 2s infinite;
+}
+
+/* Loading states for navigation */
+.nav-item.loading {
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+.nav-item.loading .nav-icon {
+    animation: spin 1s linear infinite;
+}
+
+/* Enhanced mobile touch feedback */
+@media (hover: none) and (pointer: coarse) {
+
+    .nav-item:active,
+    button:active,
+    .stat-card:active {
+        transform: scale(0.96);
+        transition: transform 0.1s ease;
+    }
+}
+
+/* Performance optimizations */
+.stat-card,
+.content-card,
+.nav-item {
+    will-change: transform;
+}
+
+/* Smooth scroll for better UX */
+html {
+    scroll-behavior: smooth;
+}
+
+/* ===== PREMIUM ANIMATION EFFECTS ===== */
+
+/* Order Modern Item Animation */
+.order-modern-item {
+    animation: slideInLeft 0.6s ease-out forwards;
+    opacity: 0;
+    transform: translateX(-20px);
+}
+
+.order-modern-item::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, #007AFF, #0056CC);
+    transform: scaleX(0);
+    transition: transform 0.3s ease;
+}
+
+.order-modern-item:hover::before {
+    transform: scaleX(1);
+}
+
+.order-modern-item:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 40px rgba(0, 122, 255, 0.15);
+    border-color: rgba(0, 122, 255, 0.3);
+}
+
+/* Order Status Badge Animation */
+.order-status-badge::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    transition: width 0.3s, height 0.3s;
+}
+
+.order-status-badge:hover::before {
+    width: 100%;
+    height: 100%;
+}
+
+/* Order Arrow Animation */
+.order-arrow {
+    transition: all 0.3s ease;
+}
+
+.order-modern-item:hover .order-arrow {
+    color: #007AFF;
+    transform: translateX(4px);
+}
+
+/* ===== PREMIUM EMPTY STATE ANIMATIONS ===== */
+
+/* Empty State Animations */
+.empty-illustration {
+    animation: float 3s ease-in-out infinite;
+}
+
+.empty-circle {
+    animation: pulse 3s infinite;
+}
+
+/* Decoration Circle Animations */
+.decoration-circle {
+    position: absolute;
+    border: 2px solid rgba(102, 126, 234, 0.1);
+    border-radius: 50%;
+    animation: float 3s ease-in-out infinite;
+}
+
+.decoration-circle:nth-child(1) {
+    width: 120px;
+    height: 120px;
+    top: -60px;
+    left: -60px;
+    animation-delay: 0s;
+}
+
+.decoration-circle:nth-child(2) {
+    width: 80px;
+    height: 80px;
+    top: -40px;
+    right: -40px;
+    animation-delay: 1.5s;
+}
+
+/* ===== APPLE-STYLE FUZZY SEARCH ANIMATIONS ===== */
+
+/* Apple-Style Search Suggestions Dropdown */
+.search-suggestions-dropdown {
+    animation: dropdownFadeIn 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    min-height: 60px;
+}
+
+/* Suggestions List Scroll Animation */
+.suggestions-list {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(0, 0, 0, 0.2) transparent;
+}
+
+.suggestions-list::-webkit-scrollbar {
+    width: 6px;
+}
+
+.suggestions-list::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.suggestions-list::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 3px;
+}
+
+.suggestions-list::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 0, 0, 0.3);
+}
+
+/* Suggestion Item Hover Animation */
+.suggestion-item {
+    transition: all 0.15s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.suggestion-item:hover {
+    background: rgba(0, 122, 255, 0.06);
+}
+
+.suggestion-item.active {
+    background: rgba(0, 122, 255, 0.1);
+}
+
+.suggestion-item:active {
+    background: rgba(0, 122, 255, 0.15);
+    transform: scale(0.998);
+}
+
+/* View All Button Animation */
+.view-all-btn {
+    transition: all 0.2s ease;
+}
+
+.view-all-btn:hover {
+    background: rgba(0, 122, 255, 0.08);
+}
+
+.view-all-btn:active {
+    background: rgba(0, 122, 255, 0.12);
+    transform: scale(0.98);
+}
+
+/* ===== CLEAN ITEMS INTERFACE ANIMATIONS ===== */
+
+/* Items Interface Fade In */
+.items-interface {
+    animation: fadeInUp 0.6s ease-out;
+}
+
+/* Header Section Animation */
+.items-header-section {
+    animation: fadeInUp 0.8s ease-out;
+}
+
+/* Search and Filter Bar Animation */
+.search-filter-bar {
+    animation: fadeInUp 1s ease-out;
+}
+
+/* Item Row Animations */
+.item-row {
+    /* Start visible by default */
+    opacity: 1;
+    transform: translateX(0);
+    transition: all 0.3s ease;
+}
+
+/* Animate items when they have the 'animate' class */
+.item-row.animate {
+    animation: slideInLeft 0.6s ease-out;
+    opacity: 0;
+    transform: translateX(-20px);
+}
+
+.item-row.animate:nth-child(1) { animation-delay: 0.1s; }
+.item-row.animate:nth-child(2) { animation-delay: 0.2s; }
+.item-row.animate:nth-child(3) { animation-delay: 0.3s; }
+.item-row.animate:nth-child(4) { animation-delay: 0.4s; }
+.item-row.animate:nth-child(5) { animation-delay: 0.5s; }
+
+/* When animation completes, ensure items are visible */
+.item-row.animate.finished {
+    opacity: 1;
+    transform: translateX(0);
+}
+
+/* Item Image Hover Animation */
+.item-image {
+    transition: transform 0.3s ease;
+}
+
+.item-row:hover .item-image {
+    transform: scale(1.05);
+}
+
+/* Action Button Animations */
+.action-btn-icon {
+    transition: all 0.3s ease;
+}
+
+.action-btn-icon:hover {
+    transform: translateY(-2px) scale(1.1);
+}
+
+/* Empty State Animation */
+.empty-state {
+    animation: fadeInUp 1.2s ease-out;
+}
+
+/* ===== LOADING STATES ANIMATIONS ===== */
+
+/* Loading States for Infinite Scroll */
+.loading-state,
+.loading-more {
+    animation: fadeInUp 0.6s ease-out;
+}
+
+.end-of-results {
+    animation: fadeInUp 0.8s ease-out;
+}
+
+/* Spinner Animation */
+.spinner {
+    animation: spin 1s linear infinite;
+}
+
+/* ===== ENHANCED ANIMATION UTILITIES ===== */
+
+/* Performance optimizations for animations */
+.stat-card,
+.content-card,
+.nav-item,
+.item-row,
+.order-modern-item {
+    will-change: transform, opacity;
+}
+
+/* Smooth animations with hardware acceleration */
+.premium-featured-card,
+.product-card-modern,
+.order-modern-item {
+    transform: translateZ(0);
+    backface-visibility: hidden;
+    perspective: 1000px;
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}
+
+/* ===== MOBILE TOUCH ANIMATIONS ===== */
+
+/* Enhanced mobile touch feedback */
+@media (hover: none) and (pointer: coarse) {
+
+    .nav-item:active,
+    .stat-card:active,
+    .content-card:active,
+    .button:active,
+    .action-btn:active {
+        transform: scale(0.96);
+        transition: transform 0.1s ease;
+    }
+
+    .nav-item:hover,
+    .stat-card:hover,
+    .content-card:hover {
+        transform: none;
+    }
+}
+
+/* ===== MICRO-INTERACTIONS ===== */
+
+/* Button Ripple Effect */
+button {
+    position: relative;
+    overflow: hidden;
+}
+
+button::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.3);
+    transform: translate(-50%, -50%);
+    transition: width 0.6s, height 0.6s;
+}
+
+button:active::after {
+    width: 300px;
+    height: 300px;
+}
+
+/* Card Hover Effects */
+.product-card-modern:hover {
+    transform: translateY(-4px);
+}
+
+/* Focus Animation */
+*:focus {
+    animation: pulse 0.3s ease-in-out;
+}
+
+/* ===== ACCESSIBILITY ANIMATIONS ===== */
+
+/* High contrast mode adjustments */
+@media (prefers-contrast: high) {
+    .stat-card,
+    .content-card,
+    .product-card-modern {
+        border-width: 2px;
+    }
+}
+
+/* ===== DARK MODE ANIMATIONS ===== */
+
+/* Dark mode transition */
+@media (prefers-color-scheme: dark) {
+    * {
+        transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+    }
+}
+
+/* ===== PRINT ANIMATIONS ===== */
+
+/* Hide animations in print */
+@media print {
+    *,
+    *::before,
+    *::after {
+        animation: none !important;
+        transition: none !important;
+    }
+}
+
+/* ===== SMOOTH PAGE LOAD ANIMATION ===== */
+
+/* Page Load Animation */
+body {
+    opacity: 0;
+    animation: fadeIn 0.5s ease-out forwards;
+}
+
+@keyframes fadeIn {
+    to {
+        opacity: 1;
+    }
+}
+
+/* ===== ANIMATION UTILITY CLASSES ===== */
+
+/* Animation delays */
+.delay-1 { animation-delay: 0.1s; }
+.delay-2 { animation-delay: 0.2s; }
+.delay-3 { animation-delay: 0.3s; }
+.delay-4 { animation-delay: 0.4s; }
+.delay-5 { animation-delay: 0.5s; }
+
+/* Animation durations */
+.duration-fast { animation-duration: 0.3s; }
+.duration-normal { animation-duration: 0.6s; }
+.duration-slow { animation-duration: 1s; }
+
+/* Animation easing */
+.ease-in { animation-timing-function: ease-in; }
+.ease-out { animation-timing-function: ease-out; }
+.ease-in-out { animation-timing-function: ease-in-out; }
+.bounce { animation-timing-function: cubic-bezier(0.68, -0.55, 0.265, 1.55); }
+
+/* Animation states */
+.paused { animation-play-state: paused; }
+.running { animation-play-state: running; }
+
+/* Animation fill modes */
+.forwards { animation-fill-mode: forwards; }
+.backwards { animation-fill-mode: backwards; }
+.both { animation-fill-mode: both; }

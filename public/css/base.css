@@ -1,0 +1,73 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+/* ===== GLOBAL RESET AND BASE STYLES ===== */
+
+* {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    box-sizing: border-box;
+}
+
+html,
+body {
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden !important;
+}
+
+.flex {
+    display: flex;
+}
+
+.only-phone {
+    display: none !important;
+}
+
+@media only screen and (max-width: 1000px) {
+    .only-pc {
+        display: none !important;
+    }
+
+    .only-phone {
+        display: block;
+    }
+}
+
+/* ===== CSS VARIABLES FOR DESIGN SYSTEM ===== */
+:root {
+    --primary-color: #007AFF;
+    --secondary-color: #0056CC;
+    --success-color: #30D158;
+    --warning-color: #FF9500;
+    --error-color: #FF3B30;
+    --text-primary: #1D1D1F;
+    --text-secondary: #86868B;
+    --background-primary: #F5F5F7;
+    --background-secondary: #FFFFFF;
+    --border-color: #D2D2D7;
+    --shadow-light: 0 4px 20px rgba(0, 0, 0, 0.08);
+    --shadow-medium: 0 8px 40px rgba(0, 0, 0, 0.12);
+    --border-radius: 12px;
+    --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ===== GLOBAL BODY STYLES ===== */
+body {
+    margin: 0;
+    padding: 0;
+    background-color: #ffffff;
+    color: var(--text-primary);
+    line-height: 1.5;
+    opacity: 0;
+    animation: fadeIn 0.5s ease-out forwards;
+}
+
+@keyframes fadeIn {
+    to {
+        opacity: 1;
+    }
+}
+
+/* ===== SMOOTH SCROLL ===== */
+html {
+    scroll-behavior: smooth;
+}

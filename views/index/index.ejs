@@ -191,7 +191,7 @@
                                     <ion-icon name="create-outline"></ion-icon>
                                     Edit Product
                                 </button>
-                                <button class="btn-secondary" onclick="window.location.href='/items/get/<%= product.id%>'">
+                                <button class="btn-primary" onclick="window.location.href='/items/get/<%= product.id%>'">
                                     <ion-icon name="eye-outline"></ion-icon>
                                     View Details
                                 </button>
@@ -220,174 +220,255 @@
             </div>
         </div>
 
-        <!-- Recent Activity Card -->
-        <div class="content-card">
-            <div class="card-header">
-                <h2 class="card-title">Recent Activity</h2>
-                <button class="card-action" onclick="window.location.href='/analysis'">View Analytics</button>
+        <!-- Apple-Style Recent Activity -->
+        <div class="apple-activity-card">
+            <div class="activity-header">
+                <div class="activity-header-content">
+                    <h2 class="activity-title">Recent Activity</h2>
+                    <span class="activity-subtitle">Live updates from your store</span>
+                </div>
+                <button class="activity-action-btn" onclick="window.location.href='/analysis'">
+                    <ion-icon name="analytics-outline"></ion-icon>
+                    <span>View Analytics</span>
+                </button>
             </div>
-            <div class="card-content">
-                <div class="activity-list">
-                    <div class="activity-item">
-                        <div class="activity-icon success">
-                            <ion-icon name="bag-handle-outline"></ion-icon>
-                        </div>
-                        <div class="activity-content">
-                            <p class="activity-text">New order received</p>
-                            <span class="activity-time">2 minutes ago</span>
-                        </div>
+            <div class="activity-timeline">
+                <div class="timeline-item success">
+                    <div class="timeline-indicator">
+                        <div class="indicator-dot success"></div>
                     </div>
-                    <div class="activity-item">
-                        <div class="activity-icon warning">
-                            <ion-icon name="warning-outline"></ion-icon>
+                    <div class="timeline-content">
+                        <div class="timeline-text">
+                            <span class="activity-label">New order received</span>
+                            <span class="activity-badge success">Order</span>
                         </div>
-                        <div class="activity-content">
-                            <p class="activity-text">Low stock alert</p>
-                            <span class="activity-time">1 hour ago</span>
-                        </div>
+                        <span class="activity-timestamp">2 min ago</span>
                     </div>
-                    <div class="activity-item">
-                        <div class="activity-icon primary">
-                            <ion-icon name="cube-outline"></ion-icon>
-                        </div>
-                        <div class="activity-content">
-                            <p class="activity-text">Product updated</p>
-                            <span class="activity-time">3 hours ago</span>
-                        </div>
+                </div>
+                <div class="timeline-item warning">
+                    <div class="timeline-indicator">
+                        <div class="indicator-dot warning"></div>
                     </div>
-                    <div class="activity-item">
-                        <div class="activity-icon success">
-                            <ion-icon name="checkmark-circle-outline"></ion-icon>
+                    <div class="timeline-content">
+                        <div class="timeline-text">
+                            <span class="activity-label">Low stock alert</span>
+                            <span class="activity-badge warning">Alert</span>
                         </div>
-                        <div class="activity-content">
-                            <p class="activity-text">Inventory synced</p>
-                            <span class="activity-time">5 hours ago</span>
+                        <span class="activity-timestamp">1 hour ago</span>
+                    </div>
+                </div>
+                <div class="timeline-item primary">
+                    <div class="timeline-indicator">
+                        <div class="indicator-dot primary"></div>
+                    </div>
+                    <div class="timeline-content">
+                        <div class="timeline-text">
+                            <span class="activity-label">Product updated</span>
+                            <span class="activity-badge primary">Update</span>
                         </div>
+                        <span class="activity-timestamp">3 hours ago</span>
+                    </div>
+                </div>
+                <div class="timeline-item neutral">
+                    <div class="timeline-indicator">
+                        <div class="indicator-dot neutral"></div>
+                    </div>
+                    <div class="timeline-content">
+                        <div class="timeline-text">
+                            <span class="activity-label">Inventory synced</span>
+                            <span class="activity-badge neutral">Sync</span>
+                        </div>
+                        <span class="activity-timestamp">5 hours ago</span>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Low Stock Items -->
-    <div class="content-card">
-        <div class="card-header">
-            <h2 class="card-title">Low Stock Alert</h2>
-            <button class="card-action" onclick="window.location.href='/storage'">Manage Inventory</button>
-        </div>
-        <div class="card-content">
-            <% if(products && products.length > 0) { %>
-                <div class="low-stock-grid">
-                    <% products.slice(0, 6).forEach((item, index) => { %>
-                        <div class="low-stock-item" onclick="window.location.href='/items/get/<%= item.id%>'">
-                            <img src="/upload/images/<%= item.image%>" alt="<%= item.name%>" class="low-stock-image">
-                            <div class="low-stock-info">
-                                <h4 class="low-stock-name"><%= item.name%></h4>
-                                <div class="low-stock-details">
-                                    <span class="low-stock-qty"><%= item.qty%> left</span>
-                                    <div class="quantity-indicator">
-                                        <div class="quantity-bar">
-                                            <div class="quantity-fill <%= item.qty < 5 ? 'low' : item.qty < 15 ? 'medium' : 'high' %>" style="width: <%= Math.min((item.qty / 50) * 100, 100)%>%"></div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    <% }) %>
-                </div>
-            <% } else { %>
-                <div class="empty-state">
-                    <ion-icon name="checkmark-circle-outline" class="empty-icon"></ion-icon>
-                    <h3>All Stock Levels Good</h3>
-                    <p>No products are currently low on stock.</p>
-                </div>
-            <% } %>
-        </div>
-    </div>
-<br>
-    <!-- Recent Orders -->
-    <div class="content-card modern-orders-card">
-        <div class="card-header">
-            <h2 class="card-title">
-                <ion-icon name="receipt-outline" class="card-title-icon"></ion-icon>
-                Recent Orders
-            </h2>
-            <button class="card-action modern-action-btn" onclick="window.location.href='/sell'">
-                <ion-icon name="eye-outline"></ion-icon>
-                View All Orders
+    <!-- Apple-Style Low Stock Alert -->
+    <div class="apple-low-stock-card">
+        <div class="stock-header">
+            <div class="stock-header-content">
+                <h2 class="stock-title">Low Stock Alert</h2>
+                <span class="stock-subtitle">Items requiring attention</span>
+            </div>
+            <button class="stock-action-btn" onclick="window.location.href='/storage'">
+                <ion-icon name="grid-outline"></ion-icon>
+                <span>Manage Inventory</span>
             </button>
         </div>
-        <div class="card-content">
-            <% if(sell && sell.length > 0) { %>
-                <div class="orders-modern-list">
-                    <% sell.forEach((order, index) => { 
-                        const statusColors = {
-                            'pending': { bg: 'linear-gradient(135deg, #FF9500, #FF8C00)', text: '#FFFFFF', icon: 'hourglass-outline' },
-                            'done': { bg: 'linear-gradient(135deg, #30D158, #20B954)', text: '#FFFFFF', icon: 'checkmark-circle-outline' },
-                            'processing': { bg: 'linear-gradient(135deg, #007AFF, #0056CC)', text: '#FFFFFF', icon: 'sync-outline' },
-                            'cancelled': { bg: 'linear-gradient(135deg, #FF3B30, #E74C3C)', text: '#FFFFFF', icon: 'close-circle-outline' }
-                        };
-                        const statusStyle = statusColors[order.status] || statusColors['pending'];
-                        const orderNumber = order.id.substring(0, 8).toUpperCase();
-                        const orderDate = new Date(order.Date).toLocaleDateString('en-US', { 
-                            month: 'short', 
-                            day: 'numeric',
-                            year: 'numeric'
-                        });
-                        const totalAmount = order.products?.reduce((sum, p) => sum + (p.total || 0), 0) || 0;
-                    %>
-                        <div class="order-modern-item" onclick="window.location.href='/sell/get-data/<%= order.id%>'" style="animation-delay: <%= index * 0.1 %>s">
-                            <div class="order-status-badge" style="background: <%= statusStyle.bg %>;">
-                                <ion-icon name="<%= statusStyle.icon %>"></ion-icon>
-                            </div>
-                            <div class="order-content">
-                                <div class="order-header-modern">
-                                    <div class="order-id-container">
-                                        <span class="order-number">#<%= orderNumber %></span>
-                                        <span class="order-time"><%= orderDate %></span>
-                                    </div>
-                                    <div class="order-status-text" style="color: <%= statusStyle.text %>">
-                                        <%= order.status.charAt(0).toUpperCase() + order.status.slice(1) %>
-                                    </div>
-                                </div>
-                                <div class="order-details-modern">
-                                    <div class="customer-info">
-                                        <ion-icon name="person-outline"></ion-icon>
-                                        <span class="customer-phone"><%= order.phone %></span>
-                                    </div>
-                                    <div class="order-total">
-                                        <ion-icon name="card-outline"></ion-icon>
-                                        <span class="amount">IQD <%= totalAmount.toLocaleString() %></span>
-                                    </div>
-                                </div>
-                                <% if(order.adress) { %>
-                                    <div class="order-address-modern">
-                                        <ion-icon name="location-outline"></ion-icon>
-                                        <span class="address-text"><%= order.adress %></span>
-                                    </div>
-                                <% } %>
-                            </div>
-                            <div class="order-arrow">
-                                <ion-icon name="chevron-forward-outline"></ion-icon>
+        
+        <% if(products && products.filter(p => p.qty < 10).length > 0) { %>
+            <div class="stock-alert-grid">
+                <% products.filter(p => p.qty < 10).slice(0, 4).forEach((item, index) => { 
+                    const stockLevel = item.qty < 5 ? 'critical' : item.qty < 8 ? 'warning' : 'low';
+                    const stockPercentage = Math.min((item.qty / 20) * 100, 100);
+                %>
+                    <div class="stock-item-card" onclick="window.location.href='/items/get/<%= item.id%>'" style="animation-delay: <%= index * 0.1 %>s">
+                        <div class="stock-item-image">
+                            <img src="/upload/images/<%= item.image%>" alt="<%= item.name%>" class="stock-image">
+                            <div class="stock-status-badge <%= stockLevel %>">
+                                <ion-icon name="<%= stockLevel === 'critical' ? 'warning' : 'alert-circle' %>"></ion-icon>
                             </div>
                         </div>
-                    <% }) %>
-                </div>
-            <% } else { %>
-                <div class="empty-state modern-empty">
-                    <div class="empty-illustration">
-                        <ion-icon name="receipt-outline" class="empty-icon"></ion-icon>
-                        <div class="empty-circle"></div>
+                        <div class="stock-item-content">
+                            <h4 class="stock-item-name"><%= item.name%></h4>
+                            <div class="stock-level-indicator">
+                                <span class="stock-quantity"><%= item.qty %> units</span>
+                                <div class="stock-progress">
+                                    <div class="stock-progress-bar">
+                                        <div class="stock-progress-fill <%= stockLevel %>" style="width: <%= stockPercentage %>%"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                    <h3>No Recent Orders</h3>
-                    <p>Orders will appear here when customers make purchases.</p>
-                    <button class="empty-action modern-empty-btn" onclick="window.location.href='/sell'">
-                        <ion-icon name="add-circle-outline"></ion-icon>
-                        Create First Order
-                    </button>
+                <% }) %>
+            </div>
+            
+            <div class="stock-footer">
+                <div class="stock-summary">
+                    <span class="summary-text">
+                        <strong><%= products.filter(p => p.qty < 10).length %></strong> items need restocking
+                    </span>
                 </div>
-            <% } %>
+                <button class="stock-view-all-btn" onclick="window.location.href='/storage'">
+                    View All Items
+                    <ion-icon name="chevron-forward-outline"></ion-icon>
+                </button>
+            </div>
+        <% } else { %>
+            <div class="stock-empty-state">
+                <div class="empty-illustration">
+                    <div class="empty-icon-container">
+                        <ion-icon name="shield-checkmark-outline" class="empty-icon"></ion-icon>
+                    </div>
+                </div>
+                <h3 class="empty-title">All Stock Levels Good</h3>
+                <p class="empty-description">No products are currently low on stock.</p>
+            </div>
+        <% } %>
+    </div>
+    <!-- Apple-Style Recent Orders -->
+    <div class="apple-orders-card">
+        <div class="orders-header">
+            <div class="orders-header-content">
+                <h2 class="orders-title">Recent Orders</h2>
+                <span class="orders-subtitle">Latest customer purchases</span>
+            </div>
+            <button class="orders-action-btn" onclick="window.location.href='/sell'">
+                <ion-icon name="receipt-outline"></ion-icon>
+                <span>View All Orders</span>
+            </button>
         </div>
+        
+        <% if(sell && sell.length > 0) { %>
+            <div class="orders-list-container">
+                <% sell.slice(0, 5).forEach((order, index) => { 
+                    const statusConfig = {
+                        'pending': { 
+                            bg: 'linear-gradient(135deg, #FF9500, #FF8C00)', 
+                            text: '#FFFFFF', 
+                            icon: 'time-outline',
+                            label: 'Pending'
+                        },
+                        'done': { 
+                            bg: 'linear-gradient(135deg, #30D158, #20B954)', 
+                            text: '#FFFFFF', 
+                            icon: 'checkmark-circle-outline',
+                            label: 'Completed'
+                        },
+                        'processing': { 
+                            bg: 'linear-gradient(135deg, #007AFF, #0056CC)', 
+                            text: '#FFFFFF', 
+                            icon: 'sync-outline',
+                            label: 'Processing'
+                        },
+                        'cancelled': { 
+                            bg: 'linear-gradient(135deg, #FF3B30, #E74C3C)', 
+                            text: '#FFFFFF', 
+                            icon: 'close-circle-outline',
+                            label: 'Cancelled'
+                        }
+                    };
+                    const status = statusConfig[order.status] || statusConfig['pending'];
+                    const orderNumber = order.id.substring(0, 8).toUpperCase();
+                    const orderDate = new Date(order.Date).toLocaleDateString('en-US', { 
+                        month: 'short', 
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    });
+                    const totalAmount = order.products?.reduce((sum, p) => sum + (p.total || 0), 0) || 0;
+                    const itemCount = order.products?.length || 0;
+                %>
+                    <div class="order-row" onclick="window.location.href='/sell/get-data/<%= order.id%>'" style="animation-delay: <%= index * 0.08 %>s">
+                        <div class="order-status">
+                            <div class="status-indicator" style="background: <%= status.bg %>;">
+                                <ion-icon name="<%= status.icon %>"></ion-icon>
+                            </div>
+                            <span class="status-label <%= order.status %>"><%= status.label %></span>
+                        </div>
+                        
+                        <div class="order-main-content">
+                            <div class="order-header-row">
+                                <div class="order-info-left">
+                                    <span class="order-number">#<%= orderNumber %></span>
+                                    <span class="order-item-count"><%= itemCount %> item<%= itemCount !== 1 ? 's' : '' %></span>
+                                </div>
+                                <div class="order-info-right">
+                                    <span class="order-amount">IQD <%= totalAmount.toLocaleString() %></span>
+                                </div>
+                            </div>
+                            
+                            <div class="order-details-row">
+                                <div class="order-meta">
+                                    <div class="meta-item">
+                                        <ion-icon name="person-outline"></ion-icon>
+                                        <span><%= order.phone %></span>
+                                    </div>
+                                    <div class="meta-item">
+                                        <ion-icon name="calendar-outline"></ion-icon>
+                                        <span><%= orderDate %></span>
+                                    </div>
+                                    <% if(order.adress) { %>
+                                        <div class="meta-item">
+                                            <ion-icon name="location-outline"></ion-icon>
+                                            <span><%= order.adress.length > 25 ? order.adress.substring(0, 25) + '...' : order.adress %></span>
+                                        </div>
+                                    <% } %>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="order-action">
+                            <ion-icon name="chevron-forward-outline"></ion-icon>
+                        </div>
+                    </div>
+                <% }) %>
+            </div>
+            
+            <div class="orders-footer">
+                <button class="view-all-orders-btn" onclick="window.location.href='/sell'">
+                    View All Orders
+                    <ion-icon name="arrow-forward-outline"></ion-icon>
+                </button>
+            </div>
+        <% } else { %>
+            <div class="orders-empty-state">
+                <div class="empty-illustration">
+                    <div class="empty-icon-container">
+                        <ion-icon name="receipt-outline" class="empty-icon"></ion-icon>
+                    </div>
+                </div>
+                <h3 class="empty-title">No Recent Orders</h3>
+                <p class="empty-description">Orders will appear here when customers make purchases.</p>
+                <button class="empty-action-btn" onclick="window.location.href='/sell'">
+                    <ion-icon name="add-circle-outline"></ion-icon>
+                    Create First Order
+                </button>
+            </div>
+        <% } %>
     </div>
 </div>
 
