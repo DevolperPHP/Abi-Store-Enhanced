@@ -1,20 +1,105 @@
 <%- include("../layout/navbar") -%>
 
-    <script>
+<link rel="stylesheet" href="/css/transfer.css">
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
         Swal.fire({
             icon: 'info',
             showConfirmButton: false,
-        html: `<form action="/transfer/edit-qty/<%= data._id%>?_method=PUT" method="post">
-        <input type="number" name="qty"
-            style="border: none; width: 80%; border-bottom: 1px solid #000; margin-top: 20px;" name="qty"
-            placeholder="Quantity">
-        <br><br>
-        <button
-            style="border: none; background-color: #2e86ea; padding: 5px; margin-top: 30px; color: #fff; border-radius: 8px;">Confirm</button>
-        <br>
-    </form>
-    <button onclick="window.location.href='/sell/new'"
-        style="border: none; background-color: ##f0ad4e; padding: 5px; margin-top: 30px; color: #000; border-radius: 8px;">Cancel</button>`,
-        })
-    </script>
-    <%- include("../layout/footer") -%>
+            showCloseButton: true,
+            html: `
+                <div style="padding: 20px; max-width: 400px;">
+                    <div style="text-align: center; margin-bottom: 24px;">
+                        <div style="width: 64px; height: 64px; margin: 0 auto 16px; background: var(--keep-blue); border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                            <ion-icon name="create-outline" style="font-size: 32px; color: white;"></ion-icon>
+                        </div>
+                        <h3 style="font-size: 20px; font-weight: 600; color: var(--text-primary); margin-bottom: 8px;">Edit Quantity</h3>
+                        <p style="font-size: 14px; color: var(--text-secondary);">Update the quantity for transfer</p>
+                    </div>
+
+                    <form action="/transfer/edit-qty/<%= data._id %>?_method=PUT" method="post" style="margin-bottom: 16px;">
+                        <div style="margin-bottom: 20px;">
+                            <label style="display: block; font-size: 13px; font-weight: 600; color: var(--text-secondary); margin-bottom: 8px;">Product Name</label>
+                            <div style="padding: 12px 16px; background: var(--keep-gray-50); border-radius: var(--radius-md); font-size: 14px; color: var(--text-primary);">
+                                <%= data.name %> - <%= data.size %>
+                            </div>
+                        </div>
+
+                        <div style="margin-bottom: 24px;">
+                            <label style="display: block; font-size: 13px; font-weight: 600; color: var(--text-secondary); margin-bottom: 8px;">Quantity</label>
+                            <input type="number"
+                                   name="qty"
+                                   min="1"
+                                   required
+                                   autofocus
+                                   style="width: 100%; padding: 12px 16px; border: 1px solid var(--keep-gray-300); border-radius: var(--radius-md); font-size: 14px; font-family: inherit; background: var(--keep-white); color: var(--text-primary); transition: all var(--transition-fast);"
+                                   onfocus="this.style.borderColor='var(--keep-blue)'; this.style.boxShadow='0 0 0 3px var(--keep-blue-light)';"
+                                   onblur="this.style.borderColor='var(--keep-gray-300)'; this.style.boxShadow='none';">
+                        </div>
+
+                        <div style="display: flex; gap: 12px;">
+                            <button type="submit"
+                                    style="flex: 1; padding: 12px 24px; background: var(--keep-blue); color: white; border: none; border-radius: var(--radius-md); font-size: 14px; font-weight: 600; font-family: inherit; cursor: pointer; transition: all var(--transition-fast); display: flex; align-items: center; justify-content: center; gap: 8px;"
+                                    onmouseover="this.style.background='var(--keep-blue-hover)';"
+                                    onmouseout="this.style.background='var(--keep-blue)';">
+                                <ion-icon name="checkmark-outline"></ion-icon>
+                                Update Quantity
+                            </button>
+                            <button type="button"
+                                    onclick="window.location.href='/transfer'"
+                                    style="flex: 1; padding: 12px 24px; background: var(--keep-gray-100); color: var(--text-primary); border: 1px solid var(--keep-gray-300); border-radius: var(--radius-md); font-size: 14px; font-weight: 600; font-family: inherit; cursor: pointer; transition: all var(--transition-fast);"
+                                    onmouseover="this.style.background='var(--keep-gray-200)';"
+                                    onmouseout="this.style.background='var(--keep-gray-100)';">
+                                Cancel
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            `,
+            customClass: {
+                popup: 'keep-swal-popup',
+                closeButton: 'keep-swal-close'
+            },
+            showClass: {
+                popup: 'animate__animated animate__fadeInDown'
+            },
+            hideClass: {
+                popup: 'animate__animated animate__fadeOutUp'
+            },
+            willOpen: () => {
+                const popup = Swal.getPopup();
+                popup.style.padding = '0';
+            }
+        });
+    });
+</script>
+
+<style>
+    .keep-swal-popup {
+        border-radius: var(--radius-lg) !important;
+        box-shadow: var(--shadow-keep-3) !important;
+        overflow: hidden;
+    }
+
+    .keep-swal-close {
+        color: var(--text-tertiary) !important;
+        font-size: 24px !important;
+        font-weight: 300 !important;
+        padding: 12px !important;
+        top: 8px !important;
+        right: 8px !important;
+    }
+
+    .keep-swal-close:hover {
+        color: var(--text-secondary) !important;
+        background: var(--keep-gray-100) !important;
+        border-radius: 50% !important;
+    }
+
+    .animate__animated {
+        animation-duration: 0.3s !important;
+    }
+</style>
+
+<%- include("../layout/footer") -%>

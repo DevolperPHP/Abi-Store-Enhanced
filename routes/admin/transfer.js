@@ -19,21 +19,25 @@ router.get('/', async (req, res) => {
         if (transferItems.length > 0) {
 
             const qtyMap = req.user.transfer.reduce((map, item) => {
-                map[item.id] = { qty: item.qty, addedAt: item.addedAt };
+                map[item.id.toString()] = { qty: Number(item.qty) || 0, addedAt: item.addedAt };
                 return map;
             }, {});
 
             const products = await Product.find({ _id: { $in: transferItems.map(item => item.id) } });
-            const formattedProducts = products.map(product => ({
-                _id: product._id,
-                name: product.name,
-                price: product.price,
-                image: product.image,
-                colorName: product.colorName,
-                size: product.size,
-                qty: qtyMap[product._id.toString()]?.qty || 0,
-                addedAt: qtyMap[product._id.toString()]?.addedAt || null
-            })).sort((a, b) => new Date(b.addedAt) - new Date(a.addedAt));
+            const formattedProducts = products.map(product => {
+                const productIdStr = product._id.toString();
+                const qtyData = qtyMap[productIdStr];
+                return {
+                    _id: product._id,
+                    name: product.name,
+                    price: product.price,
+                    image: product.image,
+                    colorName: product.colorName,
+                    size: product.size,
+                    qty: Number(qtyData?.qty) || 0,
+                    addedAt: qtyData?.addedAt || Date.now()
+                };
+            }).sort((a, b) => b.addedAt - a.addedAt);
 
 
             res.render('transfer/index', {

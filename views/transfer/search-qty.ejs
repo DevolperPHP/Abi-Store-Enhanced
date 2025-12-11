@@ -1,61 +1,225 @@
 <%- include("../layout/navbar") -%>
-<script>
-    Swal.fire({
-        icon: 'info',
-        title: 'Quantity',
-        text: 'Enter the quantity of <%= data.name%> - <%= data.size%>',
-        html: `<form action="/transfer/add/<%= data.id%>?_method=PUT" method="post">
-    <input type="number" name="qty" style="border: none; width: 80%; border-bottom: 1px solid #000; margin-top: 20px;" name="qty" placeholder="Quantity">
-    <br><br>
-    <br>    <br>
-    <button style="border: none; background-color: #2e86ea; padding: 5px; margin-top: 30px; color: #fff; border-radius: 8px;">Confirm</button>
-    <br>
-</form>
-<button onclick="window.location.href='/transfer'" style="border: none; background-color: ##f0ad4e; padding: 5px; margin-top: 30px; color: #000; border-radius: 8px;">Cancel</button>
-`,
-        showConfirmButton: false,
-    })
-</script>
-<form action="/purchase/add/<%= data.id%>?_method=PUT" method="post">
-    <input style="border: none; border-bottom: 1px solid #000; margin-top: 20px;" name="qty" placeholder="Quantity">
-    <button style="border: none; background-color: #2e86ea; padding: 5px; margin-top: 30px; color: #fff; border-radius: 8px;">Confirm</button>
-    <button style="border: none; background-color: ##f0ad4e; padding: 5px; margin-top: 30px; color: #000; border-radius: 8px;">Cancel</button>
-</form>
-    <div class="items"><br><br>
 
-        <div class="cards">
-                    <div class="card-made" onclick="window.location.href='/purchase/get/<%= data.id%>'">
-                        <div class="item-image">
-                            <img src="/upload/images/<%= data.image%>" alt="">
-                        </div>
-                        <p class="title">
-                            <%= data.name%>
-                        </p>
-                        <div class="des">
-                            <div class="item-color">
-                                <p>Color : <div class="card-color" style="background-color: <%= data.color%>"></div></p>
-                            </div>
-                            <div class="item-size">
-                                <p>Size : <%= data.size%></p>
-                            </div>
-                        </div>
-    
-                        <div class="price">
-                            <p class="price-p">Price</p>
-                            <p class="sell_price">Selling</p>
-                        </div>
-                        <div class="price">
-                            <p class="price-p"><%= data.price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")%> IQD</p>
-                            <p class="sell_price"><%= data.sell_price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")%> IQD</p>
-                        </div>
-                        <% if(data.colorName){%>
-                            <div class="item-colorName">
-                                <p>Color Name: <%= data.colorName%></p>
-                            </div>
-                        <%} %>
-                    </div>
-        </div>
+<link rel="stylesheet" href="/css/transfer.css">
+
+<div class="transfer-container">
+    <div class="page-header">
+        <h1 class="page-title">
+            <ion-icon name="cube-outline"></ion-icon>
+            Add to Transfer
+        </h1>
+        <p class="page-subtitle">Enter quantity for <%= data.name %> - <%= data.size %></p>
     </div>
 
-    <script src="/javascript/items.js"></script>
-    <%- include("../layout/footer") -%>
+    <div class="keep-card">
+        <div class="keep-card-body">
+            <div style="text-align: center; padding: 40px;">
+                <div style="width: 64px; height: 64px; margin: 0 auto 16px; background: var(--keep-blue); border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                    <ion-icon name="add-circle-outline" style="font-size: 32px; color: white;"></ion-icon>
+                </div>
+                <p style="font-size: 14px; color: var(--text-secondary);">Loading quantity dialog...</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('DOM loaded, showing SweetAlert...');
+
+        // Show the modal after a small delay to ensure everything is loaded
+        setTimeout(() => {
+            try {
+                Swal.fire({
+                    icon: 'info',
+                    showConfirmButton: false,
+                    showCloseButton: true,
+                    html: `
+                        <div style="padding: 20px; max-width: 400px;">
+                            <div style="text-align: center; margin-bottom: 24px;">
+                                <div style="width: 64px; height: 64px; margin: 0 auto 16px; background: #1a73e8; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                                    <ion-icon name="add-circle-outline" style="font-size: 32px; color: white;"></ion-icon>
+                                </div>
+                                <h3 style="font-size: 20px; font-weight: 600; color: #212121; margin-bottom: 8px;">Add to Transfer</h3>
+                                <p style="font-size: 14px; color: #616161;">Enter the quantity to transfer</p>
+                            </div>
+
+                            <form action="/transfer/add/<%= data._id %>?_method=PUT" method="post" style="margin-bottom: 16px;">
+                                <div style="margin-bottom: 20px;">
+                                    <label style="display: block; font-size: 13px; font-weight: 600; color: #757575; margin-bottom: 8px;">Product Name</label>
+                                    <div style="padding: 12px 16px; background: #f5f5f5; border-radius: 8px; font-size: 14px; color: #212121; display: flex; align-items: center; gap: 12px;">
+                                        <img src="/upload/images/<%= data.image %>" alt="<%= data.name %>" style="width: 40px; height: 40px; border-radius: 6px; object-fit: cover;">
+                                        <div style="flex: 1; text-align: left;">
+                                            <div style="font-weight: 600; margin-bottom: 4px;"><%= data.name %></div>
+                                            <div style="font-size: 12px; color: #757575;">
+                                                Size: <%= data.size %> | Color: <%= data.colorName %>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div style="margin-bottom: 24px;">
+                                    <label style="display: block; font-size: 13px; font-weight: 600; color: #757575; margin-bottom: 8px;">Available Quantity</label>
+                                    <div style="padding: 12px 16px; background: #e8f0fe; border-radius: 8px; font-size: 14px; color: #1a73e8; font-weight: 600; text-align: center;">
+                                        <ion-icon name="cube-outline" style="vertical-align: middle; margin-right: 8px;"></ion-icon>
+                                        <%= data.qty %> units available
+                                    </div>
+                                </div>
+
+                                <div style="margin-bottom: 24px;">
+                                    <label style="display: block; font-size: 13px; font-weight: 600; color: #757575; margin-bottom: 8px;">Quantity to Transfer</label>
+                                    <input type="number"
+                                           name="qty"
+                                           id="qty-input"
+                                           min="1"
+                                           max="<%= data.qty %>"
+                                           value="1"
+                                           required
+                                           autofocus
+                                           oninput="validateQty(this, <%= data.qty %>)"
+                                           style="width: 100%; padding: 12px 16px; border: 1px solid #e0e0e0; border-radius: 8px; font-size: 14px; font-family: inherit; background: #ffffff; color: #212121;">
+                                    <div id="qty-error" style="color: #ea4335; font-size: 12px; margin-top: 4px; display: none;"></div>
+                                </div>
+
+                                <div style="display: flex; gap: 12px;">
+                                    <button type="submit"
+                                            onclick="handleAddToTransfer(this)"
+                                            style="flex: 1; padding: 12px 24px; background: #1a73e8; color: white; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; font-family: inherit; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                                        <ion-icon name="add-outline"></ion-icon>
+                                        Add to Transfer
+                                    </button>
+                                    <button type="button"
+                                            onclick="window.location.href='/transfer'"
+                                            style="flex: 1; padding: 12px 24px; background: #f5f5f5; color: #212121; border: 1px solid #e0e0e0; border-radius: 8px; font-size: 14px; font-weight: 600; font-family: inherit; cursor: pointer; transition: all 0.2s;">
+                                        Cancel
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    `,
+                    customClass: {
+                        popup: 'keep-swal-popup',
+                        closeButton: 'keep-swal-close'
+                    },
+                    showClass: {
+                        popup: 'animate__animated animate__fadeInDown'
+                    },
+                    hideClass: {
+                        popup: 'animate__animated animate__fadeOutUp'
+                    },
+                    willOpen: () => {
+                        const popup = Swal.getPopup();
+                        if (popup) {
+                            popup.style.padding = '0';
+                        }
+                    }
+                });
+                console.log('SweetAlert shown');
+            } catch (error) {
+                console.error('Error showing SweetAlert:', error);
+                // Hide loading message and show fallback
+                document.querySelector('.keep-card-body').innerHTML = '<p style="text-align: center; color: #757575;">Please use the form below to add this item to transfer.</p>';
+            }
+        }, 100);
+    });
+
+    function validateQty(input, maxQty) {
+        const qty = parseInt(input.value);
+        const errorDiv = document.getElementById('qty-error');
+
+        if (qty > maxQty) {
+            input.style.borderColor = '#ea4335';
+            errorDiv.textContent = `Quantity cannot exceed ${maxQty} units`;
+            errorDiv.style.display = 'block';
+            return false;
+        } else {
+            input.style.borderColor = '#e0e0e0';
+            errorDiv.style.display = 'none';
+            return true;
+        }
+    }
+
+    function handleAddToTransfer(button) {
+        // Get the form element
+        const form = button.closest('form');
+        const qtyInput = form.querySelector('input[name="qty"]');
+        const qty = parseInt(qtyInput.value);
+        const maxQty = <%= data.qty %>;
+
+        if (!qty || qty <= 0) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Invalid Quantity',
+                text: 'Please enter a valid quantity greater than 0.',
+                showConfirmButton: true,
+                customClass: {
+                    popup: 'keep-swal-popup'
+                }
+            });
+            return;
+        }
+
+        if (qty > maxQty) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Quantity Too High',
+                text: `You cannot transfer more than ${maxQty} units.`,
+                showConfirmButton: true,
+                customClass: {
+                    popup: 'keep-swal-popup'
+                }
+            });
+            return;
+        }
+
+        // Show loading state
+        const originalText = button.innerHTML;
+        button.innerHTML = '<ion-icon name="loader-outline" class="spinning"></ion-icon> Adding...';
+        button.disabled = true;
+
+        // Submit the form normally (this will do a full page POST)
+        form.submit();
+    }
+
+    // Make functions globally available
+    window.handleAddToTransfer = handleAddToTransfer;
+    window.validateQty = validateQty;
+</script>
+
+<style>
+    .keep-swal-popup {
+        border-radius: var(--radius-lg) !important;
+        box-shadow: var(--shadow-keep-3) !important;
+        overflow: hidden;
+    }
+
+    .keep-swal-close {
+        color: var(--text-tertiary) !important;
+        font-size: 24px !important;
+        font-weight: 300 !important;
+        padding: 12px !important;
+        top: 8px !important;
+        right: 8px !important;
+    }
+
+    .keep-swal-close:hover {
+        color: var(--text-secondary) !important;
+        background: var(--keep-gray-100) !important;
+        border-radius: 50% !important;
+    }
+
+    .animate__animated {
+        animation-duration: 0.3s !important;
+    }
+
+    .spinning {
+        animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+    }
+</style>
+
+<%- include("../layout/footer") -%>
