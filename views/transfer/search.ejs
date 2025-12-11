@@ -27,7 +27,7 @@
         <div class="search-results">
             <div class="search-grid">
                 <% products.forEach(product => { %>
-                    <div class="product-card" onclick="window.location.href='/transfer/search/get-qty/<%= product._id %>'">
+                    <div class="product-card" onclick="window.location.href='/transfer/search/get-qty/<%= product._id %>?direction=<%= direction %>'">
                         <div class="product-image-container">
                             <img src="/upload/images/<%= product.image %>" alt="<%= product.name %>">
                         </div>
@@ -45,7 +45,13 @@
                                 </div>
                                 <div class="meta-row">
                                     <ion-icon name="cube-outline"></ion-icon>
-                                    <span>In Stock: <%= product.qty %> units</span>
+                                    <span>
+                                        <% if (direction === 'to-main') { %>
+                                            Available in Store: <%= product.stock %> units
+                                        <% } else { %>
+                                            Available in Main: <%= product.qty %> units
+                                        <% } %>
+                                    </span>
                                 </div>
                             </div>
                             <div class="product-actions">

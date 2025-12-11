@@ -18,7 +18,15 @@
             <ion-icon name="swap-horizontal-outline"></ion-icon>
             Transfer Items
         </h1>
-        <p class="page-subtitle">Move items between Main Storage and Local Store</p>
+        <p class="page-subtitle">
+            <% if (direction === 'to-main') { %>
+                Move items from Local Store to Main Storage
+            <% } else if (direction === 'to-store') { %>
+                Move items from Main Storage to Local Store
+            <% } else { %>
+                Move items between Main Storage and Local Store
+            <% } %>
+        </p>
     </div>
 
     <!-- Transfer Direction Card -->
@@ -30,20 +38,31 @@
             </div>
         </div>
         <div class="keep-card-body">
-            <div style="display: flex; gap: var(--space-md); flex-wrap: wrap; margin-bottom: var(--space-lg);">
-                <div style="flex: 1; min-width: 200px;">
-                    <label style="display: block; font-size: 13px; font-weight: 600; color: var(--text-secondary); margin-bottom: var(--space-sm);">From</label>
-                    <select name="min" class="keep-input" style="width: 100%;">
-                        <option selected>Main Storage</option>
-                        <option>Local Store</option>
-                    </select>
+            <div class="direction-cards">
+                <!-- Transfer to Main Storage Button -->
+                <div class="direction-card <% if (direction === 'to-main') { %>active<% } %>" onclick="window.location.href='/transfer/to-main'">
+                    <div class="direction-content">
+                        <div class="direction-icon">
+                            <ion-icon name="arrow-up-outline"></ion-icon>
+                        </div>
+                        <div class="direction-info">
+                            <h3>Transfer to Main Storage</h3>
+                            <p>Move items from Local Store to Main Storage</p>
+                        </div>
+                    </div>
                 </div>
-                <div style="flex: 1; min-width: 200px;">
-                    <label style="display: block; font-size: 13px; font-weight: 600; color: var(--text-secondary); margin-bottom: var(--space-sm);">To</label>
-                    <select name="add" class="keep-input" style="width: 100%;">
-                        <option selected>Local Store</option>
-                        <option>Main Storage</option>
-                    </select>
+
+                <!-- Transfer to Store Button -->
+                <div class="direction-card <% if (direction === 'to-store' || !direction) { %>active<% } %>" onclick="window.location.href='/transfer'">
+                    <div class="direction-content">
+                        <div class="direction-icon">
+                            <ion-icon name="arrow-down-outline"></ion-icon>
+                        </div>
+                        <div class="direction-info">
+                            <h3>Transfer to Store</h3>
+                            <p>Move items from Main Storage to Local Store</p>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -128,9 +147,15 @@
             </div>
             <div class="confirm-body">
                 <div class="transfer-route">
-                    <span class="route-from">Main Storage</span>
-                    <ion-icon class="route-arrow" name="arrow-forward-outline"></ion-icon>
-                    <span class="route-to">Local Store</span>
+                    <% if (direction === 'to-main') { %>
+                        <span class="route-from">Local Store</span>
+                        <ion-icon class="route-arrow" name="arrow-forward-outline"></ion-icon>
+                        <span class="route-to">Main Storage</span>
+                    <% } else if (direction === 'to-store') { %>
+                        <span class="route-from">Main Storage</span>
+                        <ion-icon class="route-arrow" name="arrow-forward-outline"></ion-icon>
+                        <span class="route-to">Local Store</span>
+                    <% } %>
                 </div>
                 <button type="submit" form="confirmForm" class="confirm-button">
                     <ion-icon name="paper-plane-outline"></ion-icon>
@@ -159,15 +184,25 @@
     <div style="flex: 1; min-width: 200px;">
         <label style="display: block; font-size: 13px; font-weight: 600; color: var(--text-secondary); margin-bottom: var(--space-sm);">From</label>
         <select name="min" class="keep-input" style="width: 100%;">
-            <option selected>Main Storage</option>
-            <option>Local Store</option>
+            <% if (direction === 'to-main') { %>
+                <option selected>Local Store</option>
+                <option>Main Storage</option>
+            <% } else if (direction === 'to-store') { %>
+                <option selected>Main Storage</option>
+                <option>Local Store</option>
+            <% } %>
         </select>
     </div>
     <div style="flex: 1; min-width: 200px;">
         <label style="display: block; font-size: 13px; font-weight: 600; color: var(--text-secondary); margin-bottom: var(--space-sm);">To</label>
         <select name="add" class="keep-input" style="width: 100%;">
-            <option selected>Local Store</option>
-            <option>Main Storage</option>
+            <% if (direction === 'to-main') { %>
+                <option selected>Main Storage</option>
+                <option>Local Store</option>
+            <% } else if (direction === 'to-store') { %>
+                <option selected>Local Store</option>
+                <option>Main Storage</option>
+            <% } %>
         </select>
     </div>
 </form>
@@ -230,7 +265,8 @@
         // Create a form and submit it as PUT
         const form = document.createElement('form');
         form.method = 'POST';
-        form.action = '/transfer/add-by-code/' + encodeURIComponent(codeValue) + '?_method=PUT';
+        const currentDirection = "<%= direction || 'to-store' %>";
+        form.action = '/transfer/add-by-code/' + encodeURIComponent(codeValue) + '?_method=PUT&direction=' + currentDirection;
         form.style.display = 'none';
 
         document.body.appendChild(form);
@@ -282,7 +318,9 @@
                 b.innerHTML = `<strong>${item.substr(0, val.length)}</strong>${item.substr(val.length)}`;
                 b.innerHTML += `<input type='hidden' value='${item}'>`;
                 b.addEventListener("click", function () {
-                    window.location.href = `/transfer/search/${String(this.getElementsByTagName("input")[0].value)}`;
+                    const searchTerm = String(this.getElementsByTagName("input")[0].value);
+                    const currentDirection = "<%= direction || 'to-store' %>";
+                    window.location.href = `/transfer/search/${encodeURIComponent(searchTerm)}?direction=${currentDirection}`;
                     closeAllLists();
                 });
                 a.appendChild(b);

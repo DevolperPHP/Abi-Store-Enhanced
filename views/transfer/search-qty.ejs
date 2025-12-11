@@ -45,6 +45,7 @@
                             </div>
 
                             <form action="/transfer/add/<%= data._id %>?_method=PUT" method="post" style="margin-bottom: 16px;">
+                                <input type="hidden" name="direction" value="<%= direction %>">
                                 <div style="margin-bottom: 20px;">
                                     <label style="display: block; font-size: 13px; font-weight: 600; color: #757575; margin-bottom: 8px;">Product Name</label>
                                     <div style="padding: 12px 16px; background: #f5f5f5; border-radius: 8px; font-size: 14px; color: #212121; display: flex; align-items: center; gap: 12px;">
@@ -62,7 +63,11 @@
                                     <label style="display: block; font-size: 13px; font-weight: 600; color: #757575; margin-bottom: 8px;">Available Quantity</label>
                                     <div style="padding: 12px 16px; background: #e8f0fe; border-radius: 8px; font-size: 14px; color: #1a73e8; font-weight: 600; text-align: center;">
                                         <ion-icon name="cube-outline" style="vertical-align: middle; margin-right: 8px;"></ion-icon>
-                                        <%= data.qty %> units available
+                                        <% if (direction === 'to-main') { %>
+                                            <%= data.stock %> units available in Store
+                                        <% } else { %>
+                                            <%= data.qty %> units available in Main Storage
+                                        <% } %>
                                     </div>
                                 </div>
 
@@ -72,11 +77,11 @@
                                            name="qty"
                                            id="qty-input"
                                            min="1"
-                                           max="<%= data.qty %>"
+                                           max="<% if (direction === 'to-main') { %><%= data.stock %><% } else { %><%= data.qty %><% } %>"
                                            value="1"
                                            required
                                            autofocus
-                                           oninput="validateQty(this, <%= data.qty %>)"
+                                           oninput="validateQty(this, <% if (direction === 'to-main') { %><%= data.stock %><% } else { %><%= data.qty %><% } %>)"
                                            style="width: 100%; padding: 12px 16px; border: 1px solid #e0e0e0; border-radius: 8px; font-size: 14px; font-family: inherit; background: #ffffff; color: #212121;">
                                     <div id="qty-error" style="color: #ea4335; font-size: 12px; margin-top: 4px; display: none;"></div>
                                 </div>
@@ -144,7 +149,7 @@
         const form = button.closest('form');
         const qtyInput = form.querySelector('input[name="qty"]');
         const qty = parseInt(qtyInput.value);
-        const maxQty = <%= data.qty %>;
+        const maxQty = <% if (direction === 'to-main') { %><%= data.stock %><% } else { %><%= data.qty %><% } %>;
 
         if (!qty || qty <= 0) {
             Swal.fire({
