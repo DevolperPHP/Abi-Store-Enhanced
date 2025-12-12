@@ -143,19 +143,7 @@
                     </div>
                     
                     <% if(data.status == "pending"){ %>
-                        <div class="item-actions">
-                            <% if(data.isShop == true){ %>
-                                <form action="/sell/return-shop/<%= data._id %>/<%= data.products[i]._id %>?_method=PUT" method="post">
-                                    <button type="submit" class="action-btn delete-btn" title="Return item">
-                                        <ion-icon name="return-down-back-outline"></ion-icon>
-                                    </button>
-                                </form>
-                            <% } else { %>
-                                <button class="action-btn delete-btn" onclick="window.location.href='/sell/return/<%= data._id %>/<%= data.products[i]._id %>'" title="Return item">
-                                    <ion-icon name="return-down-back-outline"></ion-icon>
-                                </button>
-                            <% } %>
-                        </div>
+                        
                     <% } %>
                 </div>
             <% } %>

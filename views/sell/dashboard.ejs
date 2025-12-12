@@ -93,7 +93,7 @@
     <div class="sales-grid" id="salesGrid">
         <% if (sell && sell.length > 0) { %>
             <% sell.forEach((order, index) => { %>
-                <div class="sale-card <%= order.isCashier === true ? 'cashier-sale' : '' %>" onclick="window.location.href='/sell/get-data/<%= order._id %>'">
+                <div class="sale-card <%= order.isCashier === true ? 'cashier-sale' : '' %>" onclick="handleOrderClick('<%= order._id %>', <%= order.products ? order.products.length : 0 %>)">
                     <div class="sale-header">
                         <div class="sale-icon">
                             <% if (order.isShop === true) { %>
@@ -258,6 +258,31 @@
         window.location.reload();
     }
 
+    function handleOrderClick(orderId, productCount) {
+        if (productCount === 0) {
+            Swal.fire({
+                title: 'Empty Order',
+                text: 'This order contains no items and cannot be viewed.',
+                icon: 'info',
+                background: 'linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%)',
+                confirmButtonColor: '#007AFF',
+                confirmButtonText: 'OK',
+                customClass: {
+                    popup: 'empty-order-popup',
+                    confirmButton: 'empty-order-confirm-btn'
+                },
+                showClass: {
+                    popup: 'animate__animated animate__fadeInDown'
+                },
+                hideClass: {
+                    popup: 'animate__animated animate__fadeOutUp'
+                }
+            });
+        } else {
+            window.location.href = `/sell/get-data/${orderId}`;
+        }
+    }
+
     // Infinite scroll
     window.addEventListener('scroll', async () => {
         if (loading) return;
@@ -292,8 +317,8 @@
 
     function createSaleCard(order) {
         const card = document.createElement('div');
-        card.className = 'sale-card';
-        card.onclick = () => window.location.href = `/sell/get-data/${order._id}`;
+        card.className = `sale-card ${order.isCashier === true ? 'cashier-sale' : ''}`;
+        card.onclick = () => handleOrderClick(order._id, order.products ? order.products.length : 0);
 
         let iconName = 'bag-handle-outline';
         if (order.isShop) iconName = 'storefront-outline';
@@ -778,6 +803,67 @@
 
     .btn-secondary ion-icon {
         font-size: 18px;
+    }
+
+    /* ===== SWEETALERT APPLE DESIGN STYLES ===== */
+    .empty-order-popup {
+        border-radius: 20px !important;
+        padding: 32px !important;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15) !important;
+        border: 1px solid rgba(0, 0, 0, 0.05) !important;
+        backdrop-filter: blur(20px) !important;
+    }
+
+    .empty-order-confirm-btn {
+        background: linear-gradient(135deg, #007AFF, #5856D6) !important;
+        border: none !important;
+        border-radius: 12px !important;
+        padding: 12px 32px !important;
+        font-weight: 600 !important;
+        font-size: 16px !important;
+        box-shadow: 0 4px 16px rgba(0, 122, 255, 0.3) !important;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    }
+
+    .empty-order-confirm-btn:hover {
+        transform: translateY(-1px) !important;
+        box-shadow: 0 6px 20px rgba(0, 122, 255, 0.4) !important;
+    }
+
+    /* Animate.css integration for smooth animations */
+    .animate__animated {
+        animation-duration: 0.6s !important;
+        animation-fill-mode: both !important;
+    }
+
+    .animate__fadeInDown {
+        animation-name: fadeInDown !important;
+    }
+
+    .animate__fadeOutUp {
+        animation-name: fadeOutUp !important;
+    }
+
+    @keyframes fadeInDown {
+        from {
+            opacity: 0;
+            transform: translate3d(0, -20px, 0);
+        }
+        to {
+            opacity: 1;
+            transform: translate3d(0, 0, 0);
+        }
+    }
+
+    @keyframes fadeOutUp {
+        from {
+            opacity: 1;
+            transform: translate3d(0, 0, 0);
+        }
+        to {
+            opacity: 0;
+            transform: translate3d(0, -20px, 0);
+        }
     }
 
     /* ===== RESPONSIVE ===== */
