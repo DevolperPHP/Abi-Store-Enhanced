@@ -21,10 +21,6 @@
                 </div>
             </div>
             <div class="header-actions">
-                <button class="btn-secondary" onclick="clearAllFilters()">
-                    <ion-icon name="remove-outline"></ion-icon>
-                    Clear Filters
-                </button>
                 <button class="btn-secondary" onclick="refreshPage()">
                     <ion-icon name="refresh-outline"></ion-icon>
                     Refresh
@@ -95,21 +91,8 @@
                 </select>
             </div>
 
-            <!-- Amount Range Filter -->
-            <div class="filter-group">
-                <label class="filter-label">
-                    <ion-icon name="cash-outline"></ion-icon>
-                    Amount Range
-                </label>
-                <div class="amount-filter-group">
-                    <input type="number" id="minAmount" class="filter-input" placeholder="Min amount" min="0">
-                    <span class="amount-separator">to</span>
-                    <input type="number" id="maxAmount" class="filter-input" placeholder="Max amount" min="0">
-                    <button class="filter-btn" onclick="filterByAmount()">
-                        <ion-icon name="search-outline"></ion-icon>
-                    </button>
-                </div>
-            </div>
+
+            
         </div>
     </div>
 

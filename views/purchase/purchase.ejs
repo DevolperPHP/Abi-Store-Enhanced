@@ -20,19 +20,205 @@
     </script>
 <%}%>
 
-<div class="purchase">
-  <button class="add-btn" onclick="window.location.href='/purchase'"><ion-icon class="icon"
-    name="add-outline"></ion-icon></button>
-    <br><br>
+<!-- Modern Dashboard Container -->
+<div class="dashboard-container">
+    <!-- Dashboard Header -->
+    <div class="dashboard-header">
+        <h1 class="dashboard-title">New Purchase</h1>
+        <p class="dashboard-subtitle">Add items and create a new purchase order</p>
+    </div>
+
+    <!-- Premium Inventory Controls -->
+    <div class="premium-inventory-controls">
+        <div class="controls-header">
+            <div class="header-content">
+                <div class="header-icon">
+                    <ion-icon name="cart-outline"></ion-icon>
+                </div>
+                <div class="header-text">
+                    <h2 class="controls-title">Add Items</h2>
+                    <p class="controls-subtitle">Scan barcode or search for products to add</p>
+                </div>
+            </div>
+            <div class="header-actions">
+                <button class="btn-secondary" onclick="window.location.href='/purchase/get-purchases'">
+                    <ion-icon name="arrow-back-outline"></ion-icon>
+                    Back to Purchases
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Search and Input Card -->
+    <div class="search-filters-card">
+        <div class="search-methods-grid">
+            <!-- Barcode Scanner -->
+            <div class="search-method-group">
+                <label class="filter-label">
+                    <ion-icon name="barcode-outline"></ion-icon>
+                    Scan Barcode
+                </label>
+                <form id="sellForm" method="post" class="barcode-form-row">
+                    <div class="input-with-button">
+                        <input type="text" id="codeInput" name="code" class="filter-input" placeholder="Scan or enter barcode..." autocomplete="off" required>
+                        <button type="submit" class="filter-btn">
+                            <ion-icon name="add-outline"></ion-icon>
+                        </button>
+                    </div>
+                </form>
+            </div>
+            <!-- Product Search -->
+            <div class="search-method-group">
+                <label class="filter-label">
+                    <ion-icon name="search-outline"></ion-icon>
+                    Search Products
+                </label>
+                <div class="autocomplete-container">
+                    <input id="myInput" type="text" class="filter-input" placeholder="Type product name..." autocomplete="off">
+                    <div id="autocomplete-list" class="autocomplete-results"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <br>
-    <p class="title">New purchase</p>
-    <br>
-    <form class="add-by-code-form" id="sellForm" method="post">
-      <input type="text" id="codeInput" name="code" placeholder="Barcode" autocomplete="off" required>
-      <button type="submit">Submit</button>
-  </form><br><br>
-  <script src="/javascript/autoselect.js"></script>
-  <script>
+    <!-- Purchase Cart Section -->
+    <% if (user.purchase && user.purchase.length > 0) { %>
+        <!-- Cart Summary Header -->
+        <div class="cart-summary-card">
+            <div class="cart-summary-content">
+                <div class="cart-info">
+                    <div class="cart-icon">
+                        <ion-icon name="bag-outline"></ion-icon>
+                    </div>
+                    <div class="cart-text">
+                        <h3 class="cart-title">Purchase Cart</h3>
+                        <p class="cart-count"><%= user.purchase.length %> item<%= user.purchase.length > 1 ? 's' : '' %> added</p>
+                    </div>
+                </div>
+                <div class="cart-total-display">
+                    <span class="total-label">Subtotal</span>
+                    <span class="total-value"><%= total.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")%> IQD</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Cart Items Grid -->
+        <div class="cart-items-grid">
+            <% for (let i = 0; i < user.purchase.length; i++) {%>
+                <div class="cart-item-card">
+                    <div class="item-image-wrapper">
+                        <img src="/upload/images/<%= user.purchase[i].image%>" alt="Product image">
+                    </div>
+                    <div class="item-content">
+                        <div class="item-header">
+                            <h4 class="item-name"><%= user.purchase[i].name%></h4>
+                            <div class="item-badge">
+                                <ion-icon name="pricetag-outline"></ion-icon>
+                                Size: <%= user.purchase[i].size%>
+                            </div>
+                        </div>
+                        <div class="item-details-row">
+                            <div class="detail-chip">
+                                <ion-icon name="cube-outline"></ion-icon>
+                                <span>Qty: <strong><%= user.purchase[i].qty%></strong></span>
+                            </div>
+                            <div class="detail-chip cost">
+                                <ion-icon name="wallet-outline"></ion-icon>
+                                <span>Cost: <strong><%= user.purchase[i].cost.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")%></strong></span>
+                            </div>
+                        </div>
+                        <div class="item-footer">
+                            <div class="item-total-price">
+                                <span class="price-label">Total</span>
+                                <span class="price-value"><%= user.purchase[i].total.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")%> IQD</span>
+                            </div>
+                            <div class="item-actions">
+                                <button class="action-btn edit" onclick="window.location.href='/purchase/edit-qty/<%= user.purchase[i].id%>/<%= user.purchase[i].qty%>'" title="Edit quantity">
+                                    <ion-icon name="create-outline"></ion-icon>
+                                </button>
+                                <form action="/purchase/remove/<%= user.purchase[i].id%>?_method=PUT" method="post" style="display: inline;">
+                                    <button type="submit" class="action-btn delete" title="Remove item">
+                                        <ion-icon name="trash-outline"></ion-icon>
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            <% } %>
+        </div>
+
+        <!-- Checkout Section -->
+        <div class="checkout-card">
+            <div class="checkout-header">
+                <div class="checkout-icon">
+                    <ion-icon name="checkmark-circle-outline"></ion-icon>
+                </div>
+                <div class="checkout-text">
+                    <h3 class="checkout-title">Complete Purchase</h3>
+                    <p class="checkout-subtitle">Enter trader details and confirm your order</p>
+                </div>
+            </div>
+            
+            <form action="/purchase/new" method="post" class="checkout-form">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label class="form-label">
+                            <ion-icon name="person-outline"></ion-icon>
+                            Trader Name
+                        </label>
+                        <input type="text" name="trader" class="form-input" placeholder="Enter trader name..." required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">
+                            <ion-icon name="cash-outline"></ion-icon>
+                            Additional Cost
+                        </label>
+                        <input type="number" name="cost" class="form-input" placeholder="0" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">
+                            <ion-icon name="business-outline"></ion-icon>
+                            Storage Location
+                        </label>
+                        <select name="storage" class="form-input" required>
+                            <option value="Main Storage">Main Storage</option>
+                            <option value="Store">Store</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="checkout-actions">
+                    <button type="button" class="btn-secondary" onclick="window.location.href='/purchase/get-purchases'">
+                        <ion-icon name="close-outline"></ion-icon>
+                        Cancel
+                    </button>
+                    <button type="submit" class="btn-primary">
+                        <ion-icon name="checkmark-outline"></ion-icon>
+                        Confirm Purchase
+                    </button>
+                </div>
+            </form>
+        </div>
+    <% } else { %>
+        <!-- Empty State -->
+        <div class="empty-state-card">
+            <div class="empty-icon">
+                <ion-icon name="cart-outline"></ion-icon>
+            </div>
+            <h3 class="empty-title">Your Cart is Empty</h3>
+            <p class="empty-description">
+                Scan a barcode or search for products above to start adding items to your purchase order.
+            </p>
+        </div>
+    <% } %>
+</div>
+
+<!-- Scripts -->
+<script src="https://cdn.jsdelivr.net/npm/fuse.js@6.6.2"></script>
+<script>
+    // Barcode form submission
     document.getElementById('sellForm').addEventListener('submit', function(event) {
         event.preventDefault();
         var codeValue = document.getElementById('codeInput').value;
@@ -40,150 +226,755 @@
         this.action = newAction;
         this.submit();
     });
-</script>
-    <div class="autocomplete" style="width:300px;">
-        <input id="myInput" autocomplete="off" type="text" placeholder="Search for item">
-      </div>
 
-      <table class="table table-striped table-hover">
-        <thead>
-            <tr>
-                <th>#</th>
-                <th class="only-pc">Image</th>
-                <th>Name</th>
-                <th>Qty</th>
-                <th>Size</th>
-                <th>Color</th>
-                <th>Cost</th>
-                <th>Selling price</th>
-                <th>Total</th>
-                <th>Delete</th>
-            </tr>
-        </thead>
+    // Enhanced autocomplete functionality
+    function autocomplete(inp, arr) {
+        let currentFocus;
+        const fuse = new Fuse(arr, {
+            threshold: 0.4,
+        });
 
-        <tbody>
-            <% for (let i = 0; i < user.purchase.length; i++) {%>
-                <tr>
-                    <td><%= i+1%></td>
-                    <td class="only-pc"><img src="/upload/images/<%= user.purchase[i].image%>" alt="Product image"></td>
-                    <td><%= user.purchase[i].name%></td>
+        inp.addEventListener("input", function () {
+            let a, b, val = this.value;
+            closeAllLists();
+            if (!val) return false;
+            currentFocus = -1;
 
-                    <td class="qty-cart">
-                       <%= user.purchase[i].qty%>
-                      <br>
-                      <div class="cart-btns flex">
-                          <button onclick="window.location.href='/purchase/edit-qty/<%= user.purchase[i].id%>/<%= user.purchase[i].qty%>'">Edit</button>
-                      </div>
-                  </td>
-                    <td><%= user.purchase[i].size%></td>
-                    <td><div class="color" style="background-color: <%= user.purchase[i].color%>;"></div></td>
-                    <td><%= user.purchase[i].cost.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")%></td>
-                    <td><%= user.purchase[i].sell.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")%></td>
-                    <td><%= user.purchase[i].total.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")%></td>
-                    <td><form action="/purchase/remove/<%= user.purchase[i].id%>?_method=PUT" method="post">
-                        <button><ion-icon class="icon" name="remove-outline"></ion-icon></button>
-                    </form></td>
-                </tr>
-            <% } %>
-            <tr>
-              <td colspan="10">Total : <%= total%> IQD</td>
-            </tr>
-        </tbody>
-      </table>
+            a = document.createElement("DIV");
+            a.setAttribute("id", this.id + "autocomplete-list");
+            a.setAttribute("class", "autocomplete-results");
+            this.parentNode.appendChild(a);
 
-      <center>
-
-      <form action="/purchase/new" method="post">
-        <input type="number" placeholder="Cost" name="cost" required>
-        <input type="text" placeholder="Trader name" name="trader" required>
-        <select class="form-select" name="storage">
-            <option selected>Main Storage</option>
-            <option>Store</option>
-        </select>
-        <br><br>
-        <button class="btn btn-success">Confirm</button>
-      </form>
-    </center>
-</div>
-
-
-<script src="https://cdn.jsdelivr.net/npm/fuse.js@6.6.2"></script>
-    <script>
-        function autocomplete(inp, arr) {
-            let currentFocus;
-            const fuse = new Fuse(arr, {
-                threshold: 0.4,
-            });
-    
-            inp.addEventListener("input", function () {
-                let a, b, val = this.value;
-                closeAllLists();
-                if (!val) return false;
-                currentFocus = -1;
-    
-                a = document.createElement("DIV");
-                a.setAttribute("id", this.id + "autocomplete-list");
-                a.setAttribute("class", "autocomplete-items");
-                this.parentNode.appendChild(a);
-    
-                const results = fuse.search(val);
-                results.forEach(({ item }) => {
-                    b = document.createElement("DIV");
-                    b.innerHTML = `<strong>${item.substr(0, val.length)}</strong>${item.substr(val.length)}`;
-                    b.innerHTML += `<input type='hidden' value='${item}'>`;
-                    b.addEventListener("click", function () {
-                        window.location.href = `/purchase/search/${String(this.getElementsByTagName("input")[0].value)}`
-                        closeAllLists();
-                    });
-                    a.appendChild(b);
+            const results = fuse.search(val);
+            results.forEach(({ item }) => {
+                b = document.createElement("DIV");
+                b.setAttribute("class", "autocomplete-item");
+                b.innerHTML = `<strong>${item.substr(0, val.length)}</strong>${item.substr(val.length)}`;
+                b.innerHTML += `<input type='hidden' value='${item}'>`;
+                b.addEventListener("click", function () {
+                    window.location.href = `/purchase/search/${String(this.getElementsByTagName("input")[0].value)}`
+                    closeAllLists();
                 });
+                a.appendChild(b);
             });
-    
-            inp.addEventListener("keydown", function (e) {
-                let x = document.getElementById(this.id + "autocomplete-list");
-                if (x) x = x.getElementsByTagName("div");
-                if (e.keyCode == 40) {
-                    currentFocus++;
-                    addActive(x);
-                } else if (e.keyCode == 38) {
-                    currentFocus--;
-                    addActive(x);
-                } else if (e.keyCode == 13) {
-                    e.preventDefault();
-                    if (currentFocus > -1 && x) x[currentFocus].click();
-                }
-            });
-    
-            function addActive(x) {
-                if (!x) return false;
-                removeActive(x);
-                if (currentFocus >= x.length) currentFocus = 0;
-                if (currentFocus < 0) currentFocus = x.length - 1;
-                x[currentFocus].classList.add("autocomplete-active");
+        });
+
+        inp.addEventListener("keydown", function (e) {
+            let x = document.getElementById(this.id + "autocomplete-list");
+            if (x) x = x.getElementsByTagName("div");
+            if (e.keyCode == 40) {
+                currentFocus++;
+                addActive(x);
+            } else if (e.keyCode == 38) {
+                currentFocus--;
+                addActive(x);
+            } else if (e.keyCode == 13) {
+                e.preventDefault();
+                if (currentFocus > -1 && x) x[currentFocus].click();
             }
-    
-            function removeActive(x) {
-                for (let i = 0; i < x.length; i++) {
-                    x[i].classList.remove("autocomplete-active");
-                }
-            }
-    
-            function closeAllLists(elmnt) {
-                const x = document.getElementsByClassName("autocomplete-items");
-                for (let i = 0; i < x.length; i++) {
-                    if (elmnt != x[i] && elmnt != inp) {
-                        x[i].parentNode.removeChild(x[i]);
-                    }
-                }
-            }
-    
-            document.addEventListener("click", function (e) {
-                closeAllLists(e.target);
-            });
+        });
+
+        function addActive(x) {
+            if (!x) return false;
+            removeActive(x);
+            if (currentFocus >= x.length) currentFocus = 0;
+            if (currentFocus < 0) currentFocus = x.length - 1;
+            x[currentFocus].classList.add("autocomplete-active");
         }
-    
-        const data = "<%= data %>".split(",");
-        autocomplete(document.getElementById("myInput"), data);
-    </script>
+
+        function removeActive(x) {
+            for (let i = 0; i < x.length; i++) {
+                x[i].classList.remove("autocomplete-active");
+            }
+        }
+
+        function closeAllLists(elmnt) {
+            const x = document.getElementsByClassName("autocomplete-results");
+            for (let i = 0; i < x.length; i++) {
+                if (elmnt != x[i] && elmnt != inp) {
+                    x[i].parentNode.removeChild(x[i]);
+                }
+            }
+        }
+
+        document.addEventListener("click", function (e) {
+            closeAllLists(e.target);
+        });
+    }
+
+    // Initialize autocomplete
+    const data = "<%= data %>".split(",");
+    autocomplete(document.getElementById("myInput"), data);
+
+    // Auto-focus barcode input on page load
+    window.addEventListener('DOMContentLoaded', function() {
+        document.getElementById('codeInput').focus();
+    });
+</script>
+
+<style>
+    /* ===== NEW PURCHASE PAGE STYLES ===== */
+    /* Inherits dashboard-container, dashboard-header, premium-inventory-controls from main CSS */
+
+    /* ===== SEARCH METHODS GRID ===== */
+    .search-methods-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 24px;
+    }
+
+    .search-method-group {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .barcode-form-row {
+        display: flex;
+        width: 100%;
+    }
+
+    .input-with-button {
+        display: flex;
+        width: 100%;
+        gap: 8px;
+    }
+
+    .input-with-button .filter-input {
+        flex: 1;
+    }
+
+    /* ===== CART SUMMARY CARD ===== */
+    .cart-summary-card {
+        background: linear-gradient(135deg, #007AFF, #5856D6);
+        border-radius: 16px;
+        padding: 24px 28px;
+        margin-bottom: 24px;
+        margin-top: 48px;
+        box-shadow: 0 4px 16px rgba(0, 122, 255, 0.25);
+    }
+
+    .cart-summary-content {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .cart-info {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+    }
+
+    .cart-icon {
+        width: 52px;
+        height: 52px;
+        border-radius: 14px;
+        background: rgba(255, 255, 255, 0.2);
+        backdrop-filter: blur(10px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .cart-icon ion-icon {
+        font-size: 26px;
+        color: #ffffff;
+    }
+
+    .cart-text {
+        color: #ffffff;
+    }
+
+    .cart-title {
+        font-size: 18px;
+        font-weight: 600;
+        margin: 0 0 4px 0;
+    }
+
+    .cart-count {
+        font-size: 14px;
+        margin: 0;
+        opacity: 0.85;
+    }
+
+    .cart-total-display {
+        text-align: right;
+        color: #ffffff;
+    }
+
+    .cart-total-display .total-label {
+        font-size: 13px;
+        display: block;
+        opacity: 0.85;
+        margin-bottom: 4px;
+    }
+
+    .cart-total-display .total-value {
+        font-size: 26px;
+        font-weight: 700;
+        letter-spacing: -0.5px;
+    }
+
+    /* ===== CART ITEMS GRID ===== */
+    .cart-items-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+        gap: 20px;
+        margin-bottom: 24px;
+    }
+
+    .cart-item-card {
+        background: #ffffff;
+        border-radius: 16px;
+        padding: 20px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+        border: 1px solid rgba(0, 0, 0, 0.06);
+        display: flex;
+        gap: 16px;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .cart-item-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+        border-color: rgba(0, 122, 255, 0.15);
+    }
+
+    .item-image-wrapper {
+        width: 80px;
+        height: 80px;
+        border-radius: 12px;
+        overflow: hidden;
+        background: #f5f5f7;
+        flex-shrink: 0;
+    }
+
+    .item-image-wrapper img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .item-content {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+    }
+
+    .item-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 12px;
+        margin-bottom: 10px;
+    }
+
+    .item-name {
+        font-size: 16px;
+        font-weight: 600;
+        color: #1d1d1f;
+        margin: 0;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .item-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 4px 10px;
+        background: rgba(0, 122, 255, 0.1);
+        color: #007AFF;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 500;
+        white-space: nowrap;
+    }
+
+    .item-badge ion-icon {
+        font-size: 12px;
+    }
+
+    .item-details-row {
+        display: flex;
+        gap: 12px;
+        margin-bottom: 12px;
+    }
+
+    .detail-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 12px;
+        background: #f5f5f7;
+        border-radius: 8px;
+        font-size: 13px;
+        color: #8e8e93;
+    }
+
+    .detail-chip ion-icon {
+        font-size: 14px;
+    }
+
+    .detail-chip strong {
+        color: #1d1d1f;
+        font-weight: 600;
+    }
+
+    .detail-chip.cost {
+        background: rgba(52, 199, 89, 0.1);
+        color: #34C759;
+    }
+
+    .detail-chip.cost strong {
+        color: #34C759;
+    }
+
+    .item-footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding-top: 12px;
+        border-top: 1px solid rgba(0, 0, 0, 0.06);
+        margin-top: auto;
+    }
+
+    .item-total-price {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .item-total-price .price-label {
+        font-size: 11px;
+        color: #8e8e93;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 2px;
+    }
+
+    .item-total-price .price-value {
+        font-size: 18px;
+        font-weight: 700;
+        color: #007AFF;
+    }
+
+    .item-actions {
+        display: flex;
+        gap: 8px;
+    }
+
+    .action-btn {
+        width: 36px;
+        height: 36px;
+        border: none;
+        border-radius: 10px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        background: #f5f5f7;
+        color: #8e8e93;
+    }
+
+    .action-btn:hover {
+        transform: scale(1.05);
+    }
+
+    .action-btn.edit:hover {
+        background: rgba(0, 122, 255, 0.1);
+        color: #007AFF;
+    }
+
+    .action-btn.delete {
+        background: rgba(255, 59, 48, 0.1);
+        color: #FF3B30;
+    }
+
+    .action-btn.delete:hover {
+        background: rgba(255, 59, 48, 0.2);
+    }
+
+    .action-btn ion-icon {
+        font-size: 18px;
+    }
+
+    /* ===== CHECKOUT CARD ===== */
+    .checkout-card {
+        background: #ffffff;
+        border-radius: 16px;
+        padding: 28px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+        border: 1px solid rgba(0, 0, 0, 0.06);
+    }
+
+    .checkout-header {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        margin-bottom: 28px;
+        padding-bottom: 20px;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+    }
+
+    .checkout-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        background: linear-gradient(135deg, #34C759, #30D158);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .checkout-icon ion-icon {
+        font-size: 24px;
+        color: #ffffff;
+    }
+
+    .checkout-text {
+        flex: 1;
+    }
+
+    .checkout-title {
+        font-size: 18px;
+        font-weight: 600;
+        color: #1d1d1f;
+        margin: 0 0 4px 0;
+    }
+
+    .checkout-subtitle {
+        font-size: 14px;
+        color: #8e8e93;
+        margin: 0;
+    }
+
+    .form-grid {
+        display: grid;
+        grid-template-columns: 2fr 1fr 1fr;
+        gap: 20px;
+        margin-bottom: 28px;
+    }
+
+    .form-group {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .form-label {
+        font-size: 13px;
+        font-weight: 600;
+        color: #8e8e93;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .form-label ion-icon {
+        font-size: 16px;
+    }
+
+    .form-input {
+        width: 100%;
+        padding: 14px 16px;
+        border: 1px solid rgba(0, 0, 0, 0.1);
+        border-radius: 12px;
+        font-size: 15px;
+        font-family: inherit;
+        color: #1d1d1f;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        background: #ffffff;
+    }
+
+    .form-input:focus {
+        outline: none;
+        border-color: #007AFF;
+        box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.1);
+    }
+
+    .form-input::placeholder {
+        color: #c7c7cc;
+    }
+
+    .checkout-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 12px;
+    }
+
+    /* ===== EMPTY STATE ===== */
+    .empty-state-card {
+        background: #ffffff;
+        border-radius: 24px;
+        padding: 80px 40px;
+        text-align: center;
+        border: 1px solid rgba(0, 0, 0, 0.06);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    }
+
+    .empty-icon {
+        width: 96px;
+        height: 96px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #f0f0f0, #e0e0e0);
+        color: #8e8e93;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 24px;
+    }
+
+    .empty-icon ion-icon {
+        font-size: 48px;
+    }
+
+    .empty-title {
+        font-size: 24px;
+        font-weight: 600;
+        color: #1d1d1f;
+        margin: 0 0 12px 0;
+        letter-spacing: -0.5px;
+    }
+
+    .empty-description {
+        font-size: 16px;
+        color: #8e8e93;
+        margin: 0;
+        line-height: 1.6;
+        max-width: 400px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    /* ===== AUTOCOMPLETE ===== */
+    .autocomplete-container {
+        position: relative;
+    }
+
+    .autocomplete-results {
+        position: absolute;
+        top: calc(100% + 8px);
+        left: 0;
+        right: 0;
+        background: #ffffff;
+        border: 1px solid rgba(0, 0, 0, 0.1);
+        border-radius: 12px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+        max-height: 300px;
+        overflow-y: auto;
+        z-index: 1000;
+    }
+
+    .autocomplete-item {
+        padding: 14px 16px;
+        cursor: pointer;
+        transition: background 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+        font-size: 15px;
+        color: #1d1d1f;
+    }
+
+    .autocomplete-item:last-child {
+        border-bottom: none;
+    }
+
+    .autocomplete-item:hover,
+    .autocomplete-item.autocomplete-active {
+        background: #f5f5f7;
+    }
+
+    .autocomplete-item strong {
+        color: #007AFF;
+        font-weight: 600;
+    }
+
+    /* ===== BUTTON STYLES (matching get-purchases.ejs) ===== */
+    .btn-primary {
+        padding: 12px 24px;
+        background: #34C759;
+        color: #ffffff;
+        border: none;
+        border-radius: 12px;
+        font-size: 15px;
+        font-weight: 500;
+        font-family: inherit;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .btn-primary:hover {
+        background: #2DB04C;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(52, 199, 89, 0.3);
+    }
+
+    .btn-primary:active {
+        transform: translateY(0);
+    }
+
+    .btn-primary ion-icon {
+        font-size: 18px;
+    }
+
+    .btn-secondary {
+        padding: 12px 24px;
+        background: rgba(0, 0, 0, 0.04);
+        color: #1d1d1f;
+        border: none;
+        border-radius: 12px;
+        font-size: 15px;
+        font-weight: 500;
+        font-family: inherit;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .btn-secondary:hover {
+        background: rgba(0, 0, 0, 0.08);
+    }
+
+    .btn-secondary ion-icon {
+        font-size: 18px;
+    }
+
+    .filter-btn {
+        padding: 12px 16px;
+        background: #007AFF;
+        color: #ffffff;
+        border: none;
+        border-radius: 12px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .filter-btn:hover {
+        background: #0056b3;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(0, 122, 255, 0.3);
+    }
+
+    .filter-btn ion-icon {
+        font-size: 20px;
+    }
+
+    /* ===== FILTER INPUT (matching get-purchases.ejs) ===== */
+    .filter-input {
+        width: 100%;
+        padding: 12px 16px;
+        border: 1px solid rgba(0, 0, 0, 0.1);
+        border-radius: 12px;
+        font-size: 15px;
+        font-family: inherit;
+        color: #1d1d1f;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        background: #ffffff;
+    }
+
+    .filter-input:focus {
+        outline: none;
+        border-color: #007AFF;
+        box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.1);
+    }
+
+    .filter-input::placeholder {
+        color: #c7c7cc;
+    }
+
+    .filter-label {
+        font-size: 13px;
+        font-weight: 600;
+        color: #8e8e93;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .filter-label ion-icon {
+        font-size: 16px;
+    }
+
+    /* ===== RESPONSIVE ===== */
+    @media (max-width: 1024px) {
+        .search-methods-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .form-grid {
+            grid-template-columns: 1fr 1fr;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .cart-summary-content {
+            flex-direction: column;
+            gap: 20px;
+            text-align: center;
+        }
+
+        .cart-info {
+            flex-direction: column;
+        }
+
+        .cart-total-display {
+            text-align: center;
+        }
+
+        .cart-items-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .cart-item-card {
+            flex-direction: column;
+        }
+
+        .item-image-wrapper {
+            width: 100%;
+            height: 160px;
+        }
+
+        .item-header {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .item-details-row {
+            flex-wrap: wrap;
+        }
+
+        .form-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .checkout-actions {
+            flex-direction: column;
+        }
+
+        .checkout-actions button {
+            width: 100%;
+            justify-content: center;
+        }
+
+        .empty-state-card {
+            padding: 60px 24px;
+        }
+    }
+</style>
 
 <%- include("../layout/footer") -%>
