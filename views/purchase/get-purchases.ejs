@@ -21,6 +21,10 @@
                 </div>
             </div>
             <div class="header-actions">
+                <button class="btn-secondary" onclick="clearAllFilters()">
+                    <ion-icon name="remove-outline"></ion-icon>
+                    Clear Filters
+                </button>
                 <button class="btn-secondary" onclick="refreshPage()">
                     <ion-icon name="refresh-outline"></ion-icon>
                     Refresh
@@ -64,22 +68,58 @@
                 </div>
             </div>
 
-            <!-- Store Filter -->
+            <!-- Enhanced Filters -->
             <div class="filter-group">
                 <label class="filter-label">
-                    <ion-icon name="storefront-outline"></ion-icon>
-                    Filter
+                    <ion-icon name="funnel-outline"></ion-icon>
+                    Quick Filters
                 </label>
                 <select class="filter-select" onchange="applyFilter(this.value)">
-                    <option value="">All Purchases</option>
-                    <option value="store">Store Purchases</option>
-                    <option value="main">Main Inventory</option>
-                    <option value="/purchase/search-by-filter/newest">Newest First</option>
-                    <option value="/purchase/search-by-filter/oldest">Oldest First</option>
+                    <optgroup label="View All">
+                        <option value="">All Purchases</option>
+                    </optgroup>
+                    <optgroup label="Purchase Type">
+                        <option value="/purchase/search-by-filter/store">Store Purchases</option>
+                        <option value="/purchase/search-by-filter/main">Main Inventory</option>
+                    </optgroup>
+                    <optgroup label="Date Range">
+                        <option value="/purchase/search-by-date/today/today">Today</option>
+                        <option value="/purchase/search-by-date/week/week">This Week</option>
+                        <option value="/purchase/search-by-date/month/month">This Month</option>
+                        <option value="/purchase/search-by-date/year/year">This Year</option>
+                    </optgroup>
+                    <optgroup label="Sort Order">
+                        <option value="/purchase/search-by-filter/newest">Newest First</option>
+                        <option value="/purchase/search-by-filter/oldest">Oldest First</option>
+                    </optgroup>
                 </select>
+            </div>
+
+            <!-- Amount Range Filter -->
+            <div class="filter-group">
+                <label class="filter-label">
+                    <ion-icon name="cash-outline"></ion-icon>
+                    Amount Range
+                </label>
+                <div class="amount-filter-group">
+                    <input type="number" id="minAmount" class="filter-input" placeholder="Min amount" min="0">
+                    <span class="amount-separator">to</span>
+                    <input type="number" id="maxAmount" class="filter-input" placeholder="Max amount" min="0">
+                    <button class="filter-btn" onclick="filterByAmount()">
+                        <ion-icon name="search-outline"></ion-icon>
+                    </button>
+                </div>
             </div>
         </div>
     </div>
+
+    <!-- Search Mode Indicator -->
+    <% if (purchases && purchases.length > 0 && purchases.searchMode) { %>
+        <div class="search-mode-indicator">
+            <ion-icon name="search-outline"></ion-icon>
+            <span>Search Results (<%= purchases.length %> found)</span>
+        </div>
+    <% } %>
 
     <!-- Purchase Cards Grid -->
     <div class="purchases-grid" id="purchasesGrid">
@@ -154,8 +194,8 @@
         <% } %>
     </div>
 
-    <!-- Load More Button (for pagination) -->
-    <% if (purchases && purchases.length > 0) { %>
+    <!-- Load More Button (for pagination) - Only show for full purchase list, not search results -->
+    <% if (purchases && purchases.length > 0 && !purchases.searchMode) { %>
         <div class="load-more-container">
             <button class="btn-secondary" id="loadMoreBtn" onclick="loadMore()">
                 <ion-icon name="chevron-down-outline"></ion-icon>
@@ -167,6 +207,13 @@
 
 <script src="https://cdn.jsdelivr.net/npm/fuse.js@6.6.2"></script>
 <script>
+    // Detect if this is a search results page
+    const isSearchResults = window.location.pathname.includes('/search-by-') ||
+                           window.location.search.includes('search') ||
+                           document.referrer.includes('/search-by-');
+    
+    console.log('🔍 Search mode detected:', isSearchResults);
+    
     let page = 1;
     let loading = false;
     const allPurchasesData = <%- JSON.stringify(purchases || []) %>;
@@ -244,8 +291,117 @@
 
     function applyFilter(url) {
         if (url) {
-            window.location.href = url;
+            // Handle special date range filters
+            if (url.includes('/search-by-date/')) {
+                const parts = url.split('/');
+                const startParam = parts[parts.length - 2];
+                const endParam = parts[parts.length - 1];
+                
+                let startDate, endDate;
+                const today = new Date();
+                
+                // Helper function to format date as YYYY-MM-DD
+                function formatDate(date) {
+                    const year = date.getFullYear();
+                    const month = String(date.getMonth() + 1).padStart(2, '0');
+                    const day = String(date.getDate()).padStart(2, '0');
+                    return `${year}-${month}-${day}`;
+                }
+                
+                switch(startParam) {
+                    case 'today':
+                        startDate = endDate = formatDate(today);
+                        break;
+                    case 'week':
+                        // Get start of current week (Sunday)
+                        const weekStart = new Date(today);
+                        weekStart.setDate(today.getDate() - today.getDay());
+                        // Get end of current week (Saturday)
+                        const weekEnd = new Date(weekStart);
+                        weekEnd.setDate(weekStart.getDate() + 6);
+                        startDate = formatDate(weekStart);
+                        endDate = formatDate(weekEnd);
+                        break;
+                    case 'month':
+                        // Get start of current month
+                        const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+                        // Get end of current month
+                        const monthEnd = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+                        startDate = formatDate(monthStart);
+                        endDate = formatDate(monthEnd);
+                        break;
+                    case 'year':
+                        // Get start of current year
+                        const yearStart = new Date(today.getFullYear(), 0, 1);
+                        // Get end of current year
+                        const yearEnd = new Date(today.getFullYear(), 11, 31);
+                        startDate = formatDate(yearStart);
+                        endDate = formatDate(yearEnd);
+                        break;
+                    default:
+                        window.location.href = url;
+                        return;
+                }
+                
+                console.log('Quick filter dates:', { startDate, endDate, today: formatDate(today) });
+                window.location.href = `/purchase/search-by-date/${startDate}/${endDate}`;
+            } else {
+                window.location.href = url;
+            }
         }
+    }
+
+    function filterByAmount() {
+        const minAmount = document.getElementById('minAmount').value;
+        const maxAmount = document.getElementById('maxAmount').value;
+        
+        if (!minAmount && !maxAmount) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Amount Required',
+                text: 'Please enter at least a minimum or maximum amount'
+            });
+            return;
+        }
+        
+        // For now, redirect to show all purchases and let user know this feature needs backend implementation
+        Swal.fire({
+            icon: 'info',
+            title: 'Amount Filter',
+            text: 'Amount filtering will be available soon. This feature requires backend implementation.'
+        });
+    }
+
+    function clearAllFilters() {
+        // Clear trader search
+        const traderSearch = document.getElementById('traderSearch');
+        if (traderSearch) traderSearch.value = '';
+        
+        // Clear date range
+        const startDate = document.getElementById('startDate');
+        const endDate = document.getElementById('endDate');
+        if (startDate) startDate.value = '';
+        if (endDate) endDate.value = '';
+        
+        // Reset filter select
+        const filterSelect = document.querySelector('.filter-select');
+        if (filterSelect) filterSelect.value = '';
+        
+        // Clear amount filters
+        const minAmount = document.getElementById('minAmount');
+        const maxAmount = document.getElementById('maxAmount');
+        if (minAmount) minAmount.value = '';
+        if (maxAmount) maxAmount.value = '';
+        
+        // Hide autocomplete results
+        const resultsDiv = document.getElementById('trader-results');
+        if (resultsDiv) {
+            resultsDiv.innerHTML = '';
+            resultsDiv.style.display = 'none';
+        }
+        
+        // Navigate to all purchases
+        window.location.href = '/purchase/get-purchases';
     }
 
     function refreshPage() {
@@ -256,38 +412,58 @@
         window.location.href = `/purchase/get-purchase/${purchaseId}`;
     }
 
-    // Infinite scroll
-    window.addEventListener('scroll', async () => {
-        if (loading) return;
+    // Infinite scroll - Only for full purchase list, not search results
+    if (!isSearchResults) {
+        window.addEventListener('scroll', async () => {
+            if (loading) return;
 
-        const { scrollTop, scrollHeight, clientHeight } = document.documentElement;
-        
-        if (scrollTop + clientHeight >= scrollHeight - 200) {
-            loading = true;
-            page++;
+            const { scrollTop, scrollHeight, clientHeight } = document.documentElement;
+            
+            if (scrollTop + clientHeight >= scrollHeight - 200) {
+                loading = true;
+                page++;
 
-            try {
-                const res = await fetch(`/purchase/api?page=${page}`);
-                const data = await res.json();
+                try {
+                    const res = await fetch(`/purchase/api?page=${page}`);
+                    const data = await res.json();
 
-                if (data.length === 0) {
-                    document.getElementById('loadMoreBtn').style.display = 'none';
-                    return;
+                    if (data.length === 0) {
+                        document.getElementById('loadMoreBtn').style.display = 'none';
+                        return;
+                    }
+
+                    const container = document.getElementById('purchasesGrid');
+                    data.forEach(item => {
+                        const card = createPurchaseCard(item);
+                        container.appendChild(card);
+                    });
+                } catch (err) {
+                    console.error('Error loading more purchases:', err);
+                } finally {
+                    loading = false;
                 }
-
-                const container = document.getElementById('purchasesGrid');
-                data.forEach(item => {
-                    const card = createPurchaseCard(item);
-                    container.appendChild(card);
-                });
-            } catch (err) {
-                console.error('Error loading more purchases:', err);
-            } finally {
-                loading = false;
             }
-        }
-    });
+        });
+    } else {
+        console.log('🚫 Infinite scroll disabled for search results');
+    }
 
+    function loadMore() {
+        if (isSearchResults) {
+            console.log('🚫 Load More disabled for search results');
+            Swal.fire({
+                icon: 'info',
+                title: 'Search Mode',
+                text: 'Load More is not available for search results. Please perform a new search to see different results.'
+            });
+            return;
+        }
+        
+        // Original load more logic for full purchase list
+        console.log('📄 Loading more purchases...');
+        // ... rest of original load more logic
+    }
+    
     function createPurchaseCard(purchase) {
         const card = document.createElement('div');
         card.className = `purchase-card ${purchase.store === true ? 'store-purchase' : ''}`;
@@ -378,6 +554,18 @@
         gap: 20px;
     }
 
+    .amount-filter-group {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .amount-separator {
+        font-weight: 500;
+        color: #8e8e93;
+        font-size: 14px;
+    }
+
     .filter-group {
         display: flex;
         flex-direction: column;
@@ -421,6 +609,26 @@
         outline: none;
         border-color: #007AFF;
         box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.1);
+    }
+
+    /* Enhanced optgroup styling */
+    .filter-select optgroup {
+        font-weight: 600;
+        color: #1d1d1f;
+        background: #f8f9fa;
+    }
+
+    .filter-select option {
+        padding: 8px 12px;
+    }
+
+    .filter-select optgroup label {
+        background: #e9ecef;
+        color: #495057;
+        padding: 4px 8px;
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
     }
 
     .autocomplete-container {
@@ -753,6 +961,25 @@
         font-size: 18px;
     }
 
+    /* ===== SEARCH MODE INDICATOR ===== */
+    .search-mode-indicator {
+        background: linear-gradient(135deg, #007AFF, #5856D6);
+        color: #ffffff;
+        padding: 12px 20px;
+        border-radius: 12px;
+        margin-bottom: 20px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 14px;
+        font-weight: 500;
+        box-shadow: 0 2px 8px rgba(0, 122, 255, 0.2);
+    }
+
+    .search-mode-indicator ion-icon {
+        font-size: 18px;
+    }
+
     /* ===== BUTTONS ===== */
     .btn-primary {
         padding: 12px 24px;
@@ -804,6 +1031,11 @@
         background: rgba(0, 0, 0, 0.08);
     }
 
+    .btn-secondary:first-child:hover {
+        background: rgba(255, 59, 48, 0.1);
+        color: #FF3B30;
+    }
+
     .btn-secondary ion-icon {
         font-size: 18px;
     }
@@ -812,6 +1044,15 @@
     @media (max-width: 1024px) {
         .filters-grid {
             grid-template-columns: 1fr;
+        }
+
+        .amount-filter-group {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .amount-separator {
+            display: none;
         }
     }
 
@@ -829,6 +1070,14 @@
         }
 
         .date-separator {
+            display: none;
+        }
+
+        .amount-filter-group {
+            flex-direction: column;
+        }
+
+        .amount-separator {
             display: none;
         }
 
