@@ -108,7 +108,7 @@
             </div>
             <div class="transfer-list-body">
                 <% products.forEach((product, index) => { %>
-                    <div class="transfer-item">
+                    <div class="transfer-item" data-product-id="<%= product._id %>" data-stock="<%= product.stock %>" data-qty="<%= product.mainQty %>" data-current-qty="<%= product.transferQty %>">
                         <div class="item-index"><%= index + 1 %></div>
                         <div class="item-info" data-label="Item">
                             <div class="item-name"><%= product.name %></div>
@@ -121,7 +121,7 @@
                             <%= product.qty %>
                         </div>
                         <div class="item-actions" data-label="Action">
-                            <form action="/transfer/return/<%= product._id%>?_method=PUT" method="post" style="display: inline;">
+                            <form action="/transfer/return/<%= product._id%>?_method=PUT&direction=<%= direction %>" method="post" style="display: inline;">
                                 <button type="button" class="keep-btn keep-btn-icon keep-btn-danger"
                                         onclick="confirmRemove(this)"
                                         title="Remove item">
@@ -129,7 +129,7 @@
                                 </button>
                             </form>
                             <button class="keep-btn keep-btn-icon keep-btn-secondary"
-                                    onclick="window.location.href='/transfer/edit-qty/<%= product._id%>'"
+                                    onclick="editQuantity('<%= product._id %>', '<%= direction %>')"
                                     title="Edit quantity">
                                 <ion-icon name="create-outline"></ion-icon>
                             </button>
@@ -157,7 +157,7 @@
                         <span class="route-to">Local Store</span>
                     <% } %>
                 </div>
-                <button type="submit" form="confirmForm" class="confirm-button">
+                <button type="button" onclick="confirmTransfer()" class="confirm-button">
                     <ion-icon name="paper-plane-outline"></ion-icon>
                     Confirm Transfer
                 </button>
@@ -180,32 +180,6 @@
     <% } %>
 </div>
 
-<form id="confirmForm" action="/transfer/confirm?_method=PUT" method="post" style="display: flex; gap: var(--space-md); flex-wrap: wrap; margin-top: var(--space-lg);">
-    <div style="flex: 1; min-width: 200px;">
-        <label style="display: block; font-size: 13px; font-weight: 600; color: var(--text-secondary); margin-bottom: var(--space-sm);">From</label>
-        <select name="min" class="keep-input" style="width: 100%;">
-            <% if (direction === 'to-main') { %>
-                <option selected>Local Store</option>
-                <option>Main Storage</option>
-            <% } else if (direction === 'to-store') { %>
-                <option selected>Main Storage</option>
-                <option>Local Store</option>
-            <% } %>
-        </select>
-    </div>
-    <div style="flex: 1; min-width: 200px;">
-        <label style="display: block; font-size: 13px; font-weight: 600; color: var(--text-secondary); margin-bottom: var(--space-sm);">To</label>
-        <select name="add" class="keep-input" style="width: 100%;">
-            <% if (direction === 'to-main') { %>
-                <option selected>Main Storage</option>
-                <option>Local Store</option>
-            <% } else if (direction === 'to-store') { %>
-                <option selected>Local Store</option>
-                <option>Main Storage</option>
-            <% } %>
-        </select>
-    </div>
-</form>
 
 <script src="/javascript/autoselect.js"></script>
 <script>
@@ -236,6 +210,126 @@
                 form.submit();
             }
         });
+    }
+
+    function editQuantity(productId, direction) {
+        // Get the product element to access available quantity
+        const productElement = document.querySelector(`[data-product-id="${productId}"]`);
+        let maxQty = 999999; // default high value
+        let currentQty = 1;
+
+        if (productElement) {
+            // Extract available quantity from the product info
+            // For to-main: use data-stock attribute
+            // For to-store: use data-qty attribute
+            if (direction === 'to-main') {
+                maxQty = parseInt(productElement.dataset.stock) || 0;
+            } else {
+                maxQty = parseInt(productElement.dataset.qty) || 0;
+            }
+            // Get current transfer quantity
+            currentQty = parseInt(productElement.dataset.currentQty) || 1;
+        }
+
+        Swal.fire({
+            title: 'Edit Quantity',
+            html: `
+                <div style="text-align: left; margin-bottom: 16px;">
+                    <p style="font-size: 13px; color: #616161; margin-bottom: 12px;">
+                        Enter the new quantity (max: <strong>${maxQty}</strong> units available)
+                    </p>
+                </div>
+            `,
+            input: 'number',
+            inputAttributes: {
+                min: 1,
+                max: maxQty,
+                step: 1
+            },
+            inputValue: currentQty,
+            showCancelButton: true,
+            confirmButtonColor: '#1a73e8',
+            cancelButtonColor: '#757575',
+            confirmButtonText: 'Update',
+            cancelButtonText: 'Cancel',
+            customClass: {
+                popup: 'keep-swal-popup',
+                confirmButton: 'keep-swal-confirm',
+                cancelButton: 'keep-swal-cancel'
+            },
+            showClass: {
+                popup: 'animate__animated animate__fadeInDown'
+            },
+            hideClass: {
+                popup: 'animate__animated animate__fadeOutUp'
+            },
+            inputValidator: (value) => {
+                if (!value || value < 1) {
+                    return 'Please enter a valid quantity';
+                }
+                if (parseInt(value) > maxQty) {
+                    return `Quantity cannot exceed ${maxQty} units`;
+                }
+            }
+        }).then((result) => {
+            if (result.isConfirmed && result.value) {
+                // Create a form and submit it
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = '/transfer/edit-qty/' + productId + '?_method=PUT';
+                form.style.display = 'none';
+
+                // Add quantity input
+                const qtyInput = document.createElement('input');
+                qtyInput.type = 'number';
+                qtyInput.name = 'qty';
+                qtyInput.value = result.value;
+                form.appendChild(qtyInput);
+
+                // Add direction input
+                const directionInput = document.createElement('input');
+                directionInput.type = 'hidden';
+                directionInput.name = 'direction';
+                directionInput.value = direction;
+                form.appendChild(directionInput);
+
+                document.body.appendChild(form);
+                form.submit();
+            }
+        });
+    }
+
+    function confirmTransfer() {
+        const currentDirection = "<%= direction || 'to-store' %>";
+
+        // Create a form dynamically
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = '/transfer/confirm?_method=PUT';
+        form.style.display = 'none';
+
+        // Add min and add inputs based on direction
+        const minInput = document.createElement('input');
+        minInput.type = 'hidden';
+        minInput.name = 'min';
+
+        const addInput = document.createElement('input');
+        addInput.type = 'hidden';
+        addInput.name = 'add';
+
+        if (currentDirection === 'to-main') {
+            minInput.value = 'Local Store';
+            addInput.value = 'Main Storage';
+        } else {
+            minInput.value = 'Main Storage';
+            addInput.value = 'Local Store';
+        }
+
+        form.appendChild(minInput);
+        form.appendChild(addInput);
+
+        document.body.appendChild(form);
+        form.submit();
     }
 
     function addByBarcode() {

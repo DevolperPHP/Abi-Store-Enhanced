@@ -35,7 +35,9 @@ router.get('/', async (req, res) => {
                     image: product.image,
                     colorName: product.colorName,
                     size: product.size,
-                    qty: Number(qtyData?.qty) || 0,
+                    stock: product.stock,  // Available in Local Store
+                    mainQty: product.qty,  // Available in Main Storage
+                    transferQty: Number(qtyData?.qty) || 0,  // Transfer quantity
                     addedAt: qtyData?.addedAt || Date.now()
                 };
             }).sort((a, b) => b.addedAt - a.addedAt);
@@ -89,7 +91,9 @@ router.get('/to-main', async (req, res) => {
                     image: product.image,
                     colorName: product.colorName,
                     size: product.size,
-                    qty: Number(qtyData?.qty) || 0,
+                    stock: product.stock,  // Available in Local Store
+                    mainQty: product.qty,  // Available in Main Storage
+                    transferQty: Number(qtyData?.qty) || 0,  // Transfer quantity
                     addedAt: qtyData?.addedAt || Date.now()
                 };
             }).sort((a, b) => b.addedAt - a.addedAt);
@@ -161,6 +165,8 @@ router.put('/add-by-code/:code', async (req, res) => {
 router.put('/return/:id', async (req, res) => {
     try {
         const id = mongoose.Types.ObjectId(req.params.id)
+        const direction = req.query.direction || 'to-store'
+
         await User.updateOne({ _id: req.user.id }, {
             $pull: {
                 transfer: {
@@ -169,7 +175,12 @@ router.put('/return/:id', async (req, res) => {
             }
         })
 
-        res.redirect('/transfer')
+        // Redirect to the correct transfer page based on direction
+        if (direction === 'to-main') {
+            res.redirect('/transfer/to-main')
+        } else {
+            res.redirect('/transfer')
+        }
     } catch (err) {
         console.log(err);
 
@@ -179,9 +190,19 @@ router.put('/return/:id', async (req, res) => {
 router.get('/edit-qty/:id', async (req, res) => {
     try {
         const data = await Product.findOne({ _id: req.params.id })
+
+        // Get current quantity from user's transfer array
+        const transferItem = req.user.transfer.find(item => item.id.toString() === req.params.id);
+        const currentQty = transferItem ? transferItem.qty : 1;
+
+        // Determine direction from current URL or default to 'to-store'
+        const direction = req.url.includes('/transfer/to-main') ? 'to-main' : 'to-store';
+
         res.render('transfer/edit-qty', {
             data,
             user: req.user,
+            currentQty,
+            direction
         })
     } catch (err) {
         console.log(err);
@@ -191,13 +212,19 @@ router.get('/edit-qty/:id', async (req, res) => {
 router.put('/edit-qty/:id', async (req, res) => {
     try {
         const id = mongoose.Types.ObjectId(req.params.id);
+        const { direction } = req.body;
 
         await User.updateOne(
             { _id: req.user.id, 'transfer.id': id },
             { $set: { 'transfer.$.qty': req.body.qty } }
         );
 
-        res.redirect('/transfer');
+        // Redirect to the correct transfer page based on direction
+        if (direction === 'to-main') {
+            res.redirect('/transfer/to-main');
+        } else {
+            res.redirect('/transfer');
+        }
     } catch (err) {
         console.log(err);
     }
