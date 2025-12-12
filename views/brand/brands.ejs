@@ -1,45 +1,813 @@
 <%- include('../layout/navbar') -%>
 
-    <div class="storage">
-        <p class="title">Brands</p>
-        <button class="add" onclick="add()" id="add"><ion-icon class="icon" name="add"></ion-icon></button>
-        <button class="add" onclick="remove()" style="display:none" onclick="hide()" id="remove"><ion-icon class="icon"
-                name="remove"></ion-icon></button>
-        <br>
-        <table class="table table-striped table-hover">
-            <thead>
-                <tr>
-                    <th>Image</th>
-                    <th>Name</th>
-                    <th>Edit</th>
-                    <th>Delete</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr style="display: none;" id="cat-form">
-                    <form action="/brand/add" method="post" enctype="multipart/form-data">
-                        <td colspan="2"><input type="text" name="name" placeholder="Name" required></td>
-                        <td colspan="1"><input type="file" name="image" required></td>
-                        <td><button class="btn btn-success">Add</button></td>
-                    </form>
-                </tr>
-                <% for (let i=0; i < brand.length; i++) {%>
-                    <tr>
-                        <td>
-                            <img style="width: 50px;" src="/upload/images/<%= brand[i].image%>" alt="image">
-                        </td>
-                        <td>
-                            <%= brand[i].name%>
-                        </td>
-                        <td><button class="btn btn-success" onclick="window.location.href='/brand/edit/<%= brand[i].id%>'">Edit</button></td>
-                        <form action="/brand/delete/<%= brand[i].id%>?_method=DELETE" method="post">
-                        <td><button class="btn btn-danger">Delete</button></td>
-                        </form>
-                    </tr>
-                    <% } %>
-            </tbody>
-        </table>
+<% if (typeof success !== 'undefined' && success) { %>
+    <script>
+        Swal.fire({
+            icon: 'success',
+            title: 'Success!',
+            text: decodeURIComponent(`<%= success %>`),
+            timer: 2000,
+            timerProgressBar: true,
+            showConfirmButton: false
+        });
+        if (window.history && window.history.replaceState) {
+            window.history.replaceState({}, document.title, window.location.pathname);
+        }
+    </script>
+<% } %>
+
+<!-- Modern Dashboard Container -->
+<div class="dashboard-container">
+    <!-- Dashboard Header -->
+    <div class="dashboard-header">
+        <h1 class="dashboard-title">Brands</h1>
+        <p class="dashboard-subtitle">Manage product brands and their logos</p>
     </div>
 
-    <script src="/javascript/category.js"></script>
-    <%- include('../layout/footer') -%>
+    <!-- Premium Inventory Controls -->
+    <div class="premium-inventory-controls">
+        <div class="controls-header">
+            <div class="header-content">
+                <div class="header-icon">
+                    <ion-icon name="pricetags-outline"></ion-icon>
+                </div>
+                <div class="header-text">
+                    <h2 class="controls-title">Brand Management</h2>
+                    <p class="controls-subtitle">Create and organize product brands</p>
+                </div>
+            </div>
+            <div class="header-actions">
+                <button class="btn-secondary" onclick="refreshBrands()">
+                    <ion-icon name="refresh-outline"></ion-icon>
+                    Refresh
+                </button>
+                <button class="btn-primary" onclick="openAddBrandModal()">
+                    <ion-icon name="add-outline"></ion-icon>
+                    Add Brand
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Brands Grid -->
+    <% if (brand && brand.length > 0) { %>
+        <div class="brands-grid">
+            <% brand.forEach((b, index) => { %>
+                <div class="brand-card">
+                    <div class="brand-image">
+                        <img src="/upload/images/<%= b.image %>" alt="<%= b.name %>">
+                    </div>
+                    <div class="brand-info">
+                        <h3 class="brand-name"><%= b.name %></h3>
+                        <% if (b.Date) { %>
+                            <div class="brand-meta">
+                                <span class="brand-date">
+                                    <ion-icon name="calendar-outline"></ion-icon>
+                                    <%= b.Date %>
+                                </span>
+                            </div>
+                        <% } %>
+                    </div>
+                    <div class="brand-actions">
+                        <button class="action-btn" onclick="editBrand('<%= b.id %>')" title="Edit brand">
+                            <ion-icon name="create-outline"></ion-icon>
+                        </button>
+                        <button class="action-btn delete-btn" onclick="confirmDeleteBrand('<%= b.id %>', '<%= b.name %>')" title="Delete brand">
+                            <ion-icon name="trash-outline"></ion-icon>
+                        </button>
+                    </div>
+                </div>
+            <% }); %>
+        </div>
+    <% } else { %>
+        <!-- Empty State -->
+        <div class="empty-state-card">
+            <div class="empty-icon">
+                <ion-icon name="pricetags-outline"></ion-icon>
+            </div>
+            <h3 class="empty-title">No Brands Yet</h3>
+            <p class="empty-description">
+                Create your first brand to organize your products. Brands help customers identify and trust your products.
+            </p>
+            <button class="btn-primary" onclick="openAddBrandModal()">
+                <ion-icon name="add-outline"></ion-icon>
+                Add Your First Brand
+            </button>
+        </div>
+    <% } %>
+</div>
+
+<!-- Add Brand Modal -->
+<div class="modal-overlay" id="addBrandModal" style="display: none;">
+    <div class="modal-container">
+        <div class="modal-header">
+            <h2 class="modal-title">Add New Brand</h2>
+            <button class="modal-close" onclick="closeAddBrandModal()">
+                <ion-icon name="close-outline"></ion-icon>
+            </button>
+        </div>
+        <form action="/brand/add" method="post" enctype="multipart/form-data" class="modal-form" id="addBrandForm">
+            <div class="form-group">
+                <label for="brandName">Brand Name</label>
+                <input type="text" id="brandName" name="name" placeholder="e.g., Apple, Samsung, Nike" required>
+            </div>
+            <div class="form-group">
+                <label for="brandImage">Brand Logo</label>
+                <div class="file-upload-area" onclick="document.getElementById('brandImage').click()">
+                    <input type="file" id="brandImage" name="image" accept="image/*" required style="display: none;">
+                    <div class="file-upload-content">
+                        <ion-icon name="image-outline"></ion-icon>
+                        <p class="file-upload-text">Click to upload brand logo</p>
+                        <p class="file-upload-hint">PNG, JPG, GIF up to 10MB</p>
+                    </div>
+                    <div class="image-preview" id="addImagePreview" style="display: none;">
+                        <img id="addPreviewImg" src="" alt="Preview">
+                        <button type="button" class="remove-preview" onclick="clearAddPreview()">
+                            <ion-icon name="close-circle"></ion-icon>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="btn-secondary" onclick="closeAddBrandModal()">Cancel</button>
+                <button type="submit" class="btn-primary">
+                    <ion-icon name="checkmark-outline"></ion-icon>
+                    Create Brand
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Edit Brand Modal -->
+<div class="modal-overlay" id="editBrandModal" style="display: none;">
+    <div class="modal-container">
+        <div class="modal-header">
+            <h2 class="modal-title">Edit Brand</h2>
+            <button class="modal-close" onclick="closeEditBrandModal()">
+                <ion-icon name="close-outline"></ion-icon>
+            </button>
+        </div>
+        <form id="editBrandForm" method="post" enctype="multipart/form-data" class="modal-form">
+            <div class="form-group">
+                <label for="editBrandName">Brand Name</label>
+                <input type="text" id="editBrandName" name="name" required>
+            </div>
+            <div class="form-group">
+                <label for="editBrandImage">Brand Logo (Leave empty to keep current)</label>
+                <div class="file-upload-area" onclick="document.getElementById('editBrandImage').click()">
+                    <input type="file" id="editBrandImage" name="image" accept="image/*" style="display: none;">
+                    <div class="file-upload-content" id="editUploadContent">
+                        <ion-icon name="image-outline"></ion-icon>
+                        <p class="file-upload-text">Click to change brand logo</p>
+                        <p class="file-upload-hint">PNG, JPG, GIF up to 10MB</p>
+                    </div>
+                    <div class="image-preview" id="editImagePreview" style="display: none;">
+                        <img id="editPreviewImg" src="" alt="Preview">
+                        <button type="button" class="remove-preview" onclick="clearEditPreview()">
+                            <ion-icon name="close-circle"></ion-icon>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="btn-secondary" onclick="closeEditBrandModal()">Cancel</button>
+                <button type="submit" class="btn-primary">
+                    <ion-icon name="checkmark-outline"></ion-icon>
+                    Save Changes
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    // Add Brand Modal Functions
+    function openAddBrandModal() {
+        document.getElementById('addBrandModal').style.display = 'flex';
+        setTimeout(() => {
+            document.getElementById('brandName').focus();
+        }, 100);
+    }
+
+    function closeAddBrandModal() {
+        document.getElementById('addBrandModal').style.display = 'none';
+        document.getElementById('addBrandForm').reset();
+        clearAddPreview();
+    }
+
+    // Edit Brand Functions
+    function editBrand(id) {
+        const brandCards = document.querySelectorAll('.brand-card');
+        let brandData = null;
+        
+        brandCards.forEach(card => {
+            const editBtn = card.querySelector('button[onclick^="editBrand"]');
+            if (editBtn && editBtn.getAttribute('onclick').includes(id)) {
+                const name = card.querySelector('.brand-name').textContent.trim();
+                const img = card.querySelector('.brand-image img');
+                brandData = { 
+                    id, 
+                    name, 
+                    image: img ? img.src : null,
+                    imageSrc: img ? img.getAttribute('src') : null
+                };
+            }
+        });
+
+        if (brandData) {
+            document.getElementById('editBrandName').value = brandData.name;
+            
+            // Show current image
+            if (brandData.imageSrc) {
+                const preview = document.getElementById('editImagePreview');
+                const img = document.getElementById('editPreviewImg');
+                img.src = brandData.imageSrc;
+                preview.style.display = 'flex';
+                document.getElementById('editUploadContent').style.display = 'none';
+            }
+            
+            document.getElementById('editBrandModal').style.display = 'flex';
+            
+            // Update form action
+            const form = document.getElementById('editBrandForm');
+            form.action = `/brand/edit/${id}?_method=PUT`;
+        }
+    }
+
+    function closeEditBrandModal() {
+        document.getElementById('editBrandModal').style.display = 'none';
+        clearEditPreview();
+    }
+
+    // Delete Brand Function
+    function confirmDeleteBrand(id, name) {
+        Swal.fire({
+            title: 'Delete Brand',
+            text: `Are you sure you want to delete "${name}"? This action cannot be undone.`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#FF3B30',
+            cancelButtonColor: '#8E8E93',
+            confirmButtonText: 'Delete',
+            cancelButtonText: 'Cancel',
+            customClass: {
+                popup: 'modern-alert',
+                confirmButton: 'modern-confirm-btn',
+                cancelButton: 'modern-cancel-btn'
+            }
+        }).then((result) => {
+            if (result.isConfirmed) {
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = `/brand/delete/${id}?_method=DELETE`;
+                document.body.appendChild(form);
+                form.submit();
+            }
+        });
+    }
+
+    // Refresh Brands
+    function refreshBrands() {
+        window.location.reload();
+    }
+
+    // Image Preview for Add
+    document.getElementById('brandImage').addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                const preview = document.getElementById('addImagePreview');
+                const img = document.getElementById('addPreviewImg');
+                img.src = event.target.result;
+                preview.style.display = 'flex';
+                document.querySelector('#addBrandModal .file-upload-content').style.display = 'none';
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+
+    function clearAddPreview() {
+        const preview = document.getElementById('addImagePreview');
+        const content = document.querySelector('#addBrandModal .file-upload-content');
+        preview.style.display = 'none';
+        content.style.display = 'flex';
+        document.getElementById('addPreviewImg').src = '';
+        document.getElementById('brandImage').value = '';
+    }
+
+    // Image Preview for Edit
+    document.getElementById('editBrandImage').addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                const preview = document.getElementById('editImagePreview');
+                const img = document.getElementById('editPreviewImg');
+                img.src = event.target.result;
+                preview.style.display = 'flex';
+                document.getElementById('editUploadContent').style.display = 'none';
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+
+    function clearEditPreview() {
+        const preview = document.getElementById('editImagePreview');
+        const content = document.getElementById('editUploadContent');
+        preview.style.display = 'none';
+        content.style.display = 'flex';
+        document.getElementById('editPreviewImg').src = '';
+        document.getElementById('editBrandImage').value = '';
+    }
+
+    // Close modals when clicking outside
+    window.onclick = function(event) {
+        const addModal = document.getElementById('addBrandModal');
+        const editModal = document.getElementById('editBrandModal');
+        
+        if (event.target === addModal) {
+            closeAddBrandModal();
+        }
+        if (event.target === editModal) {
+            closeEditBrandModal();
+        }
+    }
+
+    // Close modals with Escape key
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            closeAddBrandModal();
+            closeEditBrandModal();
+        }
+    });
+</script>
+
+<style>
+    /* ===== MODERN BRANDS PAGE STYLES ===== */
+    
+    .brands-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+        gap: 24px;
+        margin-top: 24px;
+    }
+
+    .brand-card {
+        background: #ffffff;
+        border-radius: 16px;
+        padding: 24px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+        border: 1px solid rgba(0, 0, 0, 0.06);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .brand-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: linear-gradient(90deg, #FF3B30, #FF9500);
+        transform: scaleX(0);
+        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .brand-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+        border-color: rgba(255, 59, 48, 0.2);
+    }
+
+    .brand-card:hover::before {
+        transform: scaleX(1);
+    }
+
+    .brand-image {
+        width: 100%;
+        height: 180px;
+        border-radius: 12px;
+        background: #f5f5f7;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 16px;
+        overflow: hidden;
+        position: relative;
+    }
+
+    .brand-image img {
+        max-width: 100%;
+        max-height: 100%;
+        object-fit: contain;
+        filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+    }
+
+    .brand-info {
+        flex: 1;
+    }
+
+    .brand-name {
+        font-size: 18px;
+        font-weight: 600;
+        color: #1d1d1f;
+        margin: 0 0 12px 0;
+        letter-spacing: -0.5px;
+    }
+
+    .brand-meta {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        padding-top: 12px;
+        border-top: 1px solid rgba(0, 0, 0, 0.06);
+    }
+
+    .brand-date {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 13px;
+        color: #8e8e93;
+    }
+
+    .brand-date ion-icon {
+        font-size: 16px;
+    }
+
+    .brand-actions {
+        position: absolute;
+        top: 16px;
+        right: 16px;
+        display: flex;
+        gap: 8px;
+        opacity: 0;
+        transform: translateY(-8px);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .brand-card:hover .brand-actions {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    .action-btn {
+        width: 36px;
+        height: 36px;
+        border: none;
+        background: rgba(0, 0, 0, 0.04);
+        border-radius: 10px;
+        color: #8e8e93;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .action-btn:hover {
+        background: #34C759;
+        color: #ffffff;
+        transform: scale(1.1);
+    }
+
+    .action-btn.delete-btn:hover {
+        background: #34C759;
+    }
+
+    .action-btn ion-icon {
+        font-size: 18px;
+    }
+
+    /* ===== EMPTY STATE ===== */
+    .empty-state-card {
+        background: #ffffff;
+        border-radius: 24px;
+        padding: 64px 32px;
+        text-align: center;
+        margin-top: 32px;
+        border: 1px solid rgba(0, 0, 0, 0.06);
+    }
+
+    .empty-icon {
+        width: 96px;
+        height: 96px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #f0f0f0, #e0e0e0);
+        color: #8e8e93;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 24px;
+    }
+
+    .empty-icon ion-icon {
+        font-size: 48px;
+    }
+
+    .empty-title {
+        font-size: 24px;
+        font-weight: 600;
+        color: #1d1d1f;
+        margin: 0 0 12px 0;
+        letter-spacing: -0.5px;
+    }
+
+    .empty-description {
+        font-size: 16px;
+        color: #8e8e93;
+        margin: 0 0 32px 0;
+        line-height: 1.6;
+        max-width: 500px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    /* ===== MODAL STYLES ===== */
+    .modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 10000;
+        animation: fadeIn 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .modal-container {
+        background: #ffffff;
+        border-radius: 20px;
+        width: 90%;
+        max-width: 500px;
+        max-height: 90vh;
+        overflow-y: auto;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        animation: slideUp 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .modal-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 24px;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+    }
+
+    .modal-title {
+        font-size: 20px;
+        font-weight: 600;
+        color: #1d1d1f;
+        margin: 0;
+        letter-spacing: -0.5px;
+    }
+
+    .modal-close {
+        width: 36px;
+        height: 36px;
+        border: none;
+        background: rgba(0, 0, 0, 0.04);
+        border-radius: 10px;
+        color: #8e8e93;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .modal-close:hover {
+        background: #ff3b30;
+        color: #ffffff;
+    }
+
+    .modal-close ion-icon {
+        font-size: 22px;
+    }
+
+    .modal-form {
+        padding: 24px;
+    }
+
+    .form-group {
+        margin-bottom: 20px;
+    }
+
+    .form-group label {
+        display: block;
+        font-size: 14px;
+        font-weight: 500;
+        color: #1d1d1f;
+        margin-bottom: 8px;
+    }
+
+    .form-group input[type="text"] {
+        width: 100%;
+        padding: 12px 16px;
+        border: 1px solid rgba(0, 0, 0, 0.1);
+        border-radius: 12px;
+        font-size: 16px;
+        font-family: inherit;
+        color: #1d1d1f;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        background: #ffffff;
+    }
+
+    .form-group input[type="text"]:focus {
+        outline: none;
+        border-color: #FF3B30;
+        box-shadow: 0 0 0 3px rgba(52, 199, 89, 0.1);
+    }
+
+    /* File Upload Area */
+    .file-upload-area {
+        border: 2px dashed rgba(0, 0, 0, 0.1);
+        border-radius: 12px;
+        padding: 32px;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        background: #f5f5f7;
+    }
+
+    .file-upload-area:hover {
+        border-color: #FF3B30;
+        background: #f0f0f0;
+    }
+
+    .file-upload-content ion-icon {
+        font-size: 48px;
+        color: #8e8e93;
+        margin-bottom: 12px;
+    }
+
+    .file-upload-text {
+        font-size: 15px;
+        font-weight: 500;
+        color: #1d1d1f;
+        margin: 0 0 4px 0;
+    }
+
+    .file-upload-hint {
+        font-size: 13px;
+        color: #8e8e93;
+        margin: 0;
+    }
+
+    .image-preview {
+        position: relative;
+        width: 100%;
+        max-height: 250px;
+        border-radius: 12px;
+        overflow: hidden;
+    }
+
+    .image-preview img {
+        width: 100%;
+        height: auto;
+        display: block;
+    }
+
+    .remove-preview {
+        position: absolute;
+        top: 8px;
+        right: 8px;
+        width: 32px;
+        height: 32px;
+        border: none;
+        background: rgba(0, 0, 0, 0.5);
+        border-radius: 50%;
+        color: #ffffff;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .remove-preview:hover {
+        background: rgba(0, 0, 0, 0.7);
+    }
+
+    .remove-preview ion-icon {
+        font-size: 20px;
+    }
+
+    .modal-actions {
+        display: flex;
+        gap: 12px;
+        justify-content: flex-end;
+        padding-top: 8px;
+        border-top: 1px solid rgba(0, 0, 0, 0.06);
+        margin-top: 24px;
+    }
+
+    /* ===== BUTTONS ===== */
+    .btn-primary {
+        padding: 12px 24px;
+        background: #34C759;
+        color: #ffffff;
+        border: none;
+        border-radius: 12px;
+        font-size: 15px;
+        font-weight: 500;
+        font-family: inherit;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .btn-primary:hover {
+        background: #2db04c;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(52, 199, 89, 0.3);
+    }
+
+    .btn-primary:active {
+        transform: translateY(0);
+    }
+
+    .btn-secondary {
+        padding: 12px 24px;
+        background: rgba(0, 0, 0, 0.04);
+        color: #1d1d1f;
+        border: none;
+        border-radius: 12px;
+        font-size: 15px;
+        font-weight: 500;
+        font-family: inherit;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .btn-secondary:hover {
+        background: rgba(0, 0, 0, 0.08);
+    }
+
+    /* ===== ANIMATIONS ===== */
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+
+    @keyframes slideUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    /* ===== RESPONSIVE ===== */
+    @media (max-width: 768px) {
+        .brands-grid {
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 16px;
+        }
+
+        .brand-card {
+            padding: 20px;
+        }
+
+        .brand-image {
+            height: 140px;
+        }
+
+        .empty-state-card {
+            padding: 48px 24px;
+        }
+
+        .modal-container {
+            width: 95%;
+            margin: 20px;
+        }
+
+        .modal-actions {
+            flex-direction: column-reverse;
+        }
+
+        .modal-actions button {
+            width: 100%;
+            justify-content: center;
+        }
+    }
+</style>
+
+<%- include('../layout/footer') -%>

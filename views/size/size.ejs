@@ -1,44 +1,536 @@
 <%- include("../layout/navbar") -%>
 
+<% if (typeof success !== 'undefined' && success) { %>
+    <script>
+        Swal.fire({
+            icon: 'success',
+            title: 'Success!',
+            text: decodeURIComponent(`<%= success %>`),
+            timer: 2000,
+            timerProgressBar: true,
+            showConfirmButton: false
+        });
+        if (window.history && window.history.replaceState) {
+            window.history.replaceState({}, document.title, window.location.pathname);
+        }
+    </script>
+<% } %>
+
 <% if(err.length > 0) {%>
     <script>
         Swal.fire({
             icon: 'error',
-            title: 'Size already added',
-            text: 'the size that you trying to add has already been added'
+            title: 'Size already exists',
+            text: 'The size you are trying to add has already been added'
         })
     </script>
 <%}%>
-<div class="size">
-    <br><br>
-    <p class="title">Sizes</p>
-    <button class="show" id="show" onclick="show()"><ion-icon class="icon" name="add-outline"></ion-icon></button>
-    <button class="hide" id="hide" onclick="hide()"><ion-icon class="icon" name="remove-outline"></ion-icon></button>
-    <table class="table table-striped">
-        <thead>
-            <tr>
-                <th>Size</th>
-                <th>Delete</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr id="size-input">
-                <form action="/size/add" method="post">
-                    <td><input class="size-input" name="size" type="text" placeholder="Enter size"></td>
-                    <td><button class="size-btn"><ion-icon class="icon" name="add-outline"></ion-icon></button></td>
-                </form>
-            </tr>
-            <% size.forEach(data => {%>
-                <tr>
-                <td><%= data.size%></td>
-                <td><form action="/size/delete/<%= data.id%>?_method=DELETE" method="post">
-                    <button class="delete"><ion-icon class="icon" name="remove-outline"></ion-icon></button>
-                </form></td>
-            <%}) %>
-        </tr>
-        </tbody>
-    </table>
+
+<!-- Modern Dashboard Container -->
+<div class="dashboard-container">
+    <!-- Dashboard Header -->
+    <div class="dashboard-header">
+        <h1 class="dashboard-title">Sizes</h1>
+        <p class="dashboard-subtitle">Manage product sizes for your inventory</p>
+    </div>
+
+    <!-- Premium Inventory Controls -->
+    <div class="premium-inventory-controls">
+        <div class="controls-header">
+            <div class="header-content">
+                <div class="header-icon">
+                    <ion-icon name="resize-outline"></ion-icon>
+                </div>
+                <div class="header-text">
+                    <h2 class="controls-title">Size Management</h2>
+                    <p class="controls-subtitle">Create and organize product sizes</p>
+                </div>
+            </div>
+            <div class="header-actions">
+                <button class="btn-secondary" onclick="refreshSizes()">
+                    <ion-icon name="refresh-outline"></ion-icon>
+                    Refresh
+                </button>
+                <button class="btn-primary" onclick="focusAddInput()">
+                    <ion-icon name="add-outline"></ion-icon>
+                    Add Size
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sizes List -->
+    <div class="sizes-list-container">
+        <!-- Add Size Form -->
+        <div class="add-size-card">
+            <div class="add-size-header">
+                <h3>Add New Size</h3>
+            </div>
+            <form action="/size/add" method="post" class="add-size-form">
+                <div class="input-group">
+                    <input type="text" name="size" id="sizeInput" placeholder="e.g., S, M, L, XL, XXL, 8, 10, 12" required>
+                    <button type="submit" class="btn-submit">
+                        <ion-icon name="checkmark-outline"></ion-icon>
+                        Add Size
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Sizes List -->
+        <% if (size && size.length > 0) { %>
+            <div class="sizes-list">
+                <div class="sizes-list-header">
+                    <div class="list-title">
+                        <ion-icon name="list-outline"></ion-icon>
+                        <h3>All Sizes (<%= size.length %>)</h3>
+                    </div>
+                </div>
+                <div class="sizes-items">
+                    <% size.forEach((s, index) => { %>
+                        <div class="size-item">
+                            <div class="size-info">
+                                <div class="size-badge">
+                                    <%= s.size %>
+                                </div>
+                            </div>
+                            <div class="size-actions">
+                                <button class="action-btn delete-btn" onclick="confirmDeleteSize('<%= s.id %>', '<%= s.size %>')" title="Delete size">
+                                    <ion-icon name="trash-outline"></ion-icon>
+                                </button>
+                            </div>
+                        </div>
+                    <% }); %>
+                </div>
+            </div>
+        <% } else { %>
+            <!-- Empty State -->
+            <div class="empty-state-card">
+                <div class="empty-icon">
+                    <ion-icon name="resize-outline"></ion-icon>
+                </div>
+                <h3 class="empty-title">No Sizes Yet</h3>
+                <p class="empty-description">
+                    Add your first size to help organize your products. Sizes could be S, M, L for clothing or numeric sizes like 8, 10, 12 for shoes.
+                </p>
+                <button class="btn-primary" onclick="focusAddInput()">
+                    <ion-icon name="add-outline"></ion-icon>
+                    Add Your First Size
+                </button>
+            </div>
+        <% } %>
+    </div>
 </div>
 
-<script src="/javascript/size.js"></script>
+<script>
+    // Focus on input when clicking Add Size button
+    function focusAddInput() {
+        document.getElementById('sizeInput').focus();
+    }
+
+    // Delete Size Function
+    function confirmDeleteSize(id, sizeName) {
+        Swal.fire({
+            title: 'Delete Size',
+            text: `Are you sure you want to delete size "${sizeName}"? This action cannot be undone.`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#FF3B30',
+            cancelButtonColor: '#8E8E93',
+            confirmButtonText: 'Delete',
+            cancelButtonText: 'Cancel',
+            customClass: {
+                popup: 'modern-alert',
+                confirmButton: 'modern-confirm-btn',
+                cancelButton: 'modern-cancel-btn'
+            }
+        }).then((result) => {
+            if (result.isConfirmed) {
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = `/size/delete/${id}?_method=DELETE`;
+                document.body.appendChild(form);
+                form.submit();
+            }
+        });
+    }
+
+    // Refresh Sizes
+    function refreshSizes() {
+        window.location.reload();
+    }
+
+    // Auto-focus input on page load
+    window.addEventListener('DOMContentLoaded', function() {
+        setTimeout(() => {
+            document.getElementById('sizeInput').focus();
+        }, 100);
+    });
+</script>
+
+<style>
+    /* ===== MODERN SIZES PAGE STYLES ===== */
+    
+    .sizes-list-container {
+        margin-top: 24px;
+    }
+
+    .add-size-card {
+        background: #ffffff;
+        border-radius: 16px;
+        padding: 24px;
+        margin-bottom: 24px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+        border: 1px solid rgba(0, 0, 0, 0.06);
+    }
+
+    .add-size-header {
+        margin-bottom: 16px;
+    }
+
+    .add-size-header h3 {
+        font-size: 16px;
+        font-weight: 600;
+        color: #1d1d1f;
+        margin: 0;
+        letter-spacing: -0.5px;
+    }
+
+    .add-size-form {
+        width: 100%;
+    }
+
+    .input-group {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+    }
+
+    .input-group input {
+        flex: 1;
+        padding: 12px 16px;
+        border: 1px solid rgba(0, 0, 0, 0.1);
+        border-radius: 12px;
+        font-size: 16px;
+        font-family: inherit;
+        color: #1d1d1f;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        background: #ffffff;
+    }
+
+    .input-group input:focus {
+        outline: none;
+        border-color: #34C759;
+        box-shadow: 0 0 0 3px rgba(52, 199, 89, 0.1);
+    }
+
+    .btn-submit {
+        padding: 12px 24px;
+        background: #34C759;
+        color: #ffffff;
+        border: none;
+        border-radius: 12px;
+        font-size: 15px;
+        font-weight: 500;
+        font-family: inherit;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        white-space: nowrap;
+    }
+
+    .btn-submit:hover {
+        background: #2db04c;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(52, 199, 89, 0.3);
+    }
+
+    .btn-submit:active {
+        transform: translateY(0);
+    }
+
+    .btn-submit ion-icon {
+        font-size: 18px;
+    }
+
+    /* ===== SIZES LIST ===== */
+    .sizes-list {
+        background: #ffffff;
+        border-radius: 16px;
+        box-shadow: 
+            0 1px 3px rgba(0, 0, 0, 0.08),
+            0 4px 12px rgba(0, 0, 0, 0.06);
+        border: 1px solid rgba(0, 0, 0, 0.06);
+        overflow: hidden;
+    }
+
+    .sizes-list-header {
+        padding: 24px;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+        background: linear-gradient(180deg, #fafafa, #f5f5f7);
+        position: sticky;
+        top: 0;
+        z-index: 10;
+    }
+
+    .list-title {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .list-title h3 {
+        font-size: 17px;
+        font-weight: 700;
+        color: #1d1d1f;
+        margin: 0;
+        letter-spacing: -0.3px;
+    }
+
+    .list-title ion-icon {
+        font-size: 20px;
+        color: #8e8e93;
+    }
+
+    .sizes-items {
+        padding: 0;
+        background: linear-gradient(180deg, #ffffff 0%, #ffffff 60%, #fafafa 100%);
+    }
+
+    .size-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 20px 24px;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+    }
+
+    .size-item::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 24px;
+        right: 24px;
+        height: 1px;
+        background: linear-gradient(90deg, 
+            transparent, 
+            rgba(0, 0, 0, 0.06) 20%, 
+            rgba(0, 0, 0, 0.1) 50%, 
+            rgba(0, 0, 0, 0.06) 80%, 
+            transparent
+        );
+    }
+
+    .size-item:last-child::after {
+        display: none;
+    }
+
+    .size-item:hover {
+        background: rgba(52, 199, 89, 0.04);
+    }
+
+    .size-item:hover .size-badge {
+        transform: scale(1.05);
+        box-shadow: 
+            0 2px 6px rgba(52, 199, 89, 0.35),
+            0 6px 16px rgba(52, 199, 89, 0.3);
+    }
+
+    .size-info {
+        flex: 1;
+    }
+
+    .size-badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 12px 28px;
+        background: linear-gradient(135deg, #34C759, #30b854);
+        color: #ffffff;
+        border-radius: 14px;
+        font-size: 15px;
+        font-weight: 700;
+        letter-spacing: 0.6px;
+        min-width: 75px;
+        box-shadow: 
+            0 1px 3px rgba(52, 199, 89, 0.3),
+            0 4px 12px rgba(52, 199, 89, 0.25);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .size-actions {
+        display: flex;
+        gap: 8px;
+        opacity: 0;
+        transform: translateX(4px);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .size-item:hover .size-actions {
+        opacity: 1;
+        transform: translateX(0);
+    }
+
+    .action-btn {
+        width: 38px;
+        height: 38px;
+        border: none;
+        background: rgba(0, 0, 0, 0.03);
+        border-radius: 10px;
+        color: #8e8e93;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .action-btn:hover {
+        background: #FF3B30;
+        color: #ffffff;
+        transform: scale(1.1);
+        box-shadow: 0 4px 12px rgba(255, 59, 48, 0.25);
+    }
+
+    .action-btn.delete-btn:hover {
+        background: #FF3B30;
+    }
+
+    .action-btn ion-icon {
+        font-size: 18px;
+    }
+
+    /* ===== EMPTY STATE ===== */
+    .empty-state-card {
+        background: #ffffff;
+        border-radius: 24px;
+        padding: 64px 32px;
+        text-align: center;
+        margin-top: 32px;
+        border: 1px solid rgba(0, 0, 0, 0.06);
+    }
+
+    .empty-icon {
+        width: 96px;
+        height: 96px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #f0f0f0, #e0e0e0);
+        color: #8e8e93;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 24px;
+    }
+
+    .empty-icon ion-icon {
+        font-size: 48px;
+    }
+
+    .empty-title {
+        font-size: 24px;
+        font-weight: 600;
+        color: #1d1d1f;
+        margin: 0 0 12px 0;
+        letter-spacing: -0.5px;
+    }
+
+    .empty-description {
+        font-size: 16px;
+        color: #8e8e93;
+        margin: 0 0 32px 0;
+        line-height: 1.6;
+        max-width: 500px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    /* ===== BUTTONS ===== */
+    .btn-primary {
+        padding: 12px 24px;
+        background: #34C759;
+        color: #ffffff;
+        border: none;
+        border-radius: 12px;
+        font-size: 15px;
+        font-weight: 500;
+        font-family: inherit;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .btn-primary:hover {
+        background: #2db04c;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(52, 199, 89, 0.3);
+    }
+
+    .btn-primary:active {
+        transform: translateY(0);
+    }
+
+    .btn-primary ion-icon {
+        font-size: 18px;
+    }
+
+    .btn-secondary {
+        padding: 12px 24px;
+        background: rgba(0, 0, 0, 0.04);
+        color: #1d1d1f;
+        border: none;
+        border-radius: 12px;
+        font-size: 15px;
+        font-weight: 500;
+        font-family: inherit;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .btn-secondary:hover {
+        background: rgba(0, 0, 0, 0.08);
+    }
+
+    .btn-secondary ion-icon {
+        font-size: 18px;
+    }
+
+    /* ===== RESPONSIVE ===== */
+    @media (max-width: 768px) {
+        .input-group {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .btn-submit {
+            width: 100%;
+            justify-content: center;
+        }
+
+        .size-item {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 12px;
+        }
+
+        .size-actions {
+            opacity: 1;
+            transform: none;
+            width: 100%;
+            justify-content: flex-end;
+        }
+
+        .empty-state-card {
+            padding: 48px 24px;
+        }
+    }
+</style>
+
 <%- include("../layout/footer") -%>

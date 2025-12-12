@@ -10,12 +10,13 @@ router.get('/categories', async (req, res) => {
     try {
         const id = req.cookies.id
         const user = await User.findOne({ _id: id })
-        const category = await Category.find({})
+        const category = await Category.find({}).sort({ _id: -1 })
 
         if (user.isAdmin == true) {
             res.render('category/categories', {
                 user: user,
-                category: category
+                category: category,
+                success: req.query.success
             })
         }
     } catch (err) {
@@ -35,7 +36,7 @@ router.post('/add', async (req, res) => {
                 des: req.body.des
             }).save()
 
-            res.redirect('/category/categories')
+            res.redirect('/category/categories?success=Category added successfully!')
         }
     } catch (err) {
         console.log(err);
@@ -49,7 +50,7 @@ router.delete('/delete/:id', async (req, res) => {
 
         if (user.isAdmin == true) {
             await Category.deleteOne({ _id: req.params.id })
-            res.redirect('/category/categories')
+            res.redirect('/category/categories?success=Category added successfully!')
         }
     } catch (err) {
         console.log(err);

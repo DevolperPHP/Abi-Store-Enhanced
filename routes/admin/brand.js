@@ -28,12 +28,13 @@ router.get('/brands', async (req, res) => {
     try {
         const id = req.cookies.id
         const user = await User.findOne({ _id: id })
-        const brand = await Brand.find({})
+        const brand = await Brand.find({}).sort({ _id: -1 })
 
         if (user.isAdmin == true) {
             res.render('brand/brands', {
                 user: user,
-                brand: brand
+                brand: brand,
+                success: req.query.success
             })
         }
     } catch (err) {
@@ -53,7 +54,7 @@ router.post('/add', upload.single('image'), async (req, res) => {
                 Date: moment().locale("ar-kw").format("l"),
             }).save()
 
-            res.redirect('/brand/brands')
+            res.redirect('/brand/brands?success=Brand added successfully!')
         }
     } catch (err) {
         console.log(err);

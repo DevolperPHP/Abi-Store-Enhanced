@@ -1,49 +1,646 @@
 <%- include('../layout/navbar') -%>
+<% if (typeof success !== 'undefined' && success) { %>
+    <script>
+        Swal.fire({
+            icon: 'success',
+            title: 'Success!',
+            text: decodeURIComponent(`<%= success %>`),
+            timer: 2000,
+            timerProgressBar: true,
+            showConfirmButton: false
+        });
+        if (window.history && window.history.replaceState) {
+            window.history.replaceState({}, document.title, window.location.pathname);
+        }
+    </script>
+<% } %>
 
-    <div class="storage">
-        <p class="title">Categories</p>
-        <button class="add" onclick="add()" id="add"><ion-icon class="icon" name="add"></ion-icon></button>
-        <button class="add" onclick="remove()" style="display:none" onclick="hide()" id="remove"><ion-icon class="icon"
-                name="remove"></ion-icon></button>
-        <br>
-        <table class="table table-striped table-hover">
-            <thead>
-                <tr>
-                    <th>#</th>
-                    <th>Name</th>
-                    <th>Date</th>
-                    <th>Edit</th>
-                    <th>Delete</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr style="display: none;" id="cat-form">
-                    <form action="/category/add" method="post">
-                        <td colspan="1"><input type="text" name="name" placeholder="Name"></td>
-                        <td colspan="3"><textarea cols="40" name="des" placeholder="Description"></textarea></td>
-                        <td colspan="1"><button class="btn btn-success">Add</button></td>
-                    </form>
-                </tr>
-                <% for (let i=0; i < category.length; i++) {%>
-                    <tr>
-                        <td>
-                            <%= i+1%>
-                        </td>
-                        <td>
-                            <%= category[i].name%>
-                        </td>
-                        <td>
-                            <%= category[i].Date%>
-                        </td>
-                        <td><button class="btn btn-success" onclick="window.location.href='/category/edit/<%= category[i].id%>'">Edit</button></td>
-                        <form action="/category/delete/<%= category[i].id%>?_method=DELETE" method="post">
-                        <td><button class="btn btn-danger">Delete</button></td>
-                        </form>
-                    </tr>
-                    <% } %>
-            </tbody>
-        </table>
+
+<!-- Modern Dashboard Container -->
+<div class="dashboard-container">
+    <!-- Dashboard Header -->
+    <div class="dashboard-header">
+        <h1 class="dashboard-title">Categories</h1>
+        <p class="dashboard-subtitle">Manage product categories to organize your inventory</p>
     </div>
 
-    <script src="/javascript/category.js"></script>
-    <%- include('../layout/footer') -%>
+    <!-- Premium Inventory Controls -->
+    <div class="premium-inventory-controls">
+        <div class="controls-header">
+            <div class="header-content">
+                <div class="header-icon">
+                    <ion-icon name="folder-outline"></ion-icon>
+                </div>
+                <div class="header-text">
+                    <h2 class="controls-title">Category Management</h2>
+                    <p class="controls-subtitle">Create and organize product categories</p>
+                </div>
+            </div>
+            <div class="header-actions">
+                <button class="btn-secondary" onclick="refreshCategories()">
+                    <ion-icon name="refresh-outline"></ion-icon>
+                    Refresh
+                </button>
+                <button class="btn-primary" onclick="openAddCategoryModal()">
+                    <ion-icon name="add-outline"></ion-icon>
+                    Add Category
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Categories Grid -->
+    <% if (category && category.length > 0) { %>
+        <div class="categories-grid">
+            <% category.forEach((cat, index) => { %>
+                <div class="category-card">
+                    <div class="category-icon">
+                        <ion-icon name="folder-outline"></ion-icon>
+                    </div>
+                    <div class="category-info">
+                        <h3 class="category-name"><%= cat.name %></h3>
+                        <% if (cat.des) { %>
+                            <p class="category-description"><%= cat.des %></p>
+                        <% } %>
+                        <div class="category-meta">
+                            <span class="category-date">
+                                <ion-icon name="calendar-outline"></ion-icon>
+                                <%= cat.Date %>
+                            </span>
+                        </div>
+                    </div>
+                    <div class="category-actions">
+                        <button class="action-btn" onclick="editCategory('<%= cat.id %>')" title="Edit category">
+                            <ion-icon name="create-outline"></ion-icon>
+                        </button>
+                        <button class="action-btn delete-btn" onclick="confirmDeleteCategory('<%= cat.id %>', '<%= cat.name %>')" title="Delete category">
+                            <ion-icon name="trash-outline"></ion-icon>
+                        </button>
+                    </div>
+                </div>
+            <% }); %>
+        </div>
+    <% } else { %>
+        <!-- Empty State -->
+        <div class="empty-state-card">
+            <div class="empty-icon">
+                <ion-icon name="folder-outline"></ion-icon>
+            </div>
+            <h3 class="empty-title">No Categories Yet</h3>
+            <p class="empty-description">
+                Create your first category to organize your products. Categories help you group similar items together.
+            </p>
+            <button class="btn-primary" onclick="openAddCategoryModal()">
+                <ion-icon name="add-outline"></ion-icon>
+                Add Your First Category
+            </button>
+        </div>
+    <% } %>
+</div>
+
+<!-- Add Category Modal -->
+<div class="modal-overlay" id="addCategoryModal" style="display: none;">
+    <div class="modal-container">
+        <div class="modal-header">
+            <h2 class="modal-title">Add New Category</h2>
+            <button class="modal-close" onclick="closeAddCategoryModal()">
+                <ion-icon name="close-outline"></ion-icon>
+            </button>
+        </div>
+        <form action="/category/add" method="post" class="modal-form">
+            <div class="form-group">
+                <label for="categoryName">Category Name</label>
+                <input type="text" id="categoryName" name="name" placeholder="e.g., Electronics, Clothing, Food" required>
+            </div>
+            <div class="form-group">
+                <label for="categoryDescription">Description (Optional)</label>
+                <textarea id="categoryDescription" name="des" rows="3" placeholder="Brief description of this category"></textarea>
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="btn-secondary" onclick="closeAddCategoryModal()">Cancel</button>
+                <button type="submit" class="btn-primary">
+                    <ion-icon name="checkmark-outline"></ion-icon>
+                    Create Category
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Edit Category Modal -->
+<div class="modal-overlay" id="editCategoryModal" style="display: none;">
+    <div class="modal-container">
+        <div class="modal-header">
+            <h2 class="modal-title">Edit Category</h2>
+            <button class="modal-close" onclick="closeEditCategoryModal()">
+                <ion-icon name="close-outline"></ion-icon>
+            </button>
+        </div>
+        <form id="editCategoryForm" method="post" class="modal-form">
+            <div class="form-group">
+                <label for="editCategoryName">Category Name</label>
+                <input type="text" id="editCategoryName" name="name" required>
+            </div>
+            <div class="form-group">
+                <label for="editCategoryDescription">Description (Optional)</label>
+                <textarea id="editCategoryDescription" name="des" rows="3"></textarea>
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="btn-secondary" onclick="closeEditCategoryModal()">Cancel</button>
+                <button type="submit" class="btn-primary">
+                    <ion-icon name="checkmark-outline"></ion-icon>
+                    Save Changes
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    // Add Category Modal Functions
+    function openAddCategoryModal() {
+        document.getElementById('addCategoryModal').style.display = 'flex';
+        setTimeout(() => {
+            document.getElementById('categoryName').focus();
+        }, 100);
+    }
+
+    function closeAddCategoryModal() {
+        document.getElementById('addCategoryModal').style.display = 'none';
+        document.querySelector('#addCategoryModal form').reset();
+    }
+
+    // Edit Category Functions
+    function editCategory(id) {
+        const categoryCards = document.querySelectorAll('.category-card');
+        let categoryData = null;
+        
+        categoryCards.forEach(card => {
+            const editBtn = card.querySelector('button[onclick^="editCategory"]');
+            if (editBtn && editBtn.getAttribute('onclick').includes(id)) {
+                const name = card.querySelector('.category-name').textContent.trim();
+                const description = card.querySelector('.category-description')?.textContent.trim() || '';
+                categoryData = { id, name, description };
+            }
+        });
+
+        if (categoryData) {
+            document.getElementById('editCategoryName').value = categoryData.name;
+            document.getElementById('editCategoryDescription').value = categoryData.description;
+            document.getElementById('editCategoryModal').style.display = 'flex';
+            
+            const form = document.getElementById('editCategoryForm');
+            form.action = `/category/edit/${id}?_method=PUT`;
+        }
+    }
+
+    function closeEditCategoryModal() {
+        document.getElementById('editCategoryModal').style.display = 'none';
+    }
+
+    // Delete Category Function
+    function confirmDeleteCategory(id, name) {
+        Swal.fire({
+            title: 'Delete Category',
+            text: `Are you sure you want to delete "${name}"? This action cannot be undone.`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#FF3B30',
+            cancelButtonColor: '#8E8E93',
+            confirmButtonText: 'Delete',
+            cancelButtonText: 'Cancel',
+            customClass: {
+                popup: 'modern-alert',
+                confirmButton: 'modern-confirm-btn',
+                cancelButton: 'modern-cancel-btn'
+            }
+        }).then((result) => {
+            if (result.isConfirmed) {
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = `/category/delete/${id}?_method=DELETE`;
+                document.body.appendChild(form);
+                form.submit();
+            }
+        });
+    }
+
+    // Refresh Categories
+    function refreshCategories() {
+        window.location.reload();
+    }
+
+    // Close modals when clicking outside
+    window.onclick = function(event) {
+        const addModal = document.getElementById('addCategoryModal');
+        const editModal = document.getElementById('editCategoryModal');
+        
+        if (event.target === addModal) {
+            closeAddCategoryModal();
+        }
+        if (event.target === editModal) {
+            closeEditCategoryModal();
+        }
+    }
+
+    // Close modals with Escape key
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            closeAddCategoryModal();
+            closeEditCategoryModal();
+        }
+    });
+</script>
+
+<style>
+    .categories-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 24px;
+        margin-top: 24px;
+    }
+
+    .category-card {
+        background: #ffffff;
+        border-radius: 16px;
+        padding: 24px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+        border: 1px solid rgba(0, 0, 0, 0.06);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .category-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: linear-gradient(90deg, #007AFF, #5856D6);
+        transform: scaleX(0);
+        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .category-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+        border-color: rgba(0, 122, 255, 0.2);
+    }
+
+    .category-card:hover::before {
+        transform: scaleX(1);
+    }
+
+    .category-icon {
+        width: 56px;
+        height: 56px;
+        border-radius: 12px;
+        background: linear-gradient(135deg, #007AFF, #5856D6);
+        color: #ffffff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 16px;
+    }
+
+    .category-icon ion-icon {
+        font-size: 28px;
+    }
+
+    .category-info {
+        flex: 1;
+    }
+
+    .category-name {
+        font-size: 18px;
+        font-weight: 600;
+        color: #1d1d1f;
+        margin: 0 0 8px 0;
+        letter-spacing: -0.5px;
+    }
+
+    .category-description {
+        font-size: 14px;
+        color: #8e8e93;
+        margin: 0 0 12px 0;
+        line-height: 1.5;
+    }
+
+    .category-meta {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        padding-top: 12px;
+        border-top: 1px solid rgba(0, 0, 0, 0.06);
+    }
+
+    .category-date {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 13px;
+        color: #8e8e93;
+    }
+
+    .category-date ion-icon {
+        font-size: 16px;
+    }
+
+    .category-actions {
+        position: absolute;
+        top: 16px;
+        right: 16px;
+        display: flex;
+        gap: 8px;
+        opacity: 0;
+        transform: translateY(-8px);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .category-card:hover .category-actions {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    .action-btn {
+        width: 36px;
+        height: 36px;
+        border: none;
+        background: rgba(0, 0, 0, 0.04);
+        border-radius: 10px;
+        color: #8e8e93;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .action-btn:hover {
+        background: #34C759;
+        color: #ffffff;
+        transform: scale(1.1);
+    }
+
+    .action-btn.delete-btn:hover {
+        background: #FF3B30;
+    }
+
+    .action-btn ion-icon {
+        font-size: 18px;
+    }
+
+    .empty-state-card {
+        background: #ffffff;
+        border-radius: 24px;
+        padding: 64px 32px;
+        text-align: center;
+        margin-top: 32px;
+        border: 1px solid rgba(0, 0, 0, 0.06);
+    }
+
+    .empty-icon {
+        width: 96px;
+        height: 96px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #f0f0f0, #e0e0e0);
+        color: #8e8e93;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 24px;
+    }
+
+    .empty-icon ion-icon {
+        font-size: 48px;
+    }
+
+    .empty-title {
+        font-size: 24px;
+        font-weight: 600;
+        color: #1d1d1f;
+        margin: 0 0 12px 0;
+        letter-spacing: -0.5px;
+    }
+
+    .empty-description {
+        font-size: 16px;
+        color: #8e8e93;
+        margin: 0 0 32px 0;
+        line-height: 1.6;
+        max-width: 500px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 10000;
+        animation: fadeIn 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .modal-container {
+        background: #ffffff;
+        border-radius: 20px;
+        width: 90%;
+        max-width: 500px;
+        max-height: 90vh;
+        overflow-y: auto;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        animation: slideUp 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .modal-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 24px;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+    }
+
+    .modal-title {
+        font-size: 20px;
+        font-weight: 600;
+        color: #1d1d1f;
+        margin: 0;
+        letter-spacing: -0.5px;
+    }
+
+    .modal-close {
+        width: 36px;
+        height: 36px;
+        border: none;
+        background: rgba(0, 0, 0, 0.04);
+        border-radius: 10px;
+        color: #8e8e93;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .modal-close:hover {
+        background: #ff3b30;
+        color: #ffffff;
+    }
+
+    .modal-close ion-icon {
+        font-size: 22px;
+    }
+
+    .modal-form {
+        padding: 24px;
+    }
+
+    .form-group {
+        margin-bottom: 20px;
+    }
+
+    .form-group label {
+        display: block;
+        font-size: 14px;
+        font-weight: 500;
+        color: #1d1d1f;
+        margin-bottom: 8px;
+    }
+
+    .form-group input,
+    .form-group textarea {
+        width: 100%;
+        padding: 12px 16px;
+        border: 1px solid rgba(0, 0, 0, 0.1);
+        border-radius: 12px;
+        font-size: 16px;
+        font-family: inherit;
+        color: #1d1d1f;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        background: #ffffff;
+    }
+
+    .form-group input:focus,
+    .form-group textarea:focus {
+        outline: none;
+        border-color: #007AFF;
+        box-shadow: 0 0 0 3px rgba(52, 199, 89, 0.1);
+    }
+
+    .form-group textarea {
+        resize: vertical;
+        min-height: 80px;
+    }
+
+    .modal-actions {
+        display: flex;
+        gap: 12px;
+        justify-content: flex-end;
+        padding-top: 8px;
+        border-top: 1px solid rgba(0, 0, 0, 0.06);
+        margin-top: 24px;
+    }
+
+    .btn-primary {
+        padding: 12px 24px;
+        background: #34C759;
+        color: #ffffff;
+        border: none;
+        border-radius: 12px;
+        font-size: 15px;
+        font-weight: 500;
+        font-family: inherit;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .btn-primary:hover {
+        background: #2db04c;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(52, 199, 89, 0.3);
+    }
+
+    .btn-primary:active {
+        transform: translateY(0);
+    }
+
+    .btn-secondary {
+        padding: 12px 24px;
+        background: rgba(0, 0, 0, 0.04);
+        color: #1d1d1f;
+        border: none;
+        border-radius: 12px;
+        font-size: 15px;
+        font-weight: 500;
+        font-family: inherit;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .btn-secondary:hover {
+        background: rgba(0, 0, 0, 0.08);
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+
+    @keyframes slideUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @media (max-width: 768px) {
+        .categories-grid {
+            grid-template-columns: 1fr;
+            gap: 16px;
+        }
+
+        .category-card {
+            padding: 20px;
+        }
+
+        .empty-state-card {
+            padding: 48px 24px;
+        }
+
+        .modal-container {
+            width: 95%;
+            margin: 20px;
+        }
+
+        .modal-actions {
+            flex-direction: column-reverse;
+        }
+
+        .modal-actions button {
+            width: 100%;
+            justify-content: center;
+        }
+    }
+</style>
+
+<%- include('../layout/footer') -%>

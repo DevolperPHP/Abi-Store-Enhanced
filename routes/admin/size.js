@@ -7,7 +7,7 @@ router.get('/', async (req, res) => {
     try {
         const id = req.cookies.id
         const user = await User.findOne({ _id: id})
-        const size = await Size.find({})
+        const size = await Size.find({}).sort({ _id: -1 })
 
         if(user){
             if(user.isAdmin == true || user.permissions.includes("Size")){
@@ -15,6 +15,7 @@ router.get('/', async (req, res) => {
                     user: user,
                     size: size,
                     err: req.flash("unique-size-error"),
+            success: req.query.success
                 })
             } else {
                 req.flash("permission-error", "error")
@@ -51,7 +52,7 @@ router.post("/add", async (req, res) => {
                         data.save()
                     })
     
-                    return res.redirect("/size")
+                    return res.redirect("/size?success=Size added successfully!")
                 }
             }
         } else [
@@ -70,7 +71,7 @@ router.delete("/delete/:id", async (req, res) => {
         if(user){
             if(user.isAdmin == true || user.permissions.includes("Size")){
                 await Size.deleteOne({ _id: req.params.id })
-                return res.redirect("/size")
+                return res.redirect("/size?success=Size added successfully!")
             }
         } else {
             res.redirect("/passport/sign-up")
