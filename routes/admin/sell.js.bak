@@ -27,10 +27,10 @@ router.get('/', async (req, res) => {
         .skip(skip)
         .limit(limit)
         .lean();  // Convert to plain JavaScript objects for EJS compatibility
-  
+
       // For autocomplete: just get distinct names
       const uniqueSellNames = await Sell.distinct('name');
-  
+
       res.render("sell/dashboard", {
         user: user,
         sell: sell,
@@ -41,19 +41,19 @@ router.get('/', async (req, res) => {
       res.status(500).send("Server error");
     }
   });
-  
+
   router.get('/api', async (req, res) => {
     try {
       const page = parseInt(req.query.page) || 1;
       const limit = 15;
       const skip = (page - 1) * limit;
-  
+
       const sell = await Sell.find({})
         .sort({ sortDate: -1 })
         .skip(skip)
         .limit(limit)
         .lean();  // Convert to plain JavaScript objects
-  
+
       res.json(sell);
     } catch (err) {
       console.error(err);
@@ -626,28 +626,12 @@ router.put('/return-qty/:orderId/:itemId', async (req, res) => {
         if (!order) {
             return res.status(404).send("Order not found.");
         }
-        const getItem = order.products.find(item => item._id.toString() === itemId);
+        const getItem = order.products.find(item => 
+            (item._id && item._id.toString() === itemId) ||
+            (item.id && item.id === itemId)
+        );
         if (!getItem) {
             return res.status(404).send("Product not found in the order.");
-        }
-
-        const productData = await Product.findOne({ _id: itemId });
-        if (!productData) {
-            return res.status(404).send("Product details not found.");
-        }
-
-        const newQty = getItem.qty - qty;
-
-        if (newQty < 0) {
-            return res.status(400).send("Insufficient product quantity.");
-        }
-        const objectIdItemId = mongoose.Types.ObjectId(itemId);
-
-        const updateResult = await Sell.updateOne(
-            { _id: orderId, 'products._id': objectIdItemId },
-            {
-                $set: {
-                    'products.$.qty': newQty,
                     'products.$.total': productData.sell_price * newQty,
                 },
             }
@@ -800,20 +784,20 @@ router.get('/edit/:id', async (req, res) => {
         const products = await Product.find({})
         const productsData = products.map((item) => `${item.name} - ${item.size}`)
         const uniqueArray = [... new Set(productsData)]
-
-        if (data.products.length > 0) {
+        let total = 0;
+        if (data.products && data.products.length > 0) {
             const cost = data.products.map(x => x.total)
-            const total = cost.reduce((a, b) => a + b)
-            if (user.isAdmin == true || user.permissions.includes("Sell")) {
-                res.render('sell/edit', {
-                    user: user,
-                    data: data,
-                    total: total,
-                    uniqueArray: uniqueArray,
-                    err: req.flash("qty-error"),
-                    uniqueErr: req.flash('cart-filter-error')
-                })
-            }
+            total = cost.reduce((a, b) => a + b)
+        }
+        if (user.isAdmin == true || user.permissions.includes("Sell")) {
+            res.render('sell/edit', {
+                user: user,
+                data: data,
+                total: total,
+                uniqueArray: uniqueArray,
+                err: req.flash("qty-error"),
+                uniqueErr: req.flash('cart-filter-error')
+            })
         } else {
             res.redirect("/sell")
         }
@@ -822,7 +806,7 @@ router.get('/edit/:id', async (req, res) => {
     }
 })
 
-router.put('/edit/remove/:sellId/:id', async (req, res) => {
+router.put('/edit/update-qty/:sellId/:id', async (req, res) => {
     try {
         const id = req.cookies.id
         const user = await User.findOne({ _id: id })
@@ -1101,6 +1085,70 @@ router.get('/search/:name', async (req, res) => {
 })
 
 router.get('/edit-return/:sellId/:itemId', async (req, res) => {
+
+router.get('/edit/get-stock/:sellId/:itemId', async (req, res) => {
+    try {
+        const { sellId, itemId } = req.params;
+        const id = req.cookies.id;
+
+        const user = await User.findOne({ _id: id });
+        const data = await Product.findOne({ _id: itemId });
+        const sell = await Sell.findOne({ _id: sellId }).lean();
+
+        const getItem = sell.products.find((item) =>
+            (item._id && item._id.toString() === itemId.toString()) ||
+            (item.id && item.id === itemId)
+        );
+        if (!getItem) {
+            return res.status(404).json({ success: false, message: 'Item not found' });
+        }
+
+        const maxQty = Number(getItem.qty) + Number(data.qty);
+        const availableStock = data.qty;
+
+        res.json({
+            success: true,
+            maxQty: maxQty,
+            availableStock: availableStock
+        });
+    } catch (err) {
+        console.log(err);
+        res.status(500).json({ success: false, message: 'Server Error' });
+    }
+});
+
+
+router.get('/edit/get-stock/:sellId/:itemId', async (req, res) => {
+    try {
+        const { sellId, itemId } = req.params;
+        const id = req.cookies.id;
+
+        const user = await User.findOne({ _id: id });
+        const data = await Product.findOne({ _id: itemId });
+        const sell = await Sell.findOne({ _id: sellId }).lean();
+
+        const getItem = sell.products.find((item) =>
+            (item._id && item._id.toString() === itemId.toString()) ||
+            (item.id && item.id === itemId)
+        );
+        if (!getItem) {
+            return res.status(404).json({ success: false, message: 'Item not found' });
+        }
+
+        const maxQty = Number(getItem.qty) + Number(data.qty);
+        const availableStock = data.qty;
+
+        res.json({
+            success: true,
+            maxQty: maxQty,
+            availableStock: availableStock
+        });
+    } catch (err) {
+        console.log(err);
+        res.status(500).json({ success: false, message: 'Server Error' });
+    }
+});
+
     try {
         const { sellId, itemId } = req.params
         const id = req.cookies.id;
@@ -1117,230 +1165,116 @@ router.get('/edit-return/:sellId/:itemId', async (req, res) => {
     }
 })
 
-router.put('/edit-return/:sellId/:itemId', async (req, res) => {
+router.get('/edit/get-stock/:sellId/:itemId', async (req, res) => {
+    try {
+        const { sellId, itemId } = req.params;
+        const id = req.cookies.id;
+
+        const user = await User.findOne({ _id: id });
+        const data = await Product.findOne({ _id: itemId });
+        const sell = await Sell.findOne({ _id: sellId }).lean();
+
+        // Find item by either _id or id field (support both)
+        const getItem = sell.products.find((item) =>
+            (item._id && item._id.toString() === itemId.toString()) ||
+            (item.id && item.id === itemId)
+        );
+        if (!getItem) {
+            return res.status(404).json({ success: false, message: 'Item not found' });
+        }
+
+        // Calculate max quantity (current order qty + available stock)
+        const maxQty = Number(getItem.qty) + Number(data.qty);
+        const availableStock = data.qty;
+
+        res.json({
+            success: true,
+            maxQty: maxQty,
+            availableStock: availableStock
+        });
+    } catch (err) {
+        console.log(err);
+        res.status(500).json({ success: false, message: 'Server Error' });
+    }
+});
+
+router.put('/edit/update-qty/:sellId/:itemId', async (req, res) => {
     try {
       const { sellId, itemId } = req.params;
-      const newQty = req.body.qty;
+      const newQty = Number(req.body.qty);
       const id = req.cookies.id;
-  
+
       const user = await User.findOne({ _id: id });
       const data = await Product.findOne({ _id: itemId });
       const sell = await Sell.findOne({ _id: sellId }).lean();
-  
-      const getItem = sell.products.find((item) => item._id.toString() === itemId.toString());
+
+      const getItem = sell.products.find((item) => item._id.toString() === itemId.toString() || item.id === itemId);
       if (!getItem) {
-        return res.status(404).send('Item not found in sell');
+        return res.status(404).json({ success: false, message: 'Item not found in sell' });
       }
-  
-      const oldQty = getItem.qty;
-      const updatedQty = Number(oldQty) - Number(newQty);
-      const objectItemId = new mongoose.Types.ObjectId(itemId);
-  
+
+      const oldQty = Number(getItem.qty);
+      const qtyDifference = newQty - oldQty;
+
       if (user.isAdmin === true || user.permissions.includes('Sell')) {
-        if (updatedQty <= 0) {
-          // Remove the item from the array
+        // If new quantity is 0 or less, remove the item
+        if (newQty <= 0) {
           await Sell.updateOne(
             { _id: sellId },
-            { $pull: { products: { _id: objectItemId } } }
+            { $pull: { products: { _id: getItem._id } } }
+          );
+          await Sell.updateOne(
+            { _id: sellId },
+            { $pull: { products: { id: itemId } } }
+          );
+          // Return all old quantity to stock
+          await Product.updateOne(
+            { _id: itemId },
+            { $inc: { qty: oldQty } }
           );
         } else {
-          // Update the quantity
+          // Update the quantity in the order
           await Sell.updateOne(
-            { _id: sellId, 'products._id': objectItemId },
-            {
-              $set: {
-                'products.$.qty': updatedQty,
-              },
-            }
+            { _id: sellId, 'products._id': getItem._id },
+            { $set: { 'products.$.qty': newQty, 'products.$.total': newQty * getItem.price } }
+          );
+          // If that didn't work, try with 'id' field
+          await Sell.updateOne(
+            { _id: sellId, 'products.id': itemId },
+            { $set: { 'products.$.qty': newQty, 'products.$.total': newQty * getItem.price } }
+          );
+
+          // Update stock based on the difference
+          // If qtyDifference > 0, we're increasing order qty, so subtract from stock
+          // If qtyDifference < 0, we're decreasing order qty, so add back to stock
+          await Product.updateOne(
+            { _id: itemId },
+            { $inc: { qty: -qtyDifference } }
           );
         }
-  
-        // Update Product stock
-        await Product.updateOne(
-          { _id: itemId },
-          {
-            $set: {
-              qty: Number(data.qty) + Number(newQty),
-            },
-          }
+
+        // Recalculate the total price
+        const updatedSell = await Sell.findOne({ _id: sellId }).lean();
+        let newTotal = 0;
+        if (updatedSell.products && updatedSell.products.length > 0) {
+          updatedSell.products.forEach(product => {
+            newTotal += Number(product.price) * Number(product.qty);
+          });
+        }
+        // Update the total in the order
+        await Sell.updateOne(
+          { _id: sellId },
+          { $set: { total: newTotal.toString() } }
         );
-  
-        res.redirect(`/sell/edit/${sell.id}`);
+
+        res.json({ success: true, message: 'Quantity updated successfully', newTotal: newTotal });
       } else {
-        res.status(403).send('Unauthorized');
+        res.status(403).json({ success: false, message: 'Unauthorized' });
       }
     } catch (err) {
       console.log(err);
-      res.status(500).send('Server Error');
+      res.status(500).json({ success: false, message: 'Server Error' });
     }
-  });
-
-// Route for updating quantity - handles both cashier and non-cashier based on order.isCashier
-router.put('/edit/update-qty/:orderId/:productId', async (req, res) => {
-  try {
-    const { orderId, productId } = req.params;
-    const newQty = Number(req.body.qty);
-    const id = req.cookies.id;
-    
-    const user = await User.findOne({ _id: id });
-    const sell = await Sell.findOne({ _id: orderId });
-    const product = await Product.findOne({ _id: productId });
-
-    if (!user || (!user.isAdmin && !user.permissions.includes('Sell'))) {
-      return res.status(403).send('Unauthorized');
-    }
-
-    if (!sell) {
-      return res.status(404).send('Order not found');
-    }
-
-    if (!product) {
-      return res.status(404).send('Product not found');
-    }
-
-    // Find the specific product in the order by ID
-    const targetProduct = sell.products.find(p => p._id.toString() === productId);
-    if (!targetProduct) {
-      return res.status(404).send('Product not found in order');
-    }
-
-    const oldQty = Number(targetProduct.qty);
-    const qtyDifference = newQty - oldQty;
-
-    if (newQty === 0) {
-      // Remove specific item from order using atomic operation
-      await Sell.updateOne(
-        { _id: orderId },
-        { $pull: { products: { _id: new mongoose.Types.ObjectId(productId) } } }
-      );
-
-      // Check order type and update appropriate storage field
-      if (sell.isCashier) {
-        // Cashier order - return to store storage (stock)
-        const currentStock = product.stock || 0;
-        await Product.updateOne(
-          { _id: productId },
-          {
-            $set: { stock: currentStock + Number(oldQty) },
-            $pull: {
-              score: {
-                num: oldQty,
-                Date: targetProduct.Date
-              }
-            }
-          }
-        );
-      } else {
-        // Non-cashier order - return to main storage (qty)
-        await Product.updateOne(
-          { _id: productId },
-          { $set: { qty: Number(product.qty) + Number(oldQty) } }
-        );
-      }
-
-      // Check if order is now empty and delete if so
-      const checkSell = await Sell.findOne({ _id: orderId });
-      if (checkSell.products.length === 0) {
-        await Sell.deleteOne({ _id: orderId });
-        return res.redirect('/sell'); // Redirect to dashboard when order is deleted
-      }
-    } else {
-      // Update quantity using atomic operations
-      
-      const newTotal = product.sell_price * newQty;
-      const updateResult = await Sell.updateOne(
-        {
-          _id: orderId,
-          'products._id': new mongoose.Types.ObjectId(productId)
-        },
-        {
-          $set: {
-            'products.$.qty': newQty.toString(),
-            'products.$.total': newTotal
-          }
-        }
-      );
-      
-      if (updateResult.modifiedCount === 0) {
-        return res.status(500).send('Failed to update product quantity');
-      }
-    }
-
-    // Check order type and update appropriate storage field
-    if (sell.isCashier) {
-      // Cashier order - update store storage (stock)
-      const currentStock = product.stock || 0;
-      
-      if (qtyDifference > 0) {
-        // Increasing quantity - reduce store storage
-        if (currentStock < qtyDifference) {
-          return res.status(400).send('Insufficient store storage');
-        }
-        await Product.updateOne(
-          { _id: productId },
-          {
-            $set: { stock: currentStock - Number(qtyDifference) },
-            $push: {
-              score: {
-                num: qtyDifference,
-                Date: moment().locale("ar-kw").format("l")
-              }
-            }
-          }
-        );
-      } else {
-        // Decreasing quantity - return to store storage
-        await Product.updateOne(
-          { _id: productId },
-          {
-            $set: { stock: currentStock + Math.abs(qtyDifference) },
-            $pull: {
-              score: {
-                num: Math.abs(qtyDifference)
-              }
-            }
-          }
-        );
-      }
-    } else {
-      // Non-cashier order - update main storage (qty)
-      if (qtyDifference > 0) {
-        // Increasing quantity - reduce main storage
-        if (product.qty < qtyDifference) {
-          return res.status(400).send('Insufficient main storage');
-        }
-        await Product.updateOne(
-          { _id: productId },
-          { $set: { qty: Number(product.qty) - Number(qtyDifference) } }
-        );
-      } else {
-        // Decreasing quantity - return to main storage
-        await Product.updateOne(
-          { _id: productId },
-          { $set: { qty: Number(product.qty) + Math.abs(qtyDifference) } }
-        );
-      }
-    }
-
-    // Update the overall order total (only if order still exists)
-    const updatedSell = await Sell.findOne({ _id: orderId });
-    if (updatedSell) {
-      const orderTotal = updatedSell.products.reduce((sum, item) => {
-        return sum + (Number(item.total) || 0);
-      }, 0);
-      
-      await Sell.updateOne(
-        { _id: orderId },
-        { $set: { total: orderTotal.toString() } }
-      );
-    }
-
-    res.redirect(`/sell/edit/${orderId}`);
-  } catch (err) {
-    console.error('Error updating quantity:', err);
-    res.status(500).send('Server Error');
-  }
-});
-
+  });  
 
 module.exports = router
