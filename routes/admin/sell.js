@@ -909,7 +909,7 @@ router.put('/edit/confirm/:id', async (req, res) => {
         const id = req.cookies.id
         const user = await User.findOne({ _id: id })
 
-        const { name, phone, adress, note } = req.body
+        const { name, phone, adress, note, total } = req.body
 
         if (user.isAdmin == true || user.permissions.includes("Sell")) {
             await Sell.updateOne({ _id: req.params.id }, {
@@ -918,6 +918,7 @@ router.put('/edit/confirm/:id', async (req, res) => {
                     phone: phone,
                     adress: adress,
                     note: note,
+                    total: total, // Save the updated total with discount
                 }
             })
 

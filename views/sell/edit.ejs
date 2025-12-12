@@ -180,7 +180,7 @@
                 </button>
                 <div class="discount-input-group" id="discountGroup" style="display: none;">
                     <div class="discount-input-wrapper">
-                        <input type="number" id="discount" placeholder="Enter discount amount" onkeyup="discount()">
+                        <input type="number" id="discount" placeholder="Enter discount amount">
                         <div class="input-suffix">IQD</div>
                     </div>
                     <div class="discount-actions">
@@ -313,27 +313,86 @@
 
     function discount() {
         const discountInput = document.getElementById("discount");
-        const totalInput = document.getElementById("total").value;
-        const total = parseInt(totalInput.replace(/,/g, ""));
+        const originalTotalInput = document.getElementById("total").value;
+        const originalTotal = parseInt(originalTotalInput.replace(/,/g, ""));
         const totalPriceInput = document.getElementById("total_price");
 
-        const newPrice = Number(total) - Number(discountInput.value);
-        if (newPrice < 0) {
+        const discountValue = Number(discountInput.value);
+        
+        // Always calculate discount from the original total
+        if (discountValue < 0) {
             Swal.fire({
                 icon: 'error',
                 title: 'Invalid Discount',
-                text: 'The discount value cannot exceed the total price'
+                text: 'Discount value cannot be negative'
             });
-        } else {
-            totalPriceInput.value = newPrice;
+            return;
+        }
+
+        if (discountValue > originalTotal) {
             Swal.fire({
-                icon: 'success',
-                title: 'Discount Applied',
-                text: `New total: ${newPrice.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")} IQD`,
-                timer: 2000,
-                timerProgressBar: true,
-                showConfirmButton: false
+                icon: 'error',
+                title: 'Invalid Discount',
+                text: 'Discount value cannot exceed the original total price'
             });
+            return;
+        }
+
+        // Calculate new total: always from original total, not from current discounted total
+        const newTotal = originalTotal - discountValue;
+        
+        // Update the total price input
+        totalPriceInput.value = newTotal;
+
+        // Update the visual display in cart summary
+        updateCartSummaryDisplay(originalTotal, discountValue, newTotal);
+
+        // Show success message
+        const discountText = discountValue === 0 ? 'No discount applied' : `${discountValue.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")} IQD discount applied`;
+        const newTotalText = newTotal.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+        
+        Swal.fire({
+            icon: 'success',
+            title: 'Discount Applied',
+            text: `${discountText}. New total: ${newTotalText} IQD`,
+            timer: 2000,
+            timerProgressBar: true,
+            showConfirmButton: false
+        });
+    }
+
+    function updateCartSummaryDisplay(subtotal, discountAmount, finalTotal) {
+        const summaryContent = document.querySelector('.summary-content');
+        if (!summaryContent) return;
+
+        if (discountAmount === 0) {
+            // No discount - show simple total
+            summaryContent.innerHTML = `
+                <div class="summary-row total-row">
+                    <span class="summary-label">Total</span>
+                    <span class="summary-value">${subtotal.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")} IQD</span>
+                </div>
+            `;
+        } else {
+            // Show discount breakdown
+            summaryContent.innerHTML = `
+                <div class="summary-row">
+                    <span class="summary-label">Subtotal</span>
+                    <span class="summary-value">${subtotal.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")} IQD</span>
+                </div>
+                <div class="summary-row discount-row">
+                    <span class="summary-label">
+                        <ion-icon name="pricetags"></ion-icon>
+                        Discount
+                    </span>
+                    <span class="summary-value discount-value">-${discountAmount.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")} IQD</span>
+                </div>
+                <div class="summary-divider"></div>
+                <div class="summary-row total-row">
+                    <span class="summary-label">Final Total</span>
+                    <span class="summary-value final-total">${finalTotal.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")} IQD</span>
+                </div>
+            `;
         }
     }
 
@@ -524,6 +583,19 @@
     // Auto-focus search input
     window.addEventListener('DOMContentLoaded', function() {
         document.getElementById('myInput').focus();
+    });
+
+    // Add Enter key support for discount input
+    window.addEventListener('DOMContentLoaded', function() {
+        const discountInput = document.getElementById('discount');
+        if (discountInput) {
+            discountInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    discount();
+                }
+            });
+        }
     });
 </script>
 
