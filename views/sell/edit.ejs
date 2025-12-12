@@ -96,7 +96,7 @@
                             </div>
                             <div class="action-buttons">
                                 <% if(data.isShop == true){%>
-                                    <form action="/sell/edit/remove-shop/<%= data.id%>/<%= data.products[i]._id%>?_method=PUT" method="post" style="display: inline;">
+                                    <form action="/sell/edit/remove-shop/<%= data._id%>/<%= data.products[i]._id%>?_method=PUT" method="post" style="display: inline;">
                                         <button class="action-btn delete-btn" type="submit" title="Remove item">
                                             <ion-icon name="trash-outline"></ion-icon>
                                         </button>
@@ -166,7 +166,7 @@
                 </div>
             </div>
 
-            <form action="/sell/edit/confirm/<%= data.id%>?_method=PUT" method="post" class="checkout-form">
+            <form action="/sell/edit/confirm/<%= data._id%>?_method=PUT" method="post" class="checkout-form">
                 <div class="form-grid">
                     <div class="form-group">
                         <label class="form-label">
@@ -287,7 +287,7 @@
                     b.innerHTML += arr[i].substr(val.length);
                     b.innerHTML += "<input type='hidden' value='" + arr[i] + "'>";
                     b.addEventListener("click", function(e) {
-                        window.location.href = `/sell/edit/search/<%= data.id%>/${String(this.getElementsByTagName("input")[0].value)}`;
+                        window.location.href = `/sell/edit/search/<%= data._id%>/${String(this.getElementsByTagName("input")[0].value)}`;
                         closeAllLists();
                     });
                     a.appendChild(b);

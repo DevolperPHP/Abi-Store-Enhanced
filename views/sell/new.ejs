@@ -95,12 +95,12 @@
     <% if (products && products.length > 0) { %>
         <div class="cart-card">
             <div class="cart-header">
-                <div class="header-icon">
-                    <ion-icon name="basket-outline"></ion-icon>
-                </div>
                 <div class="header-text">
                     <h2 class="card-title">Cart Items</h2>
                     <p class="card-subtitle"><%= totalQty %> items in cart</p>
+                </div>
+                <div class="header-icon">
+                    <ion-icon name="basket-outline"></ion-icon>
                 </div>
             </div>
 
@@ -135,7 +135,7 @@
                                 <%= (product.sell_price * product.qty).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") %> IQD
                             </div>
                             <div class="action-buttons">
-                                <button class="action-btn" onclick="window.location.href='/sell/edit-qty/<%= product._id %>'" title="Edit quantity">
+                                <button class="action-btn" onclick="editQuantity('<%= product._id %>', <%= product.qty %>)" title="Edit quantity">
                                     <ion-icon name="create-outline"></ion-icon>
                                 </button>
                                 <form action="/sell/remove/<%= product._id %>?_method=PUT" method="post" style="display: inline;">
@@ -165,12 +165,12 @@
         <!-- Customer Information & Checkout -->
         <div class="checkout-card">
             <div class="card-header">
-                <div class="header-icon">
-                    <ion-icon name="card-outline"></ion-icon>
-                </div>
                 <div class="header-text">
                     <h2 class="card-title">Customer Information</h2>
                     <p class="card-subtitle">Enter customer details to complete the sale</p>
+                </div>
+                <div class="header-icon">
+                    <ion-icon name="card-outline"></ion-icon>
                 </div>
             </div>
 
@@ -212,10 +212,7 @@
                 <input type="hidden" name="total" id="finalTotal" value="<%= total %>">
 
                 <div class="checkout-actions">
-                    <button type="button" class="btn-secondary" onclick="clearCart()">
-                        <ion-icon name="trash-outline"></ion-icon>
-                        Clear Cart
-                    </button>
+                    
                     <button type="submit" class="btn-primary btn-large">
                         <ion-icon name="checkmark-circle-outline"></ion-icon>
                         Complete Sale
@@ -331,6 +328,47 @@
         });
     }
 
+    // Edit quantity inline
+    function editQuantity(productId, currentQty) {
+        Swal.fire({
+            title: 'Edit Quantity',
+            text: 'Enter the new quantity:',
+            input: 'number',
+            inputValue: currentQty,
+            inputAttributes: {
+                min: 1,
+                step: 1
+            },
+            showCancelButton: true,
+            confirmButtonColor: '#007AFF',
+            cancelButtonColor: '#8E8E93',
+            confirmButtonText: 'Update',
+            cancelButtonText: 'Cancel',
+            inputValidator: (value) => {
+                if (!value || value < 1) {
+                    return 'Please enter a valid quantity (minimum 1)';
+                }
+            }
+        }).then((result) => {
+            if (result.isConfirmed) {
+                const newQty = result.value;
+                // Submit the form via POST to update quantity
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = '/sell/edit-qty/' + productId + '?_method=PUT';
+
+                const qtyInput = document.createElement('input');
+                qtyInput.type = 'hidden';
+                qtyInput.name = 'qty';
+                qtyInput.value = newQty;
+
+                form.appendChild(qtyInput);
+                document.body.appendChild(form);
+                form.submit();
+            }
+        });
+    }
+
     // Auto-focus barcode input on page load
     window.addEventListener('DOMContentLoaded', function() {
         document.getElementById('codeInput').focus();
@@ -338,6 +376,13 @@
 </script>
 
 <style>
+    .cart-header{
+        display: flex;
+        justify-content: space-between;
+        width: 95%;
+        margin-left: auto;
+        margin-right: auto;
+    }
     /* ===== BASE STYLES ===== */
     * {
         box-sizing: border-box;

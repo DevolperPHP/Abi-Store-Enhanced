@@ -477,14 +477,16 @@ router.get('/search-by-phone/:phone', async (req, res) => {
         const id = req.cookies.id
         const user = await User.findOne({ _id: id })
         const phone = req.params.phone
-        const sell = await Sell.find({ phone: phone }).sort({ sortDate: -1 })
+        const sell = await Sell.find({ phone: phone }).sort({ sortDate: -1 }).lean()
+        const uniqueSellNames = await Sell.distinct('name');
 
         if (user) {
             if (user.isAdmin == true || user.permissions.includes('Sell')) {
                 res.render("sell/get-search", {
                     user: user,
                     sell: sell,
-                    filter: `phone : ${phone}`
+                    filter: `phone : ${phone}`,
+                    data: uniqueSellNames
                 })
             }
         } else {
@@ -504,29 +506,35 @@ router.get("/search-by-filter/:filter", async (req, res) => {
         if (user) {
             if (user.isAdmin == true || user.permissions.includes('Sell')) {
                 if (filter == "newest") {
-                    const sell = await Sell.find({}).sort({ sortDate: -1 })
+                    const sell = await Sell.find({}).sort({ sortDate: -1 }).lean()
+                    const uniqueSellNames = await Sell.distinct('name');
                     res.render("sell/get-search", {
                         user: user,
                         sell: sell,
-                        filter: `filter : newst`
+                        filter: `filter : newst`,
+                        data: uniqueSellNames
                     })
                 }
 
                 if (filter == "oldest") {
-                    const sell = await Sell.find({}).sort({ sortDate: 1 })
+                    const sell = await Sell.find({}).sort({ sortDate: 1 }).lean()
+                    const uniqueSellNames = await Sell.distinct('name');
                     res.render("sell/get-search", {
                         user: user,
                         sell: sell,
-                        filter: `filter : oldest`
+                        filter: `filter : oldest`,
+                        data: uniqueSellNames
                     })
                 }
 
                 if (filter == "pending") {
-                    const sell = await Sell.find({ status: 'pending' }).sort({ sortDate: -1 })
+                    const sell = await Sell.find({ status: 'pending' }).sort({ sortDate: -1 }).lean()
+                    const uniqueSellNames = await Sell.distinct('name');
                     res.render("sell/get-search", {
                         user: user,
                         sell: sell,
-                        filter: `filter : pending`
+                        filter: `filter : pending`,
+                        data: uniqueSellNames
                     })
                 }
             }
@@ -542,7 +550,7 @@ router.get("/get-data/:id", async (req, res) => {
     try {
         const id = req.cookies.id
         const user = await User.findOne({ _id: id })
-        const data = await Sell.findOne({ _id: req.params.id })
+        const data = await Sell.findOne({ _id: req.params.id }).lean()
         if (user) {
             if (user.isAdmin == true || user.permissions.includes("Sell")) {
                 if (data.products.length > 0) {
@@ -585,7 +593,7 @@ router.get('/return/:orderId/:itemId', async (req, res) => {
 
         if (user.isAdmin == true) {
             const { orderId, itemId } = req.params
-            const order = await Sell.findOne({ _id: orderId })
+            const order = await Sell.findOne({ _id: orderId }).lean()
             const data = await Product.findOne({ _id: itemId })
 
             res.render('sell/return', {
@@ -614,7 +622,7 @@ router.put('/return-qty/:orderId/:itemId', async (req, res) => {
             return res.status(400).send("Invalid quantity.");
         }
 
-        const order = await Sell.findOne({ _id: orderId });
+        const order = await Sell.findOne({ _id: orderId }).lean();
         if (!order) {
             return res.status(404).send("Order not found.");
         }
@@ -670,7 +678,7 @@ router.put("/return/:orderId/:itemId", async (req, res) => {
         if (user) {
             if (user.isAdmin == true || user.permissions.includes('Sell')) {
                 const { orderId, itemId } = req.params
-                const data = await Sell.findOne({ _id: orderId })
+                const data = await Sell.findOne({ _id: orderId }).lean()
                 const itemData = await Product.findOne({ _id: itemId })
                 const item = data.products.find((item) => item._id == itemId)
 
@@ -704,7 +712,7 @@ router.put("/return-shop/:orderId/:itemId", async (req, res) => {
         if (user) {
             if (user.isAdmin == true || user.permissions.includes('Sell')) {
                 const { orderId, itemId } = req.params;
-                const data = await Sell.findOne({ _id: orderId });
+                const data = await Sell.findOne({ _id: orderId }).lean();
                 const itemData = await Product.findOne({ _id: itemId });
                 const objectId = mongoose.Types.ObjectId(itemId);
                 const item = data.products.find((item) => item._id.equals(objectId));
@@ -769,7 +777,7 @@ router.get('/bill/:id', async (req, res) => {
         const user = await User.findOne({ _id: id })
 
         if (user) {
-            const data = await Sell.findOne({ _id: req.params.id })
+            const data = await Sell.findOne({ _id: req.params.id }).lean()
             const total = data.products.map((x) => x.total).reduce((a, b) => a + b)
             res.render("sell/bill", {
                 user: user,
@@ -788,7 +796,7 @@ router.get('/edit/:id', async (req, res) => {
     try {
         const id = req.cookies.id
         const user = await User.findOne({ _id: id })
-        const data = await Sell.findOne({ _id: req.params.id })
+        const data = await Sell.findOne({ _id: req.params.id }).lean()
         const products = await Product.find({})
         const productsData = products.map((item) => `${item.name} - ${item.size}`)
         const uniqueArray = [... new Set(productsData)]
@@ -819,7 +827,7 @@ router.put('/edit/remove/:sellId/:id', async (req, res) => {
         const id = req.cookies.id
         const user = await User.findOne({ _id: id })
         const product = await Product.findOne({ _id: req.params.id })
-        const sell = await Sell.findOne({ _id: req.params.sellId })
+        const sell = await Sell.findOne({ _id: req.params.sellId }).lean()
         if (user) {
             if (user.isAdmin == true || user.permissions.includes('Sell')) {
                 const data = sell.products.find((item) => item._id == req.params.id)
@@ -860,7 +868,7 @@ router.put('/edit/remove-shop/:sellId/:id', async (req, res) => {
         const id = req.cookies.id
         const user = await User.findOne({ _id: id })
         const product = await Product.findOne({ _id: req.params.id })
-        const sell = await Sell.findOne({ _id: req.params.sellId })
+        const sell = await Sell.findOne({ _id: req.params.sellId }).lean()
         if (user) {
             if (user.isAdmin == true || user.permissions.includes('Sell')) {
                 const objectId = mongoose.Types.ObjectId(req.params.id);
@@ -978,7 +986,7 @@ router.put('/edit/add/:orderId/:id', async (req, res) => {
         const orderId = req.params.orderId
         const user = await User.findOne({ _id: id })
         const data = await Product.findOne({ _id: req.params.id })
-        const order = await Sell.findOne({ _id: orderId })
+        const order = await Sell.findOne({ _id: orderId }).lean()
         const { qty, type } = req.body
         if (user) {
             if (user.isAdmin == true || user.permissions.includes('Sell')) {
@@ -1039,14 +1047,14 @@ router.get('/search-by-name/:name', async (req, res) => {
     try {
         const id = req.cookies.id
         const user = await User.findOne({ _id: id })
-        const sell = await Sell.find({ name: req.params.name }).sort({ sortDate: -1 })
-        const sellForSearch = await Sell.find({}).sort({ sortDate: -1 })
+        const sell = await Sell.find({ name: req.params.name }).sort({ sortDate: -1 }).lean()
+        const sellForSearch = await Sell.find({}).sort({ sortDate: -1 }).lean()
         const uniqueSellNames = await Sell.distinct('name');
         const uniqueSell = [];
         const data = sellForSearch.map((item) => `${item.name}`)
         const uniqueArray = [... new Set(data)]
         for (const name of uniqueSellNames) {
-            const product = await Sell.findOne({ name });
+            const product = await Sell.findOne({ name }).lean();
             if (product) {
                 uniqueSell.push(product);
             }
@@ -1098,7 +1106,7 @@ router.get('/edit-return/:sellId/:itemId', async (req, res) => {
         const id = req.cookies.id;
         const user = await User.findOne({ _id: id })
         const data = await Product.findOne({ _id: itemId })
-        const sell = await Sell.findOne({ _id: sellId })
+        const sell = await Sell.findOne({ _id: sellId }).lean()
         if (user.isAdmin == true || user.permissions.includes('Sell')) {
             res.render('sell/edit-return', {
                 sell, data, user
@@ -1117,7 +1125,7 @@ router.put('/edit-return/:sellId/:itemId', async (req, res) => {
   
       const user = await User.findOne({ _id: id });
       const data = await Product.findOne({ _id: itemId });
-      const sell = await Sell.findOne({ _id: sellId });
+      const sell = await Sell.findOne({ _id: sellId }).lean();
   
       const getItem = sell.products.find((item) => item._id.toString() === itemId.toString());
       if (!getItem) {

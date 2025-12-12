@@ -145,13 +145,13 @@
                     <% if(data.status == "pending"){ %>
                         <div class="item-actions">
                             <% if(data.isShop == true){ %>
-                                <form action="/sell/return-shop/<%= data.id %>/<%= data.products[i]._id %>?_method=PUT" method="post">
+                                <form action="/sell/return-shop/<%= data._id %>/<%= data.products[i]._id %>?_method=PUT" method="post">
                                     <button type="submit" class="action-btn delete-btn" title="Return item">
                                         <ion-icon name="return-down-back-outline"></ion-icon>
                                     </button>
                                 </form>
                             <% } else { %>
-                                <button class="action-btn delete-btn" onclick="window.location.href='/sell/return/<%= data.id %>/<%= data.products[i]._id %>'" title="Return item">
+                                <button class="action-btn delete-btn" onclick="window.location.href='/sell/return/<%= data._id %>/<%= data.products[i]._id %>'" title="Return item">
                                     <ion-icon name="return-down-back-outline"></ion-icon>
                                 </button>
                             <% } %>
@@ -212,18 +212,18 @@
         </button>
         
         <div class="action-buttons-group">
-            <button class="btn-secondary" onclick="window.location.href='/sell/edit/<%= data.id %>'">
+            <button class="btn-secondary" onclick="window.location.href='/sell/edit/<%= data._id %>'">
                 <ion-icon name="create-outline"></ion-icon>
                 Edit Order
             </button>
             
-            <button class="btn-warning" onclick="window.location.href='/sell/bill/<%= data.id %>'">
+            <button class="btn-warning" onclick="window.location.href='/sell/bill/<%= data._id %>'">
                 <ion-icon name="print-outline"></ion-icon>
                 Print Bill
             </button>
             
             <% if(data.status == "pending"){ %>
-                <form action="/sell/status/confirm/<%= data.id %>?_method=PUT" method="post" style="display: inline;">
+                <form action="/sell/status/confirm/<%= data._id %>?_method=PUT" method="post" style="display: inline;">
                     <button type="submit" class="btn-success">
                         <ion-icon name="checkmark-circle-outline"></ion-icon>
                         Confirm Order
