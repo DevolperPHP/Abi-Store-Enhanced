@@ -1,44 +1,524 @@
 <%- include("../layout/navbar") -%>
 
-<div class="sell-dashboard">
-    <p class="title">Sales history</p>
-    <p class="current-filter">Search by <%= filter%></p>
-    <div class="filters">
-        <div class="flex">
-            <input type="text" id="phone" placeholder="Phone number">
-            <button onclick="searchByPhone()"><ion-icon name="search"></ion-icon></button>
-            <input type="date" id="startDate" name="startDate">
-            <input type="date" id="endDate" name="endDate">
-            <button onclick="searchByDate()"><ion-icon name="search"></ion-icon></button>
-            <select onchange="redirectToPage(this)">
-                <option selected>Filter</option>
-                <option value="/sell">All</option>
-                <option value="/sell/search-by-filter/newest">Newest</option>
-                <option value="/sell/search-by-filter/oldest">Oldest</option>
-                <option value="/sell/search-by-filter/pending">Pending</option>
-            </select>
+<!-- Modern Dashboard Container -->
+<div class="dashboard-container">
+    <!-- Dashboard Header -->
+    <div class="dashboard-header">
+        <h1 class="dashboard-title">Sales History</h1>
+        <p class="dashboard-subtitle">View and manage all sales transactions</p>
+    </div>
+
+    <!-- Search Results Info -->
+    <div class="search-results-card">
+        <div class="results-info">
+            <div class="info-icon">
+                <ion-icon name="calendar-outline"></ion-icon>
+            </div>
+            <div class="info-content">
+                <h2 class="results-title">Search Results</h2>
+                <p class="results-subtitle"><%= filter%></p>
+                <p class="results-count"><%= sell.length %> orders found</p>
+            </div>
+        </div>
+        <div class="results-actions">
+            <button class="btn-secondary" onclick="window.location.href='/sell'">
+                <ion-icon name="arrow-back-outline"></ion-icon>
+                Back to All Sales
+            </button>
+            <button class="btn-primary" onclick="window.location.href='/sell/new'">
+                <ion-icon name="add-outline"></ion-icon>
+                New Sale
+            </button>
         </div>
     </div>
-    <button class="add" onclick="window.location.href='/sell/new'"><ion-icon class="icon" name="add"></ion-icon></button>
-    <div class="sell-cards">
-        <% sell.forEach(data => {%>
-            <div class="sell-card" onclick="window.location.href='/sell/get-data/<%=data._id%>'">
-                <div class="flex">
-                    <p class="icon"><ion-icon name="folder"></ion-icon></p>
-                    <div class="details">
-                        <p><%= data.Date%></p>
-                        <p><%= data.phone%></p>
-                        <p><%= data.adress%></p>
-                    </div>
-                    <% if(data.status == "pending"){%>
-                        <p class="status">Pending</p>
-                    <%} %>
-                </div>
+
+    <!-- Quick Actions -->
+    <div class="quick-actions-card">
+        <div class="actions-info">
+            <div class="info-icon">
+                <ion-icon name="search-circle-outline"></ion-icon>
             </div>
-        <%}) %>
+            <div class="info-content">
+                <h2 class="actions-title">Quick Actions</h2>
+                <p class="actions-subtitle">Manage your sales efficiently</p>
+            </div>
+        </div>
+        <div class="actions-buttons">
+            <button class="btn-secondary" onclick="window.location.href='/sell'">
+                <ion-icon name="list-outline"></ion-icon>
+                View All Sales
+            </button>
+            <button class="btn-primary" onclick="window.location.href='/sell/new'">
+                <ion-icon name="add-outline"></ion-icon>
+                New Sale
+            </button>
+        </div>
+    </div>
+
+    <!-- Sales Cards Grid -->
+    <div class="sales-grid" id="salesGrid">
+        <% if (sell && sell.length > 0) { %>
+            <% sell.forEach((order, index) => { %>
+                <div class="sale-card" onclick="window.location.href='/sell/get-data/<%= order._id %>'">
+                    <div class="sale-header">
+                        <div class="sale-icon">
+                            <% if (order.isShop === true) { %>
+                                <ion-icon name="storefront-outline"></ion-icon>
+                            <% } else if (order.isCashier === true) { %>
+                                <ion-icon name="cash-outline"></ion-icon>
+                            <% } else { %>
+                                <ion-icon name="bag-handle-outline"></ion-icon>
+                            <% } %>
+                        </div>
+                        <div class="sale-status-badge <%= order.status %>">
+                            <%= order.status.charAt(0).toUpperCase() + order.status.slice(1) %>
+                        </div>
+                    </div>
+                    
+                    <div class="sale-info">
+                        <div class="info-row">
+                            <ion-icon name="calendar-outline"></ion-icon>
+                            <span><%= order.Date %></span>
+                        </div>
+                        <div class="info-row">
+                            <ion-icon name="call-outline"></ion-icon>
+                            <span><%= order.phone %></span>
+                        </div>
+                        <div class="info-row address-row">
+                            <ion-icon name="location-outline"></ion-icon>
+                            <span><%= order.adress %></span>
+                        </div>
+                        <% if (order.note) { %>
+                            <div class="info-row">
+                                <ion-icon name="document-text-outline"></ion-icon>
+                                <span class="note-text"><%= order.note %></span>
+                            </div>
+                        <% } %>
+                    </div>
+
+                    <div class="sale-footer">
+                        <div class="order-id">
+                            <ion-icon name="receipt-outline"></ion-icon>
+                            <span>#<%= order.bid %></span>
+                        </div>
+                        <div class="order-total">
+                            <%= (order.total || (order.products ? order.products.reduce((sum, p) => sum + (p.total || 0), 0) : 0)).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") %> IQD
+                        </div>
+                    </div>
+                </div>
+            <% }); %>
+        <% } else { %>
+            <!-- Empty State -->
+            <div class="empty-state-card">
+                <div class="empty-icon">
+                    <ion-icon name="calendar-outline"></ion-icon>
+                </div>
+                <h3 class="empty-title">No Sales Found</h3>
+                <p class="empty-description">
+                    No sales were found in the selected date range. Try adjusting your search criteria.
+                </p>
+                <button class="btn-primary" onclick="window.location.href='/sell'">
+                    <ion-icon name="arrow-back-outline"></ion-icon>
+                    Back to All Sales
+                </button>
+            </div>
+        <% } %>
     </div>
 </div>
 
-<script src="/javascript/sell-dashboard.js"></script>
+<script>
+    // Page is in view mode - no interactive search needed
+    // Results are already filtered by date range
+</script>
+
+<style>
+    /* ===== SEARCH RESULTS CARD ===== */
+    .quick-actions-card {
+        background: linear-gradient(135deg, #007AFF, #5856D6);
+        border-radius: 16px;
+        padding: 24px;
+        margin-bottom: 24px;
+        box-shadow: 0 4px 20px rgba(0, 122, 255, 0.2);
+        border: 1px solid rgba(0, 122, 255, 0.3);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 24px;
+    }
+
+    .actions-info {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        flex: 1;
+    }
+
+    .info-icon {
+        width: 56px;
+        height: 56px;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        backdrop-filter: blur(10px);
+    }
+
+    .info-icon ion-icon {
+        font-size: 28px;
+        color: #ffffff;
+    }
+
+    .info-content h2 {
+        font-size: 20px;
+        font-weight: 600;
+        color: #ffffff;
+        margin: 0 0 4px 0;
+    }
+
+
+
+    .actions-buttons {
+        display: flex;
+        gap: 12px;
+        flex-shrink: 0;
+    }
+
+    .results-actions .btn-secondary {
+        background: rgba(255, 255, 255, 0.2);
+        color: #ffffff;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+    }
+
+    .results-actions .btn-secondary:hover {
+        background: rgba(255, 255, 255, 0.3);
+    }
+
+    .results-actions .btn-primary {
+        background: #ffffff;
+        color: #007AFF;
+        border: none;
+    }
+
+    .results-actions .btn-primary:hover {
+        background: #f5f5f5;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+	    margin-bottom: 24px;
+	    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+	    border: 1px solid rgba(0, 0, 0, 0.06);
+	}
+
+	.filters-grid {
+	    display: grid;
+	    grid-template-columns: repeat(2, 1fr);
+	    gap: 20px;
+	}
+
+	.search-input:focus,
+	.filter-select:focus,
+	.date-input:focus {
+	    outline: none;
+	    border-color: #007AFF;
+	    box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.1);
+	}
+
+	.search-btn:hover {
+	    background: #0056b3;
+	    transform: translateY(-1px);
+	    box-shadow: 0 4px 12px rgba(0, 122, 255, 0.3);
+	}
+
+	.search-btn ion-icon {
+	    font-size: 18px;
+	}
+
+	.filter-input {
+	    flex: 1;
+	}
+
+	/* ===== SALES GRID ===== */
+	.sales-grid {
+	    display: grid;
+	    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+	    gap: 20px;
+	    margin-top: 24px;
+	}
+
+	.sale-card {
+	    background: #ffffff;
+	    border-radius: 16px;
+	    padding: 24px;
+	    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+	    border: 1px solid rgba(0, 0, 0, 0.06);
+	    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+	    cursor: pointer;
+	    position: relative;
+	    overflow: hidden;
+	}
+
+	.sale-card::before {
+	    content: '';
+	    position: absolute;
+	    top: 0;
+	    left: 0;
+	    right: 0;
+	    height: 3px;
+	    background: linear-gradient(90deg, #007AFF, #5856D6);
+	    transform: scaleX(0);
+	    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+	}
+
+	.sale-card:hover {
+	    transform: translateY(-4px);
+	    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+	    border-color: rgba(0, 122, 255, 0.2);
+	}
+
+	.sale-card:hover::before {
+	    transform: scaleX(1);
+	}
+
+	.sale-header {
+	    display: flex;
+	    align-items: center;
+	    justify-content: space-between;
+	    margin-bottom: 16px;
+	}
+
+	.sale-icon {
+	    width: 48px;
+	    height: 48px;
+	    border-radius: 12px;
+	    background: linear-gradient(135deg, #007AFF, #5856D6);
+	    color: #ffffff;
+	    display: flex;
+	    align-items: center;
+	    justify-content: center;
+	}
+
+	.sale-icon ion-icon {
+	    font-size: 24px;
+	}
+
+	.sale-status-badge {
+	    padding: 6px 12px;
+	    border-radius: 20px;
+	    font-size: 12px;
+	    font-weight: 600;
+	    text-transform: uppercase;
+	    letter-spacing: 0.5px;
+	}
+
+	.sale-status-badge.pending {
+	    background: rgba(255, 149, 0, 0.15);
+	    color: #FF9500;
+	}
+
+	.sale-status-badge.done {
+	    background: rgba(52, 199, 89, 0.15);
+	    color: #34C759;
+	}
+
+	.sale-info {
+	    display: flex;
+	    flex-direction: column;
+	    gap: 12px;
+	    margin-bottom: 16px;
+	}
+
+	.info-row {
+	    display: flex;
+	    align-items: flex-start;
+	    gap: 10px;
+	    color: #1d1d1f;
+	    font-size: 14px;
+	}
+
+	.info-row ion-icon {
+	    font-size: 18px;
+	    color: #8e8e93;
+	    margin-top: 2px;
+	    flex-shrink: 0;
+	}
+
+	.address-row span {
+	    line-height: 1.4;
+	}
+
+	.note-text {
+	    font-style: italic;
+	    color: #8e8e93;
+	    font-size: 13px;
+	    line-height: 1.4;
+	}
+
+	.sale-footer {
+	    display: flex;
+	    align-items: center;
+	    justify-content: space-between;
+	    padding-top: 16px;
+	    border-top: 1px solid rgba(0, 0, 0, 0.06);
+	}
+
+	.order-id {
+	    display: flex;
+	    align-items: center;
+	    gap: 6px;
+	    color: #8e8e93;
+	    font-size: 13px;
+	    font-weight: 500;
+	}
+
+	.order-id ion-icon {
+	    font-size: 16px;
+	}
+
+	.order-total {
+	    font-size: 16px;
+	    font-weight: 700;
+	    color: #007AFF;
+	}
+
+	/* ===== EMPTY STATE ===== */
+	.empty-state-card {
+	    background: #ffffff;
+	    border-radius: 24px;
+	    padding: 64px 32px;
+	    text-align: center;
+	    grid-column: 1 / -1;
+	    border: 1px solid rgba(0, 0, 0, 0.06);
+	}
+
+	.empty-icon {
+	    width: 96px;
+	    height: 96px;
+	    border-radius: 50%;
+	    background: linear-gradient(135deg, #f0f0f0, #e0e0e0);
+	    color: #8e8e93;
+	    display: flex;
+	    align-items: center;
+	    justify-content: center;
+	    margin: 0 auto 24px;
+	}
+
+	.empty-icon ion-icon {
+	    font-size: 48px;
+	}
+
+	.empty-title {
+	    font-size: 24px;
+	    font-weight: 600;
+	    color: #1d1d1f;
+	    margin: 0 0 12px 0;
+	    letter-spacing: -0.5px;
+	}
+
+	.empty-description {
+	    font-size: 16px;
+	    color: #8e8e93;
+	    margin: 0 0 32px 0;
+	    line-height: 1.6;
+	    max-width: 500px;
+	    margin-left: auto;
+	    margin-right: auto;
+	}
+
+	/* ===== LOAD MORE ===== */
+	.load-more-container {
+	    display: flex;
+	    justify-content: center;
+	    margin-top: 32px;
+	    padding: 24px;
+	}
+
+	.load-more-container button {
+	    display: flex;
+	    align-items: center;
+	    gap: 8px;
+	}
+
+	.load-more-container button ion-icon {
+	    font-size: 18px;
+	}
+
+	/* ===== BUTTONS ===== */
+	.btn-primary {
+	    padding: 12px 24px;
+	    background: #007AFF;
+	    color: #ffffff;
+	    border: none;
+	    border-radius: 12px;
+	    font-size: 15px;
+	    font-weight: 500;
+	    font-family: inherit;
+	    cursor: pointer;
+	    display: inline-flex;
+	    align-items: center;
+	    gap: 8px;
+	    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+	}
+
+	.btn-primary:hover {
+	    background: #0056b3;
+	    transform: translateY(-1px);
+	    box-shadow: 0 4px 12px rgba(0, 122, 255, 0.3);
+	}
+
+	.btn-primary:active {
+	    transform: translateY(0);
+	}
+
+	.btn-primary ion-icon {
+	    font-size: 18px;
+	}
+
+	.btn-secondary {
+	    padding: 12px 24px;
+	    background: rgba(0, 0, 0, 0.04);
+	    color: #1d1d1f;
+	    border: none;
+	    border-radius: 12px;
+	    font-size: 15px;
+	    font-weight: 500;
+	    font-family: inherit;
+	    cursor: pointer;
+	    display: inline-flex;
+	    align-items: center;
+	    gap: 8px;
+	    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+	}
+
+	.btn-secondary:hover {
+	    background: rgba(0, 0, 0, 0.08);
+	}
+
+	.btn-secondary ion-icon {
+	    font-size: 18px;
+	}
+
+	/* ===== RESPONSIVE ===== */
+	@media (max-width: 1024px) {
+	    .filters-grid {
+	        grid-template-columns: 1fr;
+	    }
+	}
+
+	@media (max-width: 768px) {
+	    .sales-grid {
+	        grid-template-columns: 1fr;
+	    }
+
+	    .filters-grid {
+	        grid-template-columns: 1fr;
+	    }
+
+	    .empty-state-card {
+	        padding: 48px 24px;
+	    }
+	}
+</style>
 
 <%- include("../layout/footer") -%>
+

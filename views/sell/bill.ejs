@@ -1,73 +1,623 @@
 <%- include('../layout/navbar') -%>
-    <div class="bill" id="printable-content">
-        <div class="bill-items">
-            <div class="info">
-                <p>Phone Number: <%= data.phone%>
-                </p>
-                <p>Address: <%= data.adress%>
-                </p>
-                <p>Date: <%= data.Date%>
-                </p>
-                <p>ID: <%= data.bid%>
-                </p>
+
+<div class="bill-container" id="printable-content">
+    <!-- Invoice Header -->
+    <div class="invoice-header">
+        <div class="header-content">
+            <div class="logo-section">
+                <div class="logo-icon">
+                    <ion-icon name="receipt-outline"></ion-icon>
+                </div>
+                <div class="brand-info">
+                    <h1 class="brand-name">Invoice</h1>
+                    <p class="brand-tagline">Order Receipt</p>
+                </div>
             </div>
-            <p class="title">Order</p>
-            <table class="table table-bordered table-dark">
+            <div class="invoice-meta">
+                <div class="meta-item">
+                    <span class="meta-label">Invoice ID</span>
+                    <span class="meta-value">#<%= data.bid%></span>
+                </div>
+                <div class="meta-item">
+                    <span class="meta-label">Date</span>
+                    <span class="meta-value"><%= data.Date%></span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Customer Information -->
+    <div class="customer-section">
+        <div class="section-header">
+            <ion-icon name="person-circle-outline"></ion-icon>
+            <h2>Customer Information</h2>
+        </div>
+        <div class="customer-details">
+            <div class="detail-item">
+                <ion-icon name="person-outline"></ion-icon>
+                <div>
+                    <span class="detail-label">Customer Name</span>
+                    <span class="detail-value"><%= data.name%></span>
+                </div>
+            </div>
+            <div class="detail-item">
+                <ion-icon name="call-outline"></ion-icon>
+                <div>
+                    <span class="detail-label">Phone Number</span>
+                    <span class="detail-value"><%= data.phone%></span>
+                </div>
+            </div>
+            <div class="detail-item">
+                <ion-icon name="location-outline"></ion-icon>
+                <div>
+                    <span class="detail-label">Address</span>
+                    <span class="detail-value"><%= data.adress%></span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Order Items -->
+    <div class="items-section">
+        <div class="section-header">
+            <ion-icon name="basket-outline"></ion-icon>
+            <h2>Order Items</h2>
+        </div>
+        <div class="items-table-container">
+            <table class="items-table">
                 <thead>
                     <tr>
                         <th>#</th>
-                        <th>Name</th>
+                        <th>Product</th>
                         <th>Size</th>
                         <th>Color</th>
                         <th>Price</th>
                         <th>Qty</th>
-                        <th>total</th>
+                        <th>Total</th>
                     </tr>
                 </thead>
                 <tbody>
-                    <% for (let i=0; i < data.products.length; i++) {%>
+                    <% for (let i = 0; i < data.products.length; i++) { %>
                         <tr>
-                            <td>
-                                <%= i+1%>
+                            <td class="col-number"><%= i + 1%></td>
+                            <td class="col-product">
+                                <div class="product-info">
+                                    <span class="product-name"><%= data.products[i].name%></span>
+                                </div>
                             </td>
-                            <td>
-                                <%= data.products[i].name%>
+                            <td class="col-size">
+                                <span class="badge"><%= data.products[i].size%></span>
                             </td>
-                            <td>
-                                <%= data.products[i].size%>
+                            <td class="col-color">
+                                <div class="color-indicator" style="background-color: <%= data.products[i].color%>"></div>
                             </td>
-                            <td>
-                                <div class="color" style="background-color: <%= data.products[i].color%>"></div>
+                            <td class="col-price">
+                                <span class="price"><%= data.products[i].price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")%></span>
+                                <span class="currency">IQD</span>
                             </td>
-                            <td>
-                                <%= data.products[i].price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")%>
+                            <td class="col-qty">
+                                <span class="quantity"><%= data.products[i].qty%></span>
                             </td>
-                            <td>
-                                <%= data.products[i].qty%>
-                            </td>
-                            <td>
-                                <%= data.products[i].total.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")%>
+                            <td class="col-total">
+                                <span class="total"><%= data.products[i].total.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")%></span>
+                                <span class="currency">IQD</span>
                             </td>
                         </tr>
-                        <%} %>
-                            <% if(data.total=="" ){%>
-                                <tr>
-                                    <td colspan="10">Total: <%= total.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")%> IQD</td>
-                                </tr>
-                                <%} else {%>
-                                    <tr>
-                                        <td colspan="10">Total: <%= data.total%> IQD - Discount <%= (Number(total) -
-                                                    Number(data.total)).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")%> IQD</td>
-                                    </tr>
-                                    <%} %>
+                    <% } %>
                 </tbody>
             </table>
         </div>
     </div>
 
-    <script>
-        window.print()
-    </script>
-    <br><br>
+    <!-- Invoice Summary -->
+    <div class="invoice-summary">
+        <% if(data.total == "") { %>
+            <div class="summary-total">
+                <span class="summary-label">Total Amount</span>
+                <span class="summary-value"><%= total.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")%> IQD</span>
+            </div>
+        <% } else { %>
+            <div class="summary-row">
+                <span class="summary-label">Subtotal</span>
+                <span class="summary-value"><%= total.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")%> IQD</span>
+            </div>
+            <div class="summary-row discount">
+                <span class="summary-label">Discount</span>
+                <span class="summary-value">-<%= (Number(total) - Number(data.total)).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")%> IQD</span>
+            </div>
+            <div class="summary-total">
+                <span class="summary-label">Final Amount</span>
+                <span class="summary-value"><%= data.total%> IQD</span>
+            </div>
+        <% } %>
+    </div>
 
-    <%- include('../layout/footer') -%>
+    <!-- Footer -->
+    <div class="invoice-footer">
+        <div class="footer-text">
+            <p>Thank you for your business!</p>
+        </div>
+        <div class="footer-actions">
+            <button class="btn-print" onclick="window.print()">
+                <ion-icon name="print-outline"></ion-icon>
+                Print Invoice
+            </button>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* ===== INVOICE STYLES ===== */
+    .bill-container {
+        max-width: 900px;
+        margin: 24px auto;
+        padding: 0 24px;
+        background: #ffffff;
+        border-radius: 20px;
+        box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+        overflow: hidden;
+    }
+
+    /* ===== INVOICE HEADER ===== */
+    .invoice-header {
+        background: linear-gradient(135deg, #007AFF, #0051D5);
+        color: #ffffff;
+        padding: 48px 40px;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .invoice-header::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        right: 0;
+        width: 400px;
+        height: 400px;
+        background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+        border-radius: 50%;
+        transform: translate(30%, -30%);
+    }
+
+    .header-content {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        position: relative;
+        z-index: 1;
+    }
+
+    .logo-section {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+    }
+
+    .logo-icon {
+        width: 80px;
+        height: 80px;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        backdrop-filter: blur(10px);
+    }
+
+    .logo-icon ion-icon {
+        font-size: 40px;
+        color: #ffffff;
+    }
+
+    .brand-info h1 {
+        font-size: 36px;
+        font-weight: 700;
+        margin: 0 0 4px 0;
+        letter-spacing: -0.5px;
+    }
+
+    .brand-tagline {
+        font-size: 16px;
+        opacity: 0.9;
+        margin: 0;
+    }
+
+    .invoice-meta {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        align-items: flex-end;
+    }
+
+    .meta-item {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        background: rgba(255, 255, 255, 0.15);
+        padding: 12px 20px;
+        border-radius: 12px;
+        backdrop-filter: blur(10px);
+        min-width: 180px;
+    }
+
+    .meta-label {
+        font-size: 12px;
+        opacity: 0.8;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .meta-value {
+        font-size: 20px;
+        font-weight: 600;
+        margin-top: 4px;
+    }
+
+    /* ===== CUSTOMER SECTION ===== */
+    .customer-section {
+        padding: 40px;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+    }
+
+    .section-header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 24px;
+    }
+
+    .section-header ion-icon {
+        font-size: 24px;
+        color: #007AFF;
+    }
+
+    .section-header h2 {
+        font-size: 20px;
+        font-weight: 600;
+        color: #1d1d1f;
+        margin: 0;
+    }
+
+    .customer-details {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 20px;
+    }
+
+    .detail-item {
+        display: flex;
+        gap: 12px;
+        align-items: flex-start;
+    }
+
+    .detail-item ion-icon {
+        font-size: 20px;
+        color: #8e8e93;
+        margin-top: 2px;
+    }
+
+    .detail-item > div {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+
+    .detail-label {
+        font-size: 12px;
+        color: #8e8e93;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        font-weight: 500;
+    }
+
+    .detail-value {
+        font-size: 16px;
+        color: #1d1d1f;
+        font-weight: 500;
+    }
+
+    /* ===== ITEMS SECTION ===== */
+    .items-section {
+        padding: 40px;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+    }
+
+    .items-table-container {
+        overflow-x: auto;
+        border-radius: 12px;
+        border: 1px solid rgba(0, 0, 0, 0.06);
+    }
+
+    .items-table {
+        width: 100%;
+        border-collapse: collapse;
+        background: #ffffff;
+    }
+
+    .items-table thead {
+        background: linear-gradient(180deg, #fafafa, #f5f5f7);
+    }
+
+    .items-table th {
+        padding: 16px 20px;
+        text-align: left;
+        font-size: 13px;
+        font-weight: 600;
+        color: #1d1d1f;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+    }
+
+    .items-table td {
+        padding: 20px;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.04);
+    }
+
+    .items-table tbody tr:hover {
+        background: rgba(52, 199, 89, 0.02);
+    }
+
+    .items-table tbody tr:last-child td {
+        border-bottom: none;
+    }
+
+    .col-number {
+        width: 50px;
+        text-align: center;
+        font-weight: 600;
+        color: #8e8e93;
+    }
+
+    .col-product {
+        min-width: 200px;
+    }
+
+    .product-name {
+        font-size: 15px;
+        font-weight: 500;
+        color: #1d1d1f;
+    }
+
+    .col-size .badge {
+        display: inline-block;
+        padding: 6px 12px;
+        background: rgba(0, 122, 255, 0.1);
+        color: #007AFF;
+        border-radius: 8px;
+        font-size: 13px;
+        font-weight: 600;
+    }
+
+    .col-color {
+        width: 80px;
+    }
+
+    .color-indicator {
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        border: 2px solid rgba(0, 0, 0, 0.1);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .col-price,
+    .col-total {
+        text-align: right;
+        white-space: nowrap;
+    }
+
+    .price,
+    .total {
+        font-size: 16px;
+        font-weight: 600;
+        color: #1d1d1f;
+    }
+
+    .currency {
+        font-size: 13px;
+        color: #8e8e93;
+        margin-left: 6px;
+    }
+
+    .col-qty {
+        text-align: center;
+        width: 80px;
+    }
+
+    .quantity {
+        display: inline-block;
+        padding: 6px 12px;
+        background: rgba(0, 0, 0, 0.05);
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 600;
+        color: #1d1d1f;
+    }
+
+    /* ===== INVOICE SUMMARY ===== */
+    .invoice-summary {
+        padding: 40px;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 12px;
+    }
+
+    .summary-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        min-width: 300px;
+        padding: 12px 20px;
+    }
+
+    .summary-row.discount {
+        color: #FF3B30;
+    }
+
+    .summary-label {
+        font-size: 16px;
+        color: #8e8e93;
+        font-weight: 500;
+    }
+
+    .summary-value {
+        font-size: 18px;
+        font-weight: 600;
+        color: #1d1d1f;
+    }
+
+    .summary-total {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        min-width: 300px;
+        padding: 20px 24px;
+        background: linear-gradient(135deg, #34C759, #30b854);
+        border-radius: 12px;
+        margin-top: 12px;
+        box-shadow: 0 4px 12px rgba(52, 199, 89, 0.25);
+    }
+
+    .summary-total .summary-label {
+        font-size: 18px;
+        color: #ffffff;
+        font-weight: 600;
+    }
+
+    .summary-total .summary-value {
+        font-size: 24px;
+        color: #ffffff;
+        font-weight: 700;
+    }
+
+    /* ===== FOOTER ===== */
+    .invoice-footer {
+        padding: 32px 40px 40px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: linear-gradient(180deg, #fafafa, #ffffff);
+    }
+
+    .footer-text p {
+        font-size: 16px;
+        color: #8e8e93;
+        margin: 0;
+        font-style: italic;
+    }
+
+    .btn-print {
+        padding: 12px 28px;
+        background: #007AFF;
+        color: #ffffff;
+        border: none;
+        border-radius: 12px;
+        font-size: 15px;
+        font-weight: 500;
+        font-family: inherit;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .btn-print:hover {
+        background: #0051D5;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(0, 122, 255, 0.3);
+    }
+
+    .btn-print ion-icon {
+        font-size: 20px;
+    }
+
+    /* ===== PRINT STYLES ===== */
+    @media print {
+        body * {
+            visibility: hidden;
+        }
+
+        #printable-content,
+        #printable-content * {
+            visibility: visible;
+        }
+
+        #printable-content {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+            margin: 0;
+            padding: 20px;
+            box-shadow: none;
+        }
+
+        .invoice-footer {
+            display: none;
+        }
+
+        .btn-print {
+            display: none;
+        }
+    }
+
+    /* ===== RESPONSIVE ===== */
+    @media (max-width: 768px) {
+        .bill-container {
+            margin: 0;
+            border-radius: 0;
+        }
+
+        .header-content {
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        .invoice-meta {
+            align-items: flex-start;
+            width: 100%;
+        }
+
+        .meta-item {
+            width: 100%;
+            align-items: flex-start;
+        }
+
+        .customer-details {
+            grid-template-columns: 1fr;
+        }
+
+        .invoice-summary {
+            align-items: stretch;
+        }
+
+        .summary-row,
+        .summary-total {
+            min-width: 100%;
+        }
+
+        .invoice-footer {
+            flex-direction: column;
+            gap: 16px;
+            align-items: stretch;
+        }
+
+        .btn-print {
+            width: 100%;
+            justify-content: center;
+        }
+    }
+</style>
+
+<script>
+    // Auto-trigger print dialog
+    window.addEventListener('load', function() {
+        // Optional: Auto-print. Uncomment the next line if you want it to auto-print
+        // window.print();
+    });
+</script>
+
+<%- include('../layout/footer') -%>

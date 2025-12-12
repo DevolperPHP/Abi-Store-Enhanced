@@ -5,94 +5,730 @@
         Swal.fire({
             icon: 'success',
             title: 'Order confirmed',
-            text: 'The order successfully confirmed'
+            text: 'The order has been successfully confirmed'
         })
     </script>
 <%}%>
 
-<div class="get-sell">
-    <p class="title">Order</p>
-    <div class="info">
-                <p>Name: <%= data.name%></p>
-        <p>Phone Number: <%= data.phone%></p>
-        <p>Address: <%= data.adress%></p>
-        <p>Date: <%= data.Date%></p>
-        <p>ID: <%= data.bid%></p>
-        <p>User: <%= data.user%></p>
+<!-- Modern Dashboard Container -->
+<div class="dashboard-container">
+    <!-- Dashboard Header -->
+    <div class="dashboard-header">
+        <h1 class="dashboard-title">Order Details</h1>
+        <p class="dashboard-subtitle">View complete order information and manage items</p>
     </div>
 
-    <table class="table table-striped table-hover">
-        <thead>
-            <tr>
-                <th>#</th>
-                <th class="only-pc">Image</th>
-                <th>Name</th>
-                <th>Size</th>
-                <th>Color</th>
-                <th>Price</th>
-                <th>Qty</th>
-                <th>total</th>
-                <% if(data.status == "pending"){%>
-                <th>return</th>
-                <%} %>
-            </tr>
-        </thead>
-        <tbody>
-            <% for (let i = 0; i < data.products.length; i++) {%>
-                <tr>
-                    <td><%= i+1%></td>
-                    <td class="only-pc"><img src="/upload/images/<%= data.products[i].image%>"></td>
-                    <td><%= data.products[i].name%></td>
-                    <td><%= data.products[i].size%></td>
-                    <td><div class="color" style="background-color: <%= data.products[i].color%>"></div></td>
-                    <td><%= data.products[i].price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")%></td>
-                    <td><%= data.products[i].qty%></td>
-                    <td><%= data.products[i].total.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")%></td>
-                    <% if(data.status == "pending"){%>
-                      <% if(data.isShop == true){%>
-                        <td><form action="/sell/return-shop/<%= data.id%>/<%= data.products[i]._id%>?_method=PUT" method="post">
-                            <button class="btn btn-danger">Return</button>
-                        </form></td>
-                        <%} else {%>
-                            <td><button class="btn btn-danger" onclick="window.location.href='/sell/return/<%= data.id%>/<%= data.products[i]._id%>'">Return</button></td>
-                            <%} %>
-                    <%} %>
-                </tr>
-            <%} %>
-            <% if(data.total == ""){%>
-                <tr>
-                    <td colspan="5">Total: <%= total.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")%> IQD</td>
-                    <td colspan="5">Qty: <%= totalQty.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")%></td>
+    <!-- Order Info Card -->
+    <div class="order-info-card">
+        <div class="info-grid">
+            <div class="info-section">
+                <div class="info-label">
+                    <ion-icon name="person-outline"></ion-icon>
+                    Customer Name
+                </div>
+                <div class="info-value"><%= data.name %></div>
+            </div>
+
+            <div class="info-section">
+                <div class="info-label">
+                    <ion-icon name="call-outline"></ion-icon>
+                    Phone Number
+                </div>
+                <div class="info-value"><%= data.phone %></div>
+            </div>
+
+            <div class="info-section full-width">
+                <div class="info-label">
+                    <ion-icon name="location-outline"></ion-icon>
+                    Address
+                </div>
+                <div class="info-value"><%= data.adress %></div>
+            </div>
+
+            <div class="info-section">
+                <div class="info-label">
+                    <ion-icon name="calendar-outline"></ion-icon>
+                    Order Date
+                </div>
+                <div class="info-value"><%= data.Date %></div>
+            </div>
+
+            <div class="info-section">
+                <div class="info-label">
+                    <ion-icon name="receipt-outline"></ion-icon>
+                    Order ID
+                </div>
+                <div class="info-value order-id">#<%= data.bid %></div>
+            </div>
+
+            <div class="info-section">
+                <div class="info-label">
+                    <ion-icon name="person-circle-outline"></ion-icon>
+                    Cashier
+                </div>
+                <div class="info-value"><%= data.user %></div>
+            </div>
+
+            <div class="info-section">
+                <div class="info-label">
+                    <ion-icon name="checkmark-circle-outline"></ion-icon>
+                    Status
+                </div>
+                <div class="status-badge <%= data.status %>">
+                    <%= data.status.charAt(0).toUpperCase() + data.status.slice(1) %>
+                </div>
+            </div>
+        </div>
+
+        <% if (data.note) { %>
+            <div class="note-section">
+                <div class="note-label">
+                    <ion-icon name="document-text-outline"></ion-icon>
+                    Note
+                </div>
+                <div class="note-value"><%= data.note %></div>
+            </div>
+        <% } %>
+    </div>
+
+    <!-- Order Items Card -->
+    <div class="order-items-card">
+        <div class="card-header">
+            <div class="header-icon">
+                <ion-icon name="cube-outline"></ion-icon>
+            </div>
+            <div class="header-text">
+                <h2 class="card-title">Order Items</h2>
+                <p class="card-subtitle"><%= data.products.length %> items in this order</p>
+            </div>
+        </div>
+
+        <div class="items-list">
+            <% for (let i = 0; i < data.products.length; i++) { %>
+                <div class="item-row">
+                    <div class="item-index"><%= i + 1 %></div>
                     
-                </tr>
-            <%} else {%>
-                <% if(data.isShop == true){%>
-                    <tr>
-                        <td colspan="5">Total: <%= data.total.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")%> IQD</td>
-                        <td colspan="5">Qty: <%= totalQty.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")%></td>
-                    </tr>
-                <%} else {%>
-                     <tr>
-                        <td colspan="5">Total: <%= data.total.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")%> IQD - Discount <%= (Number(total) - Number(data.total)).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")%> IQD</td>
-                        <td colspan="5">Qty: <%= totalQty.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")%></td>
-                    </tr>
-                <%} %>
-            <%} %>
-        </tbody>
-    </table>
-    <div>
-        <p class="note"><%= data.note%></p>
+                    <div class="item-image">
+                        <img src="/upload/images/<%= data.products[i].image %>" alt="<%= data.products[i].name %>">
+                    </div>
+                    
+                    <div class="item-details">
+                        <h3 class="item-name"><%= data.products[i].name %></h3>
+                        <div class="item-meta">
+                            <span class="meta-badge">
+                                <ion-icon name="resize-outline"></ion-icon>
+                                <%= data.products[i].size %>
+                            </span>
+                            <span class="meta-badge color-badge">
+                                <div class="color-circle" style="background-color: <%= data.products[i].color %>"></div>
+                                <%= data.products[i].color %>
+                            </span>
+                            <span class="meta-badge">
+                                <ion-icon name="cash-outline"></ion-icon>
+                                <%= data.products[i].price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") %> IQD
+                            </span>
+                        </div>
+                    </div>
+                    
+                    <div class="item-quantity">
+                        <div class="quantity-badge">
+                            <ion-icon name="remove-outline"></ion-icon>
+                            <%= data.products[i].qty %>
+                            <ion-icon name="add-outline"></ion-icon>
+                        </div>
+                    </div>
+                    
+                    <div class="item-total">
+                        <%= data.products[i].total.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") %> IQD
+                    </div>
+                    
+                    <% if(data.status == "pending"){ %>
+                        <div class="item-actions">
+                            <% if(data.isShop == true){ %>
+                                <form action="/sell/return-shop/<%= data.id %>/<%= data.products[i]._id %>?_method=PUT" method="post">
+                                    <button type="submit" class="action-btn delete-btn" title="Return item">
+                                        <ion-icon name="return-down-back-outline"></ion-icon>
+                                    </button>
+                                </form>
+                            <% } else { %>
+                                <button class="action-btn delete-btn" onclick="window.location.href='/sell/return/<%= data.id %>/<%= data.products[i]._id %>'" title="Return item">
+                                    <ion-icon name="return-down-back-outline"></ion-icon>
+                                </button>
+                            <% } %>
+                        </div>
+                    <% } %>
+                </div>
+            <% } %>
+        </div>
+
+        <!-- Order Summary -->
+        <div class="order-summary">
+            <% if(data.total == ""){ %>
+                <div class="summary-row">
+                    <span class="summary-label">Subtotal:</span>
+                    <span class="summary-value"><%= total.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") %> IQD</span>
+                </div>
+                <div class="summary-row">
+                    <span class="summary-label">Total Quantity:</span>
+                    <span class="summary-value"><%= totalQty.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") %> items</span>
+                </div>
+            <% } else { %>
+                <% if(data.isShop == true){ %>
+                    <div class="summary-row">
+                        <span class="summary-label">Total:</span>
+                        <span class="summary-value"><%= data.total.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") %> IQD</span>
+                    </div>
+                    <div class="summary-row">
+                        <span class="summary-label">Total Quantity:</span>
+                        <span class="summary-value"><%= totalQty.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") %> items</span>
+                    </div>
+                <% } else { %>
+                    <div class="summary-row">
+                        <span class="summary-label">Subtotal:</span>
+                        <span class="summary-value"><%= total.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") %> IQD</span>
+                    </div>
+                    <div class="summary-row discount-row">
+                        <span class="summary-label">Discount:</span>
+                        <span class="summary-value discount-amount">-<%= (Number(total) - Number(data.total)).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") %> IQD</span>
+                    </div>
+                    <div class="summary-row total-row">
+                        <span class="summary-label">Total:</span>
+                        <span class="summary-value"><%= data.total.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") %> IQD</span>
+                    </div>
+                    <div class="summary-row">
+                        <span class="summary-label">Total Quantity:</span>
+                        <span class="summary-value"><%= totalQty.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") %> items</span>
+                    </div>
+                <% } %>
+            <% } %>
+        </div>
     </div>
 
-    <div class="flex btns">
-        <button class="btn btn-primary" onclick="window.location.href='/sell/edit/<%= data.id%>'">Edit</button>
-        <button class="btn btn-warning" onclick="window.location.href='/sell/bill/<%= data.id%>'">Print</button>
-        <% if(data.status == "pending"){%>
-            <form action="/sell/status/confirm/<%= data.id%>?_method=PUT" method="post">
-                <button class="btn btn-primary">Confirm</button>
-            </form>
-            <%} %>
+    <!-- Action Buttons -->
+    <div class="order-actions">
+        <button class="btn-secondary" onclick="window.location.href='/sell'">
+            <ion-icon name="arrow-back-outline"></ion-icon>
+            Back to Sales
+        </button>
+        
+        <div class="action-buttons-group">
+            <button class="btn-secondary" onclick="window.location.href='/sell/edit/<%= data.id %>'">
+                <ion-icon name="create-outline"></ion-icon>
+                Edit Order
+            </button>
+            
+            <button class="btn-warning" onclick="window.location.href='/sell/bill/<%= data.id %>'">
+                <ion-icon name="print-outline"></ion-icon>
+                Print Bill
+            </button>
+            
+            <% if(data.status == "pending"){ %>
+                <form action="/sell/status/confirm/<%= data.id %>?_method=PUT" method="post" style="display: inline;">
+                    <button type="submit" class="btn-success">
+                        <ion-icon name="checkmark-circle-outline"></ion-icon>
+                        Confirm Order
+                    </button>
+                </form>
+            <% } %>
+        </div>
     </div>
 </div>
+
+<style>
+    /* ===== ORDER INFO CARD ===== */
+    .order-info-card {
+        background: #ffffff;
+        border-radius: 16px;
+        padding: 24px;
+        margin-bottom: 24px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+        border: 1px solid rgba(0, 0, 0, 0.06);
+    }
+
+    .info-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 20px;
+        margin-bottom: 24px;
+    }
+
+    .info-section {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .info-section.full-width {
+        grid-column: 1 / -1;
+    }
+
+    .info-label {
+        font-size: 13px;
+        font-weight: 600;
+        color: #8e8e93;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .info-label ion-icon {
+        font-size: 18px;
+    }
+
+    .info-value {
+        font-size: 16px;
+        color: #1d1d1f;
+        font-weight: 500;
+    }
+
+    .order-id {
+        font-family: 'SF Mono', monospace;
+        font-size: 18px;
+        font-weight: 700;
+        color: #007AFF;
+        letter-spacing: 1px;
+    }
+
+    .status-badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 8px 16px;
+        border-radius: 20px;
+        font-size: 14px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .status-badge.pending {
+        background: rgba(255, 149, 0, 0.15);
+        color: #FF9500;
+    }
+
+    .status-badge.done {
+        background: rgba(52, 199, 89, 0.15);
+        color: #34C759;
+    }
+
+    .note-section {
+        padding-top: 20px;
+        border-top: 1px solid rgba(0, 0, 0, 0.06);
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .note-label {
+        font-size: 13px;
+        font-weight: 600;
+        color: #8e8e93;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .note-label ion-icon {
+        font-size: 18px;
+    }
+
+    .note-value {
+        font-size: 15px;
+        color: #1d1d1f;
+        font-style: italic;
+        line-height: 1.6;
+    }
+
+    /* ===== ORDER ITEMS CARD ===== */
+    .order-items-card {
+        background: #ffffff;
+        border-radius: 16px;
+        padding: 24px;
+        margin-bottom: 24px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+        border: 1px solid rgba(0, 0, 0, 0.06);
+    }
+
+    .card-header {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        margin-bottom: 24px;
+        padding-bottom: 20px;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+    }
+
+    .header-icon {
+        width: 56px;
+        height: 56px;
+        border-radius: 12px;
+        background: linear-gradient(135deg, #007AFF, #5856D6);
+        color: #ffffff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .header-icon ion-icon {
+        font-size: 28px;
+    }
+
+    .header-text {
+        flex: 1;
+    }
+
+    .card-title {
+        font-size: 20px;
+        font-weight: 600;
+        color: #1d1d1f;
+        margin: 0 0 4px 0;
+        letter-spacing: -0.5px;
+    }
+
+    .card-subtitle {
+        font-size: 14px;
+        color: #8e8e93;
+        margin: 0;
+    }
+
+    .items-list {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+        margin-bottom: 24px;
+    }
+
+    .item-row {
+        display: grid;
+        grid-template-columns: 50px 80px 1fr 100px 120px auto;
+        gap: 16px;
+        align-items: center;
+        padding: 20px;
+        background: #f5f5f7;
+        border-radius: 14px;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .item-row:hover {
+        background: #f0f0f0;
+    }
+
+    .item-index {
+        width: 40px;
+        height: 40px;
+        border-radius: 10px;
+        background: rgba(0, 122, 255, 0.1);
+        color: #007AFF;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 16px;
+        font-weight: 600;
+    }
+
+    .item-image {
+        width: 80px;
+        height: 80px;
+        border-radius: 10px;
+        overflow: hidden;
+        background: #ffffff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .item-image img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .item-details {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .item-name {
+        font-size: 16px;
+        font-weight: 600;
+        color: #1d1d1f;
+        margin: 0;
+        letter-spacing: -0.3px;
+    }
+
+    .item-meta {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+    }
+
+    .meta-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 12px;
+        background: rgba(0, 0, 0, 0.04);
+        border-radius: 8px;
+        font-size: 13px;
+        color: #1d1d1f;
+        font-weight: 500;
+    }
+
+    .color-badge {
+        gap: 8px;
+    }
+
+    .color-circle {
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        border: 2px solid #ffffff;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+    }
+
+    .item-quantity {
+        display: flex;
+        justify-content: center;
+    }
+
+    .quantity-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 16px;
+        background: #ffffff;
+        border-radius: 10px;
+        font-size: 15px;
+        font-weight: 600;
+        color: #1d1d1f;
+    }
+
+    .quantity-badge ion-icon {
+        font-size: 14px;
+        color: #8e8e93;
+    }
+
+    .item-total {
+        font-size: 16px;
+        font-weight: 700;
+        color: #007AFF;
+        text-align: right;
+    }
+
+    .item-actions {
+        display: flex;
+        justify-content: flex-end;
+    }
+
+    .action-btn {
+        width: 40px;
+        height: 40px;
+        border: none;
+        background: rgba(255, 59, 48, 0.1);
+        border-radius: 10px;
+        color: #FF3B30;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .action-btn:hover {
+        background: #FF3B30;
+        color: #ffffff;
+        transform: scale(1.1);
+    }
+
+    .action-btn ion-icon {
+        font-size: 20px;
+    }
+
+    .order-summary {
+        padding: 20px;
+        background: #f5f5f7;
+        border-radius: 12px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .summary-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .summary-row.total-row {
+        padding-top: 12px;
+        border-top: 2px solid rgba(0, 0, 0, 0.1);
+    }
+
+    .summary-label {
+        font-size: 15px;
+        color: #1d1d1f;
+        font-weight: 500;
+    }
+
+    .summary-value {
+        font-size: 16px;
+        font-weight: 600;
+        color: #1d1d1f;
+    }
+
+    .total-row .summary-value {
+        font-size: 24px;
+        color: #007AFF;
+        font-weight: 700;
+    }
+
+    .discount-row .summary-value {
+        color: #FF3B30;
+    }
+
+    .discount-amount {
+        font-weight: 600;
+    }
+
+    /* ===== ORDER ACTIONS ===== */
+    .order-actions {
+        display: flex;
+        gap: 16px;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+    }
+
+    .action-buttons-group {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+    }
+
+    /* ===== BUTTONS ===== */
+    .btn-primary,
+    .btn-secondary,
+    .btn-warning,
+    .btn-success {
+        padding: 12px 24px;
+        border: none;
+        border-radius: 12px;
+        font-size: 15px;
+        font-weight: 500;
+        font-family: inherit;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        text-decoration: none;
+    }
+
+    .btn-primary {
+        background: #007AFF;
+        color: #ffffff;
+    }
+
+    .btn-primary:hover {
+        background: #0056b3;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(0, 122, 255, 0.3);
+    }
+
+    .btn-secondary {
+        background: rgba(0, 0, 0, 0.04);
+        color: #1d1d1f;
+    }
+
+    .btn-secondary:hover {
+        background: rgba(0, 0, 0, 0.08);
+    }
+
+    .btn-warning {
+        background: #FF9500;
+        color: #ffffff;
+    }
+
+    .btn-warning:hover {
+        background: #d98100;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(255, 149, 0, 0.3);
+    }
+
+    .btn-success {
+        background: #34C759;
+        color: #ffffff;
+    }
+
+    .btn-success:hover {
+        background: #2db04c;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(52, 199, 89, 0.3);
+    }
+
+    .btn-primary ion-icon,
+    .btn-secondary ion-icon,
+    .btn-warning ion-icon,
+    .btn-success ion-icon {
+        font-size: 18px;
+    }
+
+    /* ===== RESPONSIVE ===== */
+    @media (max-width: 1024px) {
+        .info-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .item-row {
+            grid-template-columns: 40px 70px 1fr 80px 100px auto;
+            gap: 12px;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .order-actions {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .action-buttons-group {
+            flex-direction: column;
+        }
+
+        .action-buttons-group button,
+        .action-buttons-group form {
+            width: 100%;
+        }
+
+        .action-buttons-group button {
+            justify-content: center;
+        }
+
+        .item-row {
+            grid-template-columns: 1fr;
+            gap: 16px;
+        }
+
+        .item-index {
+            display: none;
+        }
+
+        .item-image {
+            width: 100%;
+            height: 200px;
+        }
+
+        .item-quantity,
+        .item-total,
+        .item-actions {
+            justify-content: flex-start;
+        }
+    }
+</style>
 
 <%- include("../layout/footer") -%>

@@ -21,34 +21,11 @@ router.get('/', async (req, res) => {
       const skip = (page - 1) * limit;
   
       // Get paginated sales with parsed date
-      const sell = await Sell.aggregate([
-        {
-          $addFields: {
-            parsedDate: {
-              $dateFromString: {
-                dateString: "$Date",
-                format: "%d/%m/%Y",
-                onError: null,
-                onNull: null
-              }
-            }
-          }
-        },
-        {
-          $match: {
-            parsedDate: { $ne: null }
-          }
-        },
-        {
-          $sort: { parsedDate: -1 }
-        },
-        {
-          $skip: skip
-        },
-        {
-          $limit: limit
-        }
-      ]);
+      // Sort by Date field directly (newest to oldest)
+      const sell = await Sell.find({})
+        .sort({ Date: -1 })
+        .skip(skip)
+        .limit(limit);
   
       // For autocomplete: just get distinct names
       const uniqueSellNames = await Sell.distinct('name');
@@ -70,28 +47,10 @@ router.get('/', async (req, res) => {
       const limit = 15;
       const skip = (page - 1) * limit;
   
-      const sell = await Sell.aggregate([
-        {
-          $addFields: {
-            parsedDate: {
-              $dateFromString: {
-                dateString: "$Date",
-                format: "%d/%m/%Y",
-                onError: null,
-                onNull: null
-              }
-            }
-          }
-        },
-        {
-          $match: {
-            parsedDate: { $ne: null }
-          }
-        },
-        { $sort: { parsedDate: -1 } },
-        { $skip: skip },
-        { $limit: limit }
-      ]);
+      const sell = await Sell.find({})
+        .sort({ Date: -1 })
+        .skip(skip)
+        .limit(limit);
   
       res.json(sell);
     } catch (err) {
@@ -466,29 +425,49 @@ router.get("/search-by-date/:start/:end", async (req, res) => {
     try {
         const id = req.cookies.id
         const user = await User.findOne({ _id: id })
-        const startDateString = req.params.start.replaceAll('-', '/')
-        const endDateString = req.params.end.replaceAll('-', '/')
-
-        const sell = await Sell.aggregate([
-            {
-                $match: {
-                    $expr: {
-                        $and: [
-                            { $gte: [{ $dateFromString: { dateString: '$Date', format: '%d/%m/%Y' } }, new Date(startDateString)] },
-                            { $lte: [{ $dateFromString: { dateString: '$Date', format: '%d/%m/%Y' } }, new Date(endDateString)] }
-                        ]
-                    }
+        
+        // Get all sales and filter by date in memory
+        // This handles different date formats better than aggregation
+        const allSells = await Sell.find({})
+        
+        // Convert search dates to comparable format
+        const [startYear, startMonth, startDay] = req.params.start.split('-').map(Number)
+        const [endYear, endMonth, endDay] = req.params.end.split('-').map(Number)
+        
+        const startDate = new Date(startYear, startMonth - 1, startDay)
+        const endDate = new Date(endYear, endMonth - 1, endDay)
+        
+        // Filter sales by parsing their Date field
+        const sell = allSells.filter(s => {
+            // Parse dates like "Jun 20, 2023" or "Dec 25, 2023"
+            const match = s.Date.match(/(\w+)\s+(\d+),\s+(\d+)/)
+            if (match) {
+                const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+                                    'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+                const monthName = match[1]
+                const day = parseInt(match[2])
+                const year = parseInt(match[3])
+                const monthIndex = monthNames.indexOf(monthName)
+                
+                if (monthIndex >= 0) {
+                    const sellDate = new Date(year, monthIndex, day)
+                    return sellDate >= startDate && sellDate <= endDate
                 }
             }
-        ]);
+            return false
+        })
 
 
         if (user) {
             if (user.isAdmin == true || user.permissions.includes('Sell')) {
+                // For autocomplete: just get distinct names
+                const uniqueSellNames = await Sell.distinct('name');
+                
                 res.render("sell/get-search-by-date", {
                     user: user,
                     sell: sell,
-                    filter: `date : ${startDateString} - ${endDateString}`
+                    data: uniqueSellNames,
+                    filter: `date : ${req.params.start} - ${req.params.end}`
                 })
             } else {
                 req.flash('permission-error', 'error')
@@ -552,7 +531,7 @@ router.get("/search-by-filter/:filter", async (req, res) => {
                 }
 
                 if (filter == "pending") {
-                    const sell = await Sell.find({ status: 'pending' })
+                    const sell = await Sell.find({ status: 'pending' }).sort({ Date: -1 })
                     res.render("sell/get-search", {
                         user: user,
                         sell: sell,
