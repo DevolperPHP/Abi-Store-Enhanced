@@ -38,7 +38,7 @@
     <div class="sales-grid" id="salesGrid">
         <% if (sell && sell.length > 0) { %>
             <% sell.forEach((order, index) => { %>
-                <div class="sale-card" onclick="window.location.href='/sell/get-data/<%= order._id %>'">
+                <div class="sale-card <%= order.isCashier === true ? 'cashier-sale' : '' %>" onclick="window.location.href='/sell/get-data/<%= order._id %>'">
                     <div class="sale-header">
                         <div class="sale-icon">
                             <% if (order.isShop === true) { %>
@@ -349,6 +349,29 @@
 
 	.sale-card:hover::before {
 	    transform: scaleX(1);
+	}
+
+	/* ===== CASHIER SALE WARNING THEME ===== */
+	.sale-card.cashier-sale {
+	    background: #FFF8F0;
+	    border-color: rgba(255, 149, 0, 0.2);
+	}
+
+	.sale-card.cashier-sale::before {
+	    background: linear-gradient(90deg, #FF9500, #FFB340);
+	}
+
+	.sale-card.cashier-sale:hover {
+	    box-shadow: 0 8px 24px rgba(255, 149, 0, 0.15);
+	    border-color: rgba(255, 149, 0, 0.4);
+	}
+
+	.sale-card.cashier-sale .sale-icon {
+	    background: linear-gradient(135deg, #FF9500, #FFB340);
+	}
+
+	.sale-card.cashier-sale .order-total {
+	    color: #FF9500;
 	}
 
 	.sale-header {

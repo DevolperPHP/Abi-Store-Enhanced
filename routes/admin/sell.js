@@ -21,15 +21,16 @@ router.get('/', async (req, res) => {
       const skip = (page - 1) * limit;
   
       // Get paginated sales with parsed date
-      // Sort by Date field directly (newest to oldest)
+      // Sort by sortDate field (newest to oldest) - this is a Date object
       const sell = await Sell.find({})
-        .sort({ Date: -1 })
+        .sort({ sortDate: -1 })
         .skip(skip)
-        .limit(limit);
-  
+        .limit(limit)
+        .lean();  // Convert to plain JavaScript objects for EJS compatibility
+
       // For autocomplete: just get distinct names
       const uniqueSellNames = await Sell.distinct('name');
-      
+
       res.render("sell/dashboard", {
         user: user,
         sell: sell,
@@ -46,12 +47,13 @@ router.get('/', async (req, res) => {
       const page = parseInt(req.query.page) || 1;
       const limit = 15;
       const skip = (page - 1) * limit;
-  
+
       const sell = await Sell.find({})
-        .sort({ Date: -1 })
+        .sort({ sortDate: -1 })
         .skip(skip)
-        .limit(limit);
-  
+        .limit(limit)
+        .lean();  // Convert to plain JavaScript objects
+
       res.json(sell);
     } catch (err) {
       console.error(err);
@@ -428,41 +430,30 @@ router.get("/search-by-date/:start/:end", async (req, res) => {
         
         // Get all sales and filter by date in memory
         // This handles different date formats better than aggregation
-        const allSells = await Sell.find({})
-        
+        const allSells = await Sell.find({}).lean()
+
         // Convert search dates to comparable format
         const [startYear, startMonth, startDay] = req.params.start.split('-').map(Number)
         const [endYear, endMonth, endDay] = req.params.end.split('-').map(Number)
-        
+
         const startDate = new Date(startYear, startMonth - 1, startDay)
         const endDate = new Date(endYear, endMonth - 1, endDay)
-        
-        // Filter sales by parsing their Date field
+
+        // Filter sales by sortDate field (works for both admin and localstore sales)
         const sell = allSells.filter(s => {
-            // Parse dates like "Jun 20, 2023" or "Dec 25, 2023"
-            const match = s.Date.match(/(\w+)\s+(\d+),\s+(\d+)/)
-            if (match) {
-                const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-                                    'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
-                const monthName = match[1]
-                const day = parseInt(match[2])
-                const year = parseInt(match[3])
-                const monthIndex = monthNames.indexOf(monthName)
-                
-                if (monthIndex >= 0) {
-                    const sellDate = new Date(year, monthIndex, day)
-                    return sellDate >= startDate && sellDate <= endDate
-                }
+            // Use sortDate (Date object) for filtering - works for both admin and localstore sales
+            if (s.sortDate) {
+                const sellDate = new Date(s.sortDate)
+                return sellDate >= startDate && sellDate <= endDate
             }
             return false
         })
-
 
         if (user) {
             if (user.isAdmin == true || user.permissions.includes('Sell')) {
                 // For autocomplete: just get distinct names
                 const uniqueSellNames = await Sell.distinct('name');
-                
+
                 res.render("sell/get-search-by-date", {
                     user: user,
                     sell: sell,
@@ -486,7 +477,7 @@ router.get('/search-by-phone/:phone', async (req, res) => {
         const id = req.cookies.id
         const user = await User.findOne({ _id: id })
         const phone = req.params.phone
-        const sell = await Sell.find({ phone: phone }).sort({ Date: -1 })
+        const sell = await Sell.find({ phone: phone }).sort({ sortDate: -1 })
 
         if (user) {
             if (user.isAdmin == true || user.permissions.includes('Sell')) {
@@ -513,7 +504,7 @@ router.get("/search-by-filter/:filter", async (req, res) => {
         if (user) {
             if (user.isAdmin == true || user.permissions.includes('Sell')) {
                 if (filter == "newest") {
-                    const sell = await Sell.find({}).sort({ Date: -1 })
+                    const sell = await Sell.find({}).sort({ sortDate: -1 })
                     res.render("sell/get-search", {
                         user: user,
                         sell: sell,
@@ -522,7 +513,7 @@ router.get("/search-by-filter/:filter", async (req, res) => {
                 }
 
                 if (filter == "oldest") {
-                    const sell = await Sell.find({}).sort({ Date: 1 })
+                    const sell = await Sell.find({}).sort({ sortDate: 1 })
                     res.render("sell/get-search", {
                         user: user,
                         sell: sell,
@@ -531,7 +522,7 @@ router.get("/search-by-filter/:filter", async (req, res) => {
                 }
 
                 if (filter == "pending") {
-                    const sell = await Sell.find({ status: 'pending' }).sort({ Date: -1 })
+                    const sell = await Sell.find({ status: 'pending' }).sort({ sortDate: -1 })
                     res.render("sell/get-search", {
                         user: user,
                         sell: sell,
@@ -1048,8 +1039,8 @@ router.get('/search-by-name/:name', async (req, res) => {
     try {
         const id = req.cookies.id
         const user = await User.findOne({ _id: id })
-        const sell = await Sell.find({ name: req.params.name }).sort({ Date: -1 })
-        const sellForSearch = await Sell.find({}).sort({ Date: -1 })
+        const sell = await Sell.find({ name: req.params.name }).sort({ sortDate: -1 })
+        const sellForSearch = await Sell.find({}).sort({ sortDate: -1 })
         const uniqueSellNames = await Sell.distinct('name');
         const uniqueSell = [];
         const data = sellForSearch.map((item) => `${item.name}`)
