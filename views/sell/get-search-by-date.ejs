@@ -4,7 +4,7 @@
 <div class="dashboard-container">
     <!-- Dashboard Header -->
     <div class="dashboard-header">
-        <h1 class="dashboard-title">Sales History</h1>
+        <h1 class="dashboard-title">Sales history</h1>
         <p class="dashboard-subtitle">View and manage all sales transactions</p>
     </div>
 
@@ -16,8 +16,8 @@
             </div>
             <div class="info-content">
                 <h2 class="results-title">Search Results</h2>
-                <p class="results-subtitle"><%= filter%></p>
-                <p class="results-count"><%= sell.length %> orders found</p>
+                <p class="results-subtitle" style="color: #fff"><%= filter%></p>
+                <p class="results-count" style="color: #fff"><%= sell.length %> orders found</p>
             </div>
         </div>
         <div class="results-actions">
@@ -32,28 +32,7 @@
         </div>
     </div>
 
-    <!-- Quick Actions -->
-    <div class="quick-actions-card">
-        <div class="actions-info">
-            <div class="info-icon">
-                <ion-icon name="search-circle-outline"></ion-icon>
-            </div>
-            <div class="info-content">
-                <h2 class="actions-title">Quick Actions</h2>
-                <p class="actions-subtitle">Manage your sales efficiently</p>
-            </div>
-        </div>
-        <div class="actions-buttons">
-            <button class="btn-secondary" onclick="window.location.href='/sell'">
-                <ion-icon name="list-outline"></ion-icon>
-                View All Sales
-            </button>
-            <button class="btn-primary" onclick="window.location.href='/sell/new'">
-                <ion-icon name="add-outline"></ion-icon>
-                New Sale
-            </button>
-        </div>
-    </div>
+
 
     <!-- Sales Cards Grid -->
     <div class="sales-grid" id="salesGrid">
@@ -126,14 +105,106 @@
     </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/fuse.js@6.6.2"></script>
 <script>
-    // Page is in view mode - no interactive search needed
-    // Results are already filtered by date range
+    let page = 1;
+    let loading = false;
+    const allSalesData = <%- JSON.stringify(data || []) %>;
+
+    // Autocomplete functionality
+    function initAutocomplete() {
+        const fuse = new Fuse(allSalesData, {
+            threshold: 0.4,
+            keys: ['name']
+        });
+
+        const input = document.getElementById('myInput');
+        const resultsDiv = document.getElementById('autocomplete-results');
+
+        input.addEventListener('input', function() {
+            const value = this.value;
+            
+            if (value.length < 2) {
+                resultsDiv.innerHTML = '';
+                resultsDiv.style.display = 'none';
+                return;
+            }
+
+            const results = fuse.search(value);
+            
+            if (results.length === 0) {
+                resultsDiv.innerHTML = '<div class="autocomplete-item no-results">No matches found</div>';
+                resultsDiv.style.display = 'block';
+                return;
+            }
+
+            resultsDiv.innerHTML = results.map(result => `
+                <div class="autocomplete-item" onclick="window.location.href='/sell/search-by-name/${encodeURIComponent(result.item)}'">
+                    ${highlightMatch(result.item, value)}
+                </div>
+            `).join('');
+            
+            resultsDiv.style.display = 'block';
+        });
+
+        // Close autocomplete when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!input.contains(e.target) && !resultsDiv.contains(e.target)) {
+                resultsDiv.style.display = 'none';
+            }
+        });
+    }
+
+    function highlightMatch(text, query) {
+        const regex = new RegExp(`(${query})`, 'gi');
+        return text.replace(regex, '<strong>$1</strong>');
+    }
+
+    // Search functions
+    function searchByPhone() {
+        const phone = document.getElementById('phoneSearch').value.trim();
+        if (phone) {
+            window.location.href = `/sell/search-by-phone/${encodeURIComponent(phone)}`;
+        }
+    }
+
+    function searchByDate() {
+        const startDate = document.getElementById('startDate').value;
+        const endDate = document.getElementById('endDate').value;
+
+        if (startDate && endDate) {
+            window.location.href = `/sell/search-by-date/${startDate}/${endDate}`;
+        } else {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Date Required',
+                text: 'Please select both start and end dates'
+            });
+        }
+    }
+
+    function applyFilter(url) {
+        if (url) {
+            window.location.href = url;
+        }
+    }
+
+    // Initialize on page load
+    window.addEventListener('DOMContentLoaded', function() {
+        initAutocomplete();
+        
+        // Handle Enter key in phone search
+        document.getElementById('phoneSearch').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                searchByPhone();
+            }
+        });
+    });
 </script>
 
 <style>
     /* ===== SEARCH RESULTS CARD ===== */
-    .quick-actions-card {
+    .search-results-card {
         background: linear-gradient(135deg, #007AFF, #5856D6);
         border-radius: 16px;
         padding: 24px;
@@ -146,7 +217,7 @@
         gap: 24px;
     }
 
-    .actions-info {
+    .results-info {
         display: flex;
         align-items: center;
         gap: 16px;
@@ -178,7 +249,7 @@
 
 
 
-    .actions-buttons {
+    .results-actions {
         display: flex;
         gap: 12px;
         flex-shrink: 0;
