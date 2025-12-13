@@ -1,4 +1,5 @@
 <%- include("../layout/navbar") -%>
+
 <% if(err.length > 0){%>
     <script>
         Swal.fire({
@@ -8,184 +9,952 @@
         })
     </script>
 <%} %>
-<div class="sell">
-    <p class="title">Sell</p>
-    <div class="tools">
-        <form id="searchForm" action="" method="post">
-            <input id="searchInput" autocomplete="off" type="text" placeholder="Barcode">
-            <button><ion-icon class="icon" name="search-outline"></ion-icon></button>
-        </form>
-            <div class="autocomplete" style="width:300px;">
-                <input id="myInput" type="text" placeholder="Search for item" autocomplete="off">
-            </div>
-    </div>
-<br>
-    <div class="container">
-        <table class="table table-striped table-hover">
-            <tr>
-                <th>Image</th>
-                <th>Name</th>
-                <th>Size</th>
-                <th>Color</th>
-                <th>Qty</th>
-                <th>Price</th>
-                <th>total</th>
-                <th>Return</th>
-            </tr>
-    
-            <% for (let i = 0; i < products.length; i++) {%>
-                <tr>
-                    <td><img src="/upload/images/<%= products[i].image%>" alt="" /></td>
-                    <td><%= products[i].name%></td>
-                    <td><%= products[i].size%></td>
-                    <td><%= products[i].colorName%></td>
-                    <td><%= products[i].qty%></td>
-                    <td><%= products[i].sell_price%></td>
-                    <td><%= products[i].total%></td>
-                    <td>
-                        <form action="/localstore/sell/remove/<%= products[i]._id%>?_method=PUT" method="post">
-                            <button class="return-btn"><ion-icon class="icon" name="remove-outline"></ion-icon></button>
-                        </form>
-                    </td>
-                </tr>
-            <%} %>
-            <tr>
-                <td colspan="4" id="totalTable">Total: <%= total.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")%> IQD</td>
-                <td colspan="4">Qty: <%= totalQty.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")%></td>
-            </tr>
-        </table>
 
-        <div class="tools-form">
-            <input type="number" class="form-control" id="discount" placeholder="Discount">
-            <button onclick="discount()" class="btn btn-success">Discount</button>
-            <button class="btn btn-primary" onclick="refresh()"><ion-icon class="icon" name="refresh-outline"></ion-icon></button>
+<% if(order_suc.length > 0){%>
+    <script>
+        Swal.fire({
+            icon: 'success',
+            title: 'Success',
+            text: `<%= order_suc%>`,
+            timer: 2000,
+            showConfirmButton: false
+        })
+    </script>
+<%} %>
+
+<div class="cashier-content">
+    <!-- Page Header with Quick Stats -->
+    <div class="page-header" style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 24px;">
+        <div>
+            <h1 class="page-title">Point of Sale</h1>
+            <p class="page-subtitle">Scan barcode or search for products to add to cart</p>
+        </div>
+        <div class="pos-quick-stats">
+            <div class="quick-stat">
+                <ion-icon name="cart-outline"></ion-icon>
+                <span><%= products.length %> items</span>
+            </div>
+            <div class="quick-stat">
+                <ion-icon name="cash-outline"></ion-icon>
+                <span id="headerTotal"><%= total.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")%> IQD</span>
+            </div>
+            <a href="/localstore/sell/pending" class="quick-stat pending-orders-btn" title="View Pending Orders">
+                <ion-icon name="pause-circle-outline"></ion-icon>
+                <span>Pending Orders</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Keyboard Shortcuts Bar -->
+    <div class="shortcuts-bar">
+        <div class="shortcut-item">
+            <kbd>F1</kbd>
+            <span>Focus Barcode</span>
+        </div>
+        <div class="shortcut-item">
+            <kbd>F2</kbd>
+            <span>Focus Search</span>
+        </div>
+        <div class="shortcut-item">
+            <kbd>F3</kbd>
+            <span>Apply Discount</span>
+        </div>
+        <div class="shortcut-item">
+            <kbd>F4</kbd>
+            <span>Hold Order</span>
+        </div>
+        <div class="shortcut-item">
+            <kbd>F8</kbd>
+            <span>Clear Cart</span>
+        </div>
+        <div class="shortcut-item">
+            <kbd>F12</kbd>
+            <span>Confirm Sale</span>
+        </div>
+    </div>
+
+    <!-- Main POS Layout -->
+    <div class="pos-layout">
+        <!-- Left Panel: Products & Cart -->
+        <div class="pos-main">
+            <!-- Search Section -->
+            <div class="modern-card">
+                <div class="modern-card-header">
+                    <div>
+                        <h3 class="modern-card-title">Product Search</h3>
+                        <p class="modern-card-subtitle">Use barcode scanner or search by name</p>
+                    </div>
+                    <div style="display: flex; gap: 8px;">
+                        <button class="btn btn-secondary btn-icon" onclick="document.getElementById('searchInput').focus()" title="Focus Barcode (F1)">
+                            <ion-icon name="barcode-outline"></ion-icon>
+                        </button>
+                        <button class="btn btn-secondary btn-icon" onclick="document.getElementById('myInput').focus()" title="Focus Search (F2)">
+                            <ion-icon name="search-outline"></ion-icon>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="action-bar">
+                    <div class="search-box" style="flex: 1;">
+                        <ion-icon name="barcode-outline"></ion-icon>
+                        <input id="searchInput" autocomplete="off" type="text" placeholder="Scan or enter barcode (F1)">
+                    </div>
+                    <div class="search-box" style="flex: 1;">
+                        <ion-icon name="search-outline"></ion-icon>
+                        <input id="myInput" type="text" placeholder="Search for item by name (F2)" autocomplete="off">
+                    </div>
+                </div>
+
+                <form id="searchForm" action="" method="post" style="display: none;"></form>
+            </div>
+
+            <!-- Shopping Cart Table -->
+            <div class="modern-card">
+                <div class="modern-card-header">
+                    <div>
+                        <h3 class="modern-card-title">Shopping Cart</h3>
+                        <p class="modern-card-subtitle"><%= products.length %> item(s) | <%= totalQty %> unit(s) in cart</p>
+                    </div>
+                    <% if(products.length > 0) { %>
+                        <button class="btn btn-danger" onclick="clearCart()" title="Clear Cart (F8)">
+                            <ion-icon name="trash-outline"></ion-icon>
+                            Clear Cart
+                        </button>
+                    <% } %>
+                </div>
+
+                <% if(products.length > 0) { %>
+                    <div style="overflow-x: auto;">
+                        <table class="modern-table">
+                            <thead>
+                                <tr>
+                                    <th style="width: 70px;">Image</th>
+                                    <th>Product</th>
+                                    <th>Size</th>
+                                    <th>Color</th>
+                                    <th style="width: 80px;">Qty</th>
+                                    <th>Price</th>
+                                    <th>Total</th>
+                                    <th style="width: 60px;">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="cartBody">
+                                <% for (let i = 0; i < products.length; i++) { %>
+                                    <tr>
+                                        <td>
+                                            <img src="/upload/images/<%= products[i].image%>" alt="<%= products[i].name%>" class="product-image">
+                                        </td>
+                                        <td><strong><%= products[i].name%></strong></td>
+                                        <td><span class="size-badge"><%= products[i].size%></span></td>
+                                        <td><%= products[i].colorName%></td>
+                                        <td>
+                                            <span class="qty-badge"><%= products[i].qty%></span>
+                                        </td>
+                                        <td><%= products[i].sell_price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")%> IQD</td>
+                                        <td><strong class="item-total"><%= products[i].total.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")%> IQD</strong></td>
+                                        <td>
+                                            <form action="/localstore/sell/remove/<%= products[i]._id%>?_method=PUT" method="post" style="display: inline;">
+                                                <button type="submit" class="btn btn-danger btn-icon" title="Remove item">
+                                                    <ion-icon name="close-outline"></ion-icon>
+                                                </button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                <% } %>
+                            </tbody>
+                            <tfoot>
+                                <tr class="subtotal-row">
+                                    <td colspan="6" style="text-align: right; font-weight: 600;">Subtotal:</td>
+                                    <td colspan="2" id="subtotalDisplay">
+                                        <%= total.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")%> IQD
+                                    </td>
+                                </tr>
+                                <tr class="discount-row" id="discountRow" style="display: none;">
+                                    <td colspan="6" style="text-align: right; font-weight: 600; color: var(--success-color);">Discount:</td>
+                                    <td colspan="2" id="discountDisplay" style="color: var(--success-color);">- 0 IQD</td>
+                                </tr>
+                                <tr class="total-row">
+                                    <td colspan="6" style="text-align: right; font-weight: 700; font-size: 18px;">TOTAL:</td>
+                                    <td colspan="2" id="totalTable" style="font-size: 20px; font-weight: 700; color: var(--primary-color);">
+                                        <%= total.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")%> IQD
+                                    </td>
+                                </tr>
+                                <tr class="qty-row">
+                                    <td colspan="6" style="text-align: right; font-weight: 500; color: var(--text-secondary);">Total Quantity:</td>
+                                    <td colspan="2" style="color: var(--text-secondary);">
+                                        <%= totalQty.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")%> items
+                                    </td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                <% } else { %>
+                    <div class="empty-cart">
+                        <ion-icon name="cart-outline"></ion-icon>
+                        <h3>Cart is Empty</h3>
+                        <p>Start scanning barcodes or search for products to add items</p>
+                        <div style="margin-top: 16px;">
+                            <button class="btn btn-primary" onclick="document.getElementById('searchInput').focus()">
+                                <ion-icon name="barcode-outline"></ion-icon>
+                                Start Scanning
+                            </button>
+                        </div>
+                    </div>
+                <% } %>
+            </div>
         </div>
 
-        <form class="confirm" action="/localstore/sell/confirm" method="post">
-            <input value="<%= total%>" id="totalForm" name="total" style="display: none;">
-            <br>
-            <center><button>Confirm</button></center>
-        </form>
+        <!-- Right Panel: Actions & Summary -->
+        <div class="pos-sidebar">
+            <!-- Discount Panel -->
+            <div class="modern-card">
+                <div class="modern-card-header" style="border-bottom: none; margin-bottom: 0; padding-bottom: 0;">
+                    <div>
+                        <h3 class="modern-card-title">
+                            <ion-icon name="pricetag-outline" style="margin-right: 8px;"></ion-icon>
+                            Discount
+                        </h3>
+                    </div>
+                </div>
+                <div class="discount-section">
+                    <div class="discount-type-toggle">
+                        <button type="button" class="discount-type-btn active" data-type="amount" onclick="setDiscountType('amount')">
+                            <ion-icon name="cash-outline"></ion-icon>
+                            Amount (IQD)
+                        </button>
+                        <button type="button" class="discount-type-btn" data-type="percent" onclick="setDiscountType('percent')">
+                            <ion-icon name="calculator-outline"></ion-icon>
+                            Percentage (%)
+                        </button>
+                    </div>
+                    <div class="discount-input-group">
+                        <input type="number" class="form-control discount-input" id="discount" placeholder="Enter discount value" min="0">
+                        <span class="discount-suffix" id="discountSuffix">IQD</span>
+                    </div>
+                    <div class="discount-actions">
+                        <button onclick="applyDiscount()" class="btn btn-success" style="flex: 1;" title="Apply Discount (F3)">
+                            <ion-icon name="checkmark-circle-outline"></ion-icon>
+                            Apply
+                        </button>
+                        <button onclick="resetDiscount()" class="btn btn-secondary" style="flex: 1;">
+                            <ion-icon name="refresh-outline"></ion-icon>
+                            Reset
+                        </button>
+                    </div>
+                </div>
+                <input type="hidden" id="discountType" value="amount">
+            </div>
+
+            <!-- Order Notes -->
+            <div class="modern-card">
+                <div class="modern-card-header" style="border-bottom: none; margin-bottom: 0; padding-bottom: 0;">
+                    <div>
+                        <h3 class="modern-card-title">
+                            <ion-icon name="document-text-outline" style="margin-right: 8px;"></ion-icon>
+                            Order Notes
+                        </h3>
+                    </div>
+                </div>
+                <textarea id="orderNotes" class="form-control" placeholder="Add notes for this order (optional)" rows="2" style="resize: none;"></textarea>
+            </div>
+
+            <!-- Payment Summary -->
+            <div class="modern-card payment-summary-card">
+                <div class="payment-summary">
+                    <div class="summary-row">
+                        <span>Subtotal</span>
+                        <span id="summarySubtotal"><%= total.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")%> IQD</span>
+                    </div>
+                    <div class="summary-row discount-summary" id="summaryDiscountRow" style="display: none;">
+                        <span>Discount</span>
+                        <span id="summaryDiscount" style="color: var(--success-color);">- 0 IQD</span>
+                    </div>
+                    <div class="summary-divider"></div>
+                    <div class="summary-row total">
+                        <span>Total</span>
+                        <span id="summaryTotal"><%= total.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")%> IQD</span>
+                    </div>
+                    <div class="summary-row items">
+                        <span>Items</span>
+                        <span><%= products.length %> products (<%= totalQty %> units)</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="action-buttons">
+                <button class="btn btn-warning action-btn" id="holdOrder" <%= products.length === 0 ? 'disabled' : '' %> title="Hold Order (F4)">
+                    <ion-icon name="pause-circle-outline"></ion-icon>
+                    <span>Hold Order</span>
+                    <small>F4</small>
+                </button>
+
+                <a href="/localstore/sell/pending" class="btn btn-secondary action-btn">
+                    <ion-icon name="time-outline"></ion-icon>
+                    <span>View Pending</span>
+                    <small>Orders</small>
+                </a>
+
+                <form class="confirm" action="/localstore/sell/confirm" method="post" style="width: 100%;">
+                    <input value="<%= total%>" id="totalForm" name="total" type="hidden">
+                    <button type="submit" class="btn btn-success action-btn confirm-btn" <%= products.length === 0 ? 'disabled' : '' %> title="Confirm Sale (F12)">
+                        <ion-icon name="checkmark-circle-outline"></ion-icon>
+                        <span>Confirm Sale</span>
+                        <small>F12</small>
+                    </button>
+                </form>
+            </div>
+        </div>
     </div>
 </div>
 
-<script>
-    function discount(){
-        var discount = Number(document.getElementById("discount").value)
-        var total = `<%= total%>`
-        var totalTable = document.getElementById("totalTable")
-        var newTotal = Number(total) - discount
-        var totalForm = document.getElementById("totalForm")
-        totalTable.innerHTML = "Total: " + `${newTotal.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")} IQD`
-        totalForm.value = newTotal
+<style>
+/* POS Layout */
+.pos-layout {
+    display: grid;
+    grid-template-columns: 1fr 380px;
+    gap: 24px;
+}
+
+.pos-main {
+    min-width: 0;
+}
+
+.pos-sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+/* Quick Stats */
+.pos-quick-stats {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+}
+
+.quick-stat {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 16px;
+    background: var(--background-primary);
+    border-radius: var(--border-radius);
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-primary);
+    text-decoration: none;
+    border: 1px solid var(--border-color);
+    transition: var(--transition);
+}
+
+.quick-stat ion-icon {
+    font-size: 18px;
+    color: var(--primary-color);
+}
+
+.pending-orders-btn:hover {
+    background: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
+}
+
+.pending-orders-btn:hover ion-icon {
+    color: white;
+}
+
+/* Shortcuts Bar */
+.shortcuts-bar {
+    display: flex;
+    gap: 16px;
+    padding: 12px 16px;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-radius: var(--border-radius);
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+    border: 1px solid var(--border-color);
+}
+
+.shortcut-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    color: var(--text-secondary);
+}
+
+.shortcut-item kbd {
+    display: inline-block;
+    padding: 4px 8px;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-primary);
+    background: white;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+    font-family: monospace;
+}
+
+/* Size & Qty Badges */
+.size-badge {
+    display: inline-block;
+    padding: 4px 10px;
+    background: var(--background-primary);
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.qty-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 32px;
+    height: 32px;
+    padding: 0 10px;
+    background: var(--primary-color);
+    color: white;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+/* Empty Cart */
+.empty-cart {
+    text-align: center;
+    padding: 64px 24px;
+    color: var(--text-secondary);
+}
+
+.empty-cart ion-icon {
+    font-size: 80px;
+    opacity: 0.2;
+    margin-bottom: 16px;
+}
+
+.empty-cart h3 {
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0 0 8px 0;
+}
+
+.empty-cart p {
+    font-size: 14px;
+    margin: 0;
+}
+
+/* Table Footer Rows */
+.modern-table tfoot tr {
+    background: var(--background-primary);
+}
+
+.modern-table tfoot td {
+    padding: 12px 16px;
+    border-top: 1px solid var(--border-color);
+}
+
+.total-row {
+    background: linear-gradient(135deg, #f0f4ff 0%, #e8f0fe 100%) !important;
+}
+
+.total-row td {
+    border-top: 2px solid var(--primary-color) !important;
+}
+
+/* Discount Section */
+.discount-section {
+    padding-top: 16px;
+}
+
+.discount-type-toggle {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.discount-type-btn {
+    flex: 1;
+    padding: 10px 12px;
+    border: 2px solid var(--border-color);
+    background: white;
+    border-radius: var(--border-radius);
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: var(--transition);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    color: var(--text-secondary);
+}
+
+.discount-type-btn:hover {
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+}
+
+.discount-type-btn.active {
+    border-color: var(--primary-color);
+    background: rgba(0, 122, 255, 0.05);
+    color: var(--primary-color);
+}
+
+.discount-input-group {
+    position: relative;
+    margin-bottom: 12px;
+}
+
+.discount-input {
+    padding-right: 60px !important;
+    font-size: 18px !important;
+    font-weight: 600 !important;
+    text-align: center;
+}
+
+.discount-suffix {
+    position: absolute;
+    right: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-secondary);
+}
+
+.discount-actions {
+    display: flex;
+    gap: 8px;
+}
+
+/* Payment Summary */
+.payment-summary-card {
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    color: white;
+}
+
+.payment-summary-card:hover {
+    transform: none;
+}
+
+.payment-summary {
+    padding-top: 8px;
+}
+
+.summary-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    font-size: 14px;
+}
+
+.summary-row.total {
+    font-size: 24px;
+    font-weight: 700;
+    padding: 16px 0;
+}
+
+.summary-row.items {
+    font-size: 12px;
+    opacity: 0.7;
+}
+
+.summary-divider {
+    height: 1px;
+    background: rgba(255,255,255,0.1);
+    margin: 8px 0;
+}
+
+/* Action Buttons */
+.action-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.action-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    font-size: 16px;
+    font-weight: 600;
+    border-radius: var(--border-radius);
+    text-decoration: none;
+    width: 100%;
+}
+
+.action-btn ion-icon {
+    font-size: 24px;
+    margin-bottom: 4px;
+}
+
+.action-btn small {
+    font-size: 11px;
+    opacity: 0.7;
+    font-weight: 400;
+}
+
+.action-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.confirm-btn {
+    background: linear-gradient(135deg, #30d158 0%, #28a745 100%);
+    color: white;
+    padding: 20px;
+    font-size: 18px;
+}
+
+.confirm-btn:hover:not(:disabled) {
+    background: linear-gradient(135deg, #28a745 0%, #218838 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(48, 209, 88, 0.3);
+}
+
+.btn-warning {
+    background: linear-gradient(135deg, #ff9500 0%, #ff8000 100%);
+    color: white;
+}
+
+.btn-warning:hover:not(:disabled) {
+    background: linear-gradient(135deg, #ff8000 0%, #e67300 100%);
+}
+
+/* Responsive */
+@media (max-width: 1200px) {
+    .pos-layout {
+        grid-template-columns: 1fr;
     }
 
-    function refresh(){
-        var discount = document.getElementById("discount")
-        var total = `<%= total%>`
-        var totalTable = document.getElementById("totalTable")
-        var totalForm = document.getElementById("totalForm")
-        totalTable.innerHTML = "Total: " + `${total.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")} IQD`
-        totalForm.value = total
-        discount.value = "";
+    .pos-sidebar {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: white;
+        padding: 16px;
+        box-shadow: 0 -4px 20px rgba(0,0,0,0.1);
+        z-index: 100;
+        flex-direction: row;
+        flex-wrap: wrap;
+        gap: 12px;
+    }
+
+    .pos-sidebar .modern-card {
+        display: none;
+    }
+
+    .action-buttons {
+        flex-direction: row;
+        width: 100%;
+    }
+
+    .action-btn {
+        flex: 1;
+        padding: 12px;
+    }
+
+    .cashier-content {
+        padding-bottom: 120px;
+    }
+}
+
+@media (max-width: 768px) {
+    .pos-quick-stats {
+        flex-wrap: wrap;
+    }
+
+    .shortcuts-bar {
+        display: none;
+    }
+}
+</style>
+
+<script>
+    // Discount functionality
+    let currentDiscountType = 'amount';
+    const originalTotal = Number(`<%= total%>`);
+
+    function setDiscountType(type) {
+        currentDiscountType = type;
+        document.getElementById('discountType').value = type;
+        document.getElementById('discountSuffix').textContent = type === 'amount' ? 'IQD' : '%';
+        document.getElementById('discount').placeholder = type === 'amount' ? 'Enter amount' : 'Enter percentage';
+
+        // Toggle active class
+        document.querySelectorAll('.discount-type-btn').forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.type === type);
+        });
+
+        // Reset discount when type changes
+        document.getElementById('discount').value = '';
+        resetDiscount();
+    }
+
+    function applyDiscount() {
+        const discountInput = document.getElementById("discount");
+        const discountValue = Number(discountInput.value) || 0;
+        const discountType = currentDiscountType;
+
+        if (discountValue <= 0) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Invalid Discount',
+                text: 'Please enter a valid discount value.',
+                confirmButtonColor: 'var(--primary-color)'
+            });
+            return;
+        }
+
+        let discountAmount = 0;
+        let newTotal;
+
+        if (discountType === 'amount') {
+            discountAmount = discountValue;
+            newTotal = originalTotal - discountAmount;
+        } else if (discountType === 'percent') {
+            if (discountValue > 100) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Invalid Discount',
+                    text: 'Percentage cannot exceed 100%.',
+                    confirmButtonColor: 'var(--primary-color)'
+                });
+                return;
+            }
+            discountAmount = (originalTotal * discountValue) / 100;
+            newTotal = originalTotal - discountAmount;
+        }
+
+        if (newTotal < 0) newTotal = 0;
+
+        // Update all displays
+        updateTotalDisplays(newTotal, discountAmount);
+
+        Swal.fire({
+            icon: 'success',
+            title: 'Discount Applied',
+            text: `Discount of ${discountAmount.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")} IQD applied.`,
+            timer: 1500,
+            showConfirmButton: false
+        });
+    }
+
+    function updateTotalDisplays(newTotal, discountAmount) {
+        const formatNumber = (num) => num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+
+        // Table displays
+        document.getElementById("totalTable").innerHTML = `${formatNumber(Math.round(newTotal))} IQD`;
+        document.getElementById("discountRow").style.display = 'table-row';
+        document.getElementById("discountDisplay").innerHTML = `- ${formatNumber(Math.round(discountAmount))} IQD`;
+
+        // Summary displays
+        document.getElementById("summaryTotal").innerHTML = `${formatNumber(Math.round(newTotal))} IQD`;
+        document.getElementById("summaryDiscountRow").style.display = 'flex';
+        document.getElementById("summaryDiscount").innerHTML = `- ${formatNumber(Math.round(discountAmount))} IQD`;
+
+        // Header display
+        document.getElementById("headerTotal").innerHTML = `${formatNumber(Math.round(newTotal))} IQD`;
+
+        // Form value
+        document.getElementById("totalForm").value = Math.round(newTotal);
+    }
+
+    function resetDiscount() {
+        const formatNumber = (num) => num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+
+        document.getElementById("discount").value = "";
+        document.getElementById("discountRow").style.display = 'none';
+        document.getElementById("summaryDiscountRow").style.display = 'none';
+        document.getElementById("totalTable").innerHTML = `${formatNumber(originalTotal)} IQD`;
+        document.getElementById("summaryTotal").innerHTML = `${formatNumber(originalTotal)} IQD`;
+        document.getElementById("headerTotal").innerHTML = `${formatNumber(originalTotal)} IQD`;
+        document.getElementById("totalForm").value = originalTotal;
+    }
+
+    function clearCart() {
+        Swal.fire({
+            title: 'Clear Cart?',
+            text: 'This will remove all items from your cart.',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#ff3b30',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: 'Yes, clear it'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                fetch('/localstore/sell/clear-cart', { method: 'POST' })
+                    .then(() => window.location.reload())
+                    .catch(err => console.error(err));
+            }
+        });
     }
 </script>
 
 <script>
+    // Barcode search form handling
     const form = document.getElementById("searchForm");
     const searchInput = document.getElementById("searchInput");
-  
-    form.addEventListener("submit", function (event) {
-      const inputValue = searchInput.value;
-      form.action = `/localstore/sell/add-by-barcode/${inputValue}?_method=PUT`;
-    });
-  
-    form.addEventListener("keydown", function (event) {
-      if (event.key === "Enter") {
-        event.preventDefault(); // Prevent the default form submission
-        const inputValue = event.target.value; // Get the input value
-        const form = document.getElementById("searchForm");
-        form.action = `/localstore/sell/add-by-barcode/${inputValue}?_method=PUT`; // Set form action to /search/[inputValue]
-        form.submit(); // Submit the form
-      }
-    });
-  </script>
-    <script src="https://cdn.jsdelivr.net/npm/fuse.js@6.6.2"></script>
-    <script>
-        function autocomplete(inp, arr) {
-            let currentFocus;
-            const fuse = new Fuse(arr, {
-                threshold: 0.4,
-            });
-    
-            inp.addEventListener("input", function () {
-                let a, b, val = this.value;
-                closeAllLists();
-                if (!val) return false;
-                currentFocus = -1;
-    
-                a = document.createElement("DIV");
-                a.setAttribute("id", this.id + "autocomplete-list");
-                a.setAttribute("class", "autocomplete-items");
-                this.parentNode.appendChild(a);
-    
-                const results = fuse.search(val);
-                results.forEach(({ item }) => {
-                    b = document.createElement("DIV");
-                    b.innerHTML = `<strong>${item.substr(0, val.length)}</strong>${item.substr(val.length)}`;
-                    b.innerHTML += `<input type='hidden' value='${item}'>`;
-                    b.addEventListener("click", function () {
-                        window.location.href = `/localstore/sell/search-by-name/${String(this.getElementsByTagName("input")[0].value)}`
-                        closeAllLists();
-                    });
-                    a.appendChild(b);
-                });
-            });
-    
-            inp.addEventListener("keydown", function (e) {
-                let x = document.getElementById(this.id + "autocomplete-list");
-                if (x) x = x.getElementsByTagName("div");
-                if (e.keyCode == 40) {
-                    currentFocus++;
-                    addActive(x);
-                } else if (e.keyCode == 38) {
-                    currentFocus--;
-                    addActive(x);
-                } else if (e.keyCode == 13) {
-                    e.preventDefault();
-                    if (currentFocus > -1 && x) x[currentFocus].click();
-                }
-            });
-    
-            function addActive(x) {
-                if (!x) return false;
-                removeActive(x);
-                if (currentFocus >= x.length) currentFocus = 0;
-                if (currentFocus < 0) currentFocus = x.length - 1;
-                x[currentFocus].classList.add("autocomplete-active");
+
+    searchInput.addEventListener("keydown", function (event) {
+        if (event.key === "Enter") {
+            event.preventDefault();
+            const inputValue = event.target.value.trim();
+            if (inputValue) {
+                form.action = `/localstore/sell/add-by-barcode/${inputValue}?_method=PUT`;
+                form.submit();
             }
-    
-            function removeActive(x) {
-                for (let i = 0; i < x.length; i++) {
-                    x[i].classList.remove("autocomplete-active");
-                }
-            }
-    
-            function closeAllLists(elmnt) {
-                const x = document.getElementsByClassName("autocomplete-items");
-                for (let i = 0; i < x.length; i++) {
-                    if (elmnt != x[i] && elmnt != inp) {
-                        x[i].parentNode.removeChild(x[i]);
-                    }
-                }
-            }
-    
-            document.addEventListener("click", function (e) {
-                closeAllLists(e.target);
-            });
         }
-    
-        const data = "<%= data %>".split(",");
-        autocomplete(document.getElementById("myInput"), data);
-    </script>
+    });
+</script>
+
+<script>
+    // Hold Order functionality
+    const holdOrderBtn = document.getElementById("holdOrder");
+    if (holdOrderBtn) {
+        holdOrderBtn.addEventListener("click", () => {
+            Swal.fire({
+                title: 'Hold Order?',
+                text: 'This order will be saved and you can recall it later.',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#ff9500',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Yes, hold it'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    const holdForm = document.createElement('form');
+                    holdForm.method = 'POST';
+                    holdForm.action = '/localstore/sell/hold';
+                    document.body.appendChild(holdForm);
+                    holdForm.submit();
+                }
+            });
+        });
+    }
+</script>
+
+<script>
+    // Keyboard shortcuts
+    document.addEventListener('keydown', function(e) {
+        // F1 - Focus barcode input
+        if (e.key === 'F1') {
+            e.preventDefault();
+            document.getElementById('searchInput').focus();
+        }
+        // F2 - Focus name search
+        if (e.key === 'F2') {
+            e.preventDefault();
+            document.getElementById('myInput').focus();
+        }
+        // F3 - Apply discount
+        if (e.key === 'F3') {
+            e.preventDefault();
+            document.getElementById('discount').focus();
+        }
+        // F4 - Hold order
+        if (e.key === 'F4') {
+            e.preventDefault();
+            const holdBtn = document.getElementById('holdOrder');
+            if (holdBtn && !holdBtn.disabled) holdBtn.click();
+        }
+        // F8 - Clear cart
+        if (e.key === 'F8') {
+            e.preventDefault();
+            if (<%= products.length %> > 0) clearCart();
+        }
+        // F12 - Confirm sale
+        if (e.key === 'F12') {
+            e.preventDefault();
+            const confirmBtn = document.querySelector('.confirm-btn');
+            if (confirmBtn && !confirmBtn.disabled) {
+                document.querySelector('.confirm').submit();
+            }
+        }
+    });
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/fuse.js@6.6.2"></script>
+<script>
+    function autocomplete(inp, arr) {
+        let currentFocus;
+        const fuse = new Fuse(arr, { threshold: 0.4 });
+
+        inp.addEventListener("input", function () {
+            let a, b, val = this.value;
+            closeAllLists();
+            if (!val) return false;
+            currentFocus = -1;
+
+            a = document.createElement("DIV");
+            a.setAttribute("id", this.id + "autocomplete-list");
+            a.setAttribute("class", "autocomplete-items");
+            this.parentNode.appendChild(a);
+
+            const results = fuse.search(val);
+            results.forEach(({ item }) => {
+                b = document.createElement("DIV");
+                b.innerHTML = `<strong>${item.substr(0, val.length)}</strong>${item.substr(val.length)}`;
+                b.innerHTML += `<input type='hidden' value='${item}'>`;
+                b.addEventListener("click", function () {
+                    window.location.href = `/localstore/sell/search-by-name/${String(this.getElementsByTagName("input")[0].value)}`;
+                    closeAllLists();
+                });
+                a.appendChild(b);
+            });
+        });
+
+        inp.addEventListener("keydown", function (e) {
+            let x = document.getElementById(this.id + "autocomplete-list");
+            if (x) x = x.getElementsByTagName("div");
+            if (e.keyCode == 40) {
+                currentFocus++;
+                addActive(x);
+            } else if (e.keyCode == 38) {
+                currentFocus--;
+                addActive(x);
+            } else if (e.keyCode == 13) {
+                e.preventDefault();
+                if (currentFocus > -1 && x) x[currentFocus].click();
+            }
+        });
+
+        function addActive(x) {
+            if (!x) return false;
+            removeActive(x);
+            if (currentFocus >= x.length) currentFocus = 0;
+            if (currentFocus < 0) currentFocus = x.length - 1;
+            x[currentFocus].classList.add("autocomplete-active");
+        }
+
+        function removeActive(x) {
+            for (let i = 0; i < x.length; i++) {
+                x[i].classList.remove("autocomplete-active");
+            }
+        }
+
+        function closeAllLists(elmnt) {
+            const x = document.getElementsByClassName("autocomplete-items");
+            for (let i = 0; i < x.length; i++) {
+                if (elmnt != x[i] && elmnt != inp) {
+                    x[i].parentNode.removeChild(x[i]);
+                }
+            }
+        }
+
+        document.addEventListener("click", function (e) {
+            closeAllLists(e.target);
+        });
+    }
+
+    const data = "<%= data %>".split(",");
+    autocomplete(document.getElementById("myInput"), data);
+</script>
+
 <%- include("../layout/footer") -%>

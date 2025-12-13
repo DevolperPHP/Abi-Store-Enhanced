@@ -182,6 +182,62 @@ router.get('/serch-by-name-qty/:id', async (req, res) => {
     }
 })
 
+router.post('/hold', async (req, res) => {
+    try {
+        const user = req.user;
+        const cartItems = user.localstoreCart;
+
+        if (cartItems.length === 0) {
+            req.flash('data-err', 'Cart is empty.');
+            return res.redirect('/localstore/sell');
+        }
+
+        const ids = cartItems.map(item => mongoose.Types.ObjectId(item.id));
+        const products = await Product.find({ _id: { $in: ids } });
+
+        const productsWithQty = products.map(product => {
+            const cartItem = cartItems.find(item => item.id === product._id.toString());
+            const qty = cartItem ? cartItem.qty : 0;
+            return {
+                name: product.name,
+                size: product.size,
+                qty,
+                price: product.sell_price,
+                total: qty * product.sell_price,
+                image: product.image,
+                _id: product._id,
+                colorName: product.colorName
+            };
+        });
+
+        const total = productsWithQty.map(p => p.total).reduce((a, b) => a + b, 0);
+        const now = moment().tz('Asia/Baghdad');
+        const generateOrderId = () => Math.floor(100000 + Math.random() * 900000);
+
+        await new Sell({
+            name: `Held by ${user.name}`,
+            products: productsWithQty,
+            status: 'pending',
+            bid: generateOrderId(),
+            Date: now.format('lll'),
+            userId: user.id,
+            isCashier: true,
+            total: total 
+        }).save();
+
+        // Clear the cart
+        user.localstoreCart = [];
+        await user.save();
+
+        req.flash('order-suc', 'Order has been put on hold.');
+        res.redirect('/localstore/sell');
+    } catch (err) {
+        console.error('Error holding order:', err);
+        req.flash('data-err', 'Error holding order.');
+        res.redirect('/localstore/sell');
+    }
+});
+
 router.post('/confirm', async (req, res) => {
     try {
         const user = req.user;
@@ -264,6 +320,60 @@ router.post('/clear-cart', async (req, res) => {
     req.user.localstoreCart = [];
     await req.user.save();
     res.sendStatus(200);
+});
+
+router.get('/pending', async (req, res) => {
+    try {
+        const pendingOrders = await Sell.find({ status: 'pending' }).sort({ Date: -1 });
+        res.render('localstore/sell/pending-orders', {
+            orders: pendingOrders,
+            user: req.user
+        });
+    } catch (err) {
+        console.error(err);
+        req.flash('data-err', 'Error fetching pending orders.');
+        res.redirect('/localstore/sell');
+    }
+});
+
+router.post('/recall/:id', async (req, res) => {
+    try {
+        const user = req.user;
+        if (user.localstoreCart.length > 0) {
+            req.flash('data-err', 'Please clear your current cart before recalling an order.');
+            return res.redirect('/localstore/sell/pending');
+        }
+
+        const pendingOrder = await Sell.findById(req.params.id);
+        if (!pendingOrder) {
+            req.flash('data-err', 'Pending order not found.');
+            return res.redirect('/localstore/sell/pending');
+        }
+
+        user.localstoreCart = pendingOrder.products.map(p => ({ id: p._id.toString(), qty: p.qty }));
+        await user.save();
+
+        await Sell.findByIdAndDelete(req.params.id);
+
+        req.flash('order-suc', 'Order has been recalled successfully.');
+        res.redirect('/localstore/sell');
+    } catch (err) {
+        console.error('Error recalling order:', err);
+        req.flash('data-err', 'Error recalling order.');
+        res.redirect('/localstore/sell/pending');
+    }
+});
+
+router.delete('/pending/:id', async (req, res) => {
+    try {
+        await Sell.findByIdAndDelete(req.params.id);
+        req.flash('order-suc', 'Pending order deleted.');
+        res.redirect('/localstore/sell/pending');
+    } catch (err) {
+        console.error('Error deleting pending order:', err);
+        req.flash('data-err', 'Error deleting pending order.');
+        res.redirect('/localstore/sell/pending');
+    }
 });
 
 router.get('/receipt/:orderId', async (req, res) => {

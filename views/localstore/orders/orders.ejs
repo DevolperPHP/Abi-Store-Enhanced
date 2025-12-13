@@ -4,65 +4,121 @@
     <script>
         Swal.fire({
             icon: 'error',
+            title: 'Error',
             text: `<%= err%>`
         })
     </script>
 <%} %>
 
-    <div class="sell-dashboard">
-        <p class="title">Orders history</p>
-        <form id="orders-id-form" class="orders-id-form" method="get">
-            <input type="number" id="id-input" placeholder="Order ID">
-            <button>Search</button>
-        </form>
-        <script>
-            const form = document.getElementById("orders-id-form");
-            const searchInput = document.getElementById("id-input");
-
-            form.addEventListener("submit", function (event) {
-                const inputValue = searchInput.value;
-                form.action = `/localstore/orders/getbyid/${inputValue}`;
-            });
-
-            form.addEventListener("keydown", function (event) {
-                if (event.key === "Enter") {
-                    event.preventDefault(); // Prevent the default form submission
-                    const inputValue = event.target.value; // Get the input value
-                    const form = document.getElementById("orders-id-form");
-                    form.action = `/localstore/orders/getbyid/${inputValue}`;
-                    form.submit(); // Submit the form
-                }
-            });
-        </script>
-        <div class="sell-cards">
-            <% orders.forEach(data=> {%>
-                <div class="sell-card" onclick="window.location.href='/localstore/orders/get-data/<%=data._id%>'">
-                    <div class="flex">
-                        <% if(data.isShop==true){%>
-                            <p class="icon" style="color: #665CC4;"><ion-icon name="folder"></ion-icon></p>
-                            <%} else {%>
-                                <p class="icon"><ion-icon name="folder"></ion-icon></p>
-                                <%} %>
-                                    <div class="details">
-                                        <p>
-                                            <%= data.Date%>
-                                        </p>
-                                        <p>
-                                            <%= data.total.toString().replace(/\B(?=(\d{3})+(?!\d))/g, "," )%> IQD
-                                        </p>
-                                        <p>
-                                            <%= data.adress%>
-                                        </p>
-                                    </div>
-                                    <% if(data.status=="pending" ){%>
-                                        <p class="status">Pending</p>
-                                        <%} %>
-                    </div>
-                </div>
-                <%}) %>
-        </div>
-        <br>
-        <br>
-        <br>
+<div class="cashier-content">
+    <!-- Page Header -->
+    <div class="page-header">
+        <h1 class="page-title">Orders History</h1>
+        <p class="page-subtitle">View and manage all customer orders</p>
     </div>
-    <%- include("../layout/footer") -%>
+
+    <!-- Search Section -->
+    <div class="modern-card">
+        <div class="modern-card-header">
+            <div>
+                <h3 class="modern-card-title">Search Orders</h3>
+                <p class="modern-card-subtitle">Find orders by Order ID</p>
+            </div>
+        </div>
+
+        <form id="orders-id-form" method="get" class="action-bar" style="align-items: flex-end;">
+            <div class="search-box" style="flex: 1; max-width: 400px;">
+                <ion-icon name="search-outline"></ion-icon>
+                <input type="number" id="id-input" placeholder="Enter Order ID">
+            </div>
+            <button type="submit" class="btn btn-primary">
+                <ion-icon name="search-outline"></ion-icon>
+                Search
+            </button>
+        </form>
+    </div>
+
+    <!-- Orders List -->
+    <div class="modern-card">
+        <div class="modern-card-header">
+            <div>
+                <h3 class="modern-card-title">Recent Orders</h3>
+                <p class="modern-card-subtitle"><%= orders.length %> order(s) found</p>
+            </div>
+        </div>
+
+        <% if(orders.length > 0) { %>
+            <div class="grid grid-2">
+                <% orders.forEach(data=> { %>
+                    <div class="stat-card" onclick="window.location.href='/localstore/orders/get-data/<%=data._id%>'" style="cursor: pointer;">
+                        <div class="stat-card-header">
+                            <div>
+                                <div class="stat-card-title">
+                                    <% if(data.isShop==true){%>
+                                        <ion-icon name="storefront-outline" style="color: var(--primary-color); margin-right: 8px;"></ion-icon>
+                                        Shop Order
+                                    <%} else {%>
+                                        <ion-icon name="cash-outline" style="color: var(--primary-color); margin-right: 8px;"></ion-icon>
+                                        POS Sale
+                                    <%} %>
+                                </div>
+                            </div>
+                            <% if(data.status=="pending" ){%>
+                                <span class="status-badge status-pending">Pending</span>
+                            <%} else if(data.status=="completed") { %>
+                                <span class="status-badge status-success">Completed</span>
+                            <%} %>
+                        </div>
+                        <div style="margin-top: 16px;">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 12px;">
+                                <span style="color: var(--text-secondary); font-size: 14px;">Date:</span>
+                                <span style="color: var(--text-primary); font-weight: 500;"><%= data.Date%></span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 12px;">
+                                <span style="color: var(--text-secondary); font-size: 14px;">Order ID:</span>
+                                <span style="color: var(--text-primary); font-weight: 500;">#<%= String(data._id).substring(0, 8)%></span>
+                            </div>
+                            <% if(data.adress) { %>
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 12px;">
+                                <span style="color: var(--text-secondary); font-size: 14px;">Address:</span>
+                                <span style="color: var(--text-primary); font-weight: 500;"><%= data.adress%></span>
+                            </div>
+                            <% } %>
+                            <div style="display: flex; justify-content: space-between; padding-top: 12px; border-top: 1px solid var(--border-color);">
+                                <span style="color: var(--text-primary); font-size: 16px; font-weight: 600;">Total:</span>
+                                <span style="color: var(--primary-color); font-size: 20px; font-weight: 700;"><%= data.total.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")%> IQD</span>
+                            </div>
+                        </div>
+                    </div>
+                <%}) %>
+            </div>
+        <% } else { %>
+            <div style="text-align: center; padding: 48px 24px; color: var(--text-secondary);">
+                <ion-icon name="folder-open-outline" style="font-size: 64px; opacity: 0.3;"></ion-icon>
+                <p style="margin-top: 16px; font-size: 16px;">No orders found.</p>
+            </div>
+        <% } %>
+    </div>
+</div>
+
+<script>
+    const form = document.getElementById("orders-id-form");
+    const searchInput = document.getElementById("id-input");
+
+    form.addEventListener("submit", function (event) {
+        const inputValue = searchInput.value;
+        form.action = `/localstore/orders/getbyid/${inputValue}`;
+    });
+
+    form.addEventListener("keydown", function (event) {
+        if (event.key === "Enter") {
+            event.preventDefault();
+            const inputValue = event.target.value;
+            const form = document.getElementById("orders-id-form");
+            form.action = `/localstore/orders/getbyid/${inputValue}`;
+            form.submit();
+        }
+    });
+</script>
+
+<%- include("../layout/footer") -%>
