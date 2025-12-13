@@ -1,22 +1,1445 @@
 <%- include("../layout/navbar") -%>
 
-<div class="analysis">
-    <p class="title">Data analysis</p>
-    <div class="search">
-        <div class="flex only-pc">
-            <label for="date">Start date: </label><input id="startDate" type="date">
-            <label for="date">End date: </label><input  id="endDate" type="date">
+<!-- Modern Analytics Dashboard -->
+<div class="analytics-dashboard">
+    <!-- Dashboard Header -->
+    <div class="dashboard-header">
+        <div class="header-content">
+            <div class="header-icon">
+                <ion-icon name="analytics-outline"></ion-icon>
+            </div>
+            <div class="header-text">
+                <h1 class="dashboard-title">Business Analytics</h1>
+                <p class="dashboard-subtitle">Comprehensive analysis of your business performance</p>
+            </div>
         </div>
+        <div class="header-actions">
+            <button class="btn-export" onclick="exportReport()">
+                <ion-icon name="download-outline"></ion-icon>
+                Export Report
+            </button>
+            <button class="btn-settings" onclick="showSettings()">
+                <ion-icon name="settings-outline"></ion-icon>
+                Settings
+            </button>
+        </div>
+    </div>
 
-        <div class="flex only-phone">
-            <label for="date">Start date: </label><input id="startDate" type="date">
-            <br><br><br>
-            <label for="date">End date: </label><input  id="endDate" type="date">
+    <!-- Quick Stats Overview -->
+    <div class="stats-overview">
+        <div class="stats-grid">
+            <div class="stat-card revenue">
+                <div class="stat-icon">
+                    <ion-icon name="trending-up-outline"></ion-icon>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-value" id="totalRevenue">-</div>
+                    <div class="stat-label">Total Revenue</div>
+                    <div class="stat-change positive" id="revenueChange">-</div>
+                </div>
+            </div>
+            <div class="stat-card profit">
+                <div class="stat-icon">
+                    <ion-icon name="cash-outline"></ion-icon>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-value" id="totalProfit">-</div>
+                    <div class="stat-label">Net Profit</div>
+                    <div class="stat-change positive" id="profitChange">-</div>
+                </div>
+            </div>
+            <div class="stat-card transactions">
+                <div class="stat-icon">
+                    <ion-icon name="receipt-outline"></ion-icon>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-value" id="totalTransactions">-</div>
+                    <div class="stat-label">Transactions</div>
+                    <div class="stat-change neutral" id="transactionChange">-</div>
+                </div>
+            </div>
+            <div class="stat-card customers">
+                <div class="stat-icon">
+                    <ion-icon name="people-outline"></ion-icon>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-value" id="totalCustomers">-</div>
+                    <div class="stat-label">Active Customers</div>
+                    <div class="stat-change positive" id="customerChange">-</div>
+                </div>
+            </div>
         </div>
-        <center><button class="btn btn-primary" onclick="search()">Search</button></center>
+    </div>
+
+    <!-- Analysis Type Selection -->
+    <div class="analysis-type-selector">
+        <div class="selector-header">
+            <h3 class="selector-title">Choose Analysis Type</h3>
+            <p class="selector-subtitle">Select the scope of your business analysis</p>
+        </div>
+        <div class="type-cards">
+            <div class="type-card active" data-type="combined" onclick="selectAnalysisType('combined')">
+                <div class="type-icon">
+                    <ion-icon name="business-outline"></ion-icon>
+                </div>
+                <div class="type-content">
+                    <h4 class="type-title">Combined Analysis</h4>
+                    <p class="type-description">Complete overview of all business operations</p>
+                    <div class="type-features">
+                        <span class="feature">Revenue & Profit</span>
+                        <span class="feature">All Transactions</span>
+                        <span class="feature">Full Inventory</span>
+                    </div>
+                </div>
+            </div>
+            <div class="type-card" data-type="local" onclick="selectAnalysisType('local')">
+                <div class="type-icon">
+                    <ion-icon name="storefront-outline"></ion-icon>
+                </div>
+                <div class="type-content">
+                    <h4 class="type-title">Local Store Analysis</h4>
+                    <p class="type-description">Focus on retail store operations and walk-in sales</p>
+                    <div class="type-features">
+                        <span class="feature">Store Sales</span>
+                        <span class="feature">Walk-in Customers</span>
+                        <span class="feature">Retail Performance</span>
+                    </div>
+                </div>
+            </div>
+            <div class="type-card" data-type="main" onclick="selectAnalysisType('main')">
+                <div class="type-icon">
+                    <ion-icon name="cube-outline"></ion-icon>
+                </div>
+                <div class="type-content">
+                    <h4 class="type-title">Main Storage Analysis</h4>
+                    <p class="type-description">Wholesale operations and inventory management</p>
+                    <div class="type-features">
+                        <span class="feature">Bulk Purchases</span>
+                        <span class="feature">Inventory Levels</span>
+                        <span class="feature">Supplier Performance</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Date Range Selection -->
+    <div class="date-range-section">
+        <div class="range-header">
+            <h3 class="range-title">Analysis Period</h3>
+            <div class="range-presets">
+                <button class="preset-btn" onclick="setDateRange('today')">Today</button>
+                <button class="preset-btn" onclick="setDateRange('week')">This Week</button>
+                <button class="preset-btn" onclick="setDateRange('month')">This Month</button>
+                <button class="preset-btn" onclick="setDateRange('quarter')">This Quarter</button>
+                <button class="preset-btn" onclick="setDateRange('year')">This Year</button>
+                <button class="preset-btn active" onclick="setDateRange('custom')">Custom Range</button>
+            </div>
+        </div>
+        <div class="date-inputs" id="dateInputs">
+            <div class="input-group">
+                <label for="startDate" class="input-label">
+                    <ion-icon name="calendar-outline"></ion-icon>
+                    Start Date
+                </label>
+                <input type="date" id="startDate" class="date-input" max="" value="">
+            </div>
+            <div class="input-group">
+                <label for="endDate" class="input-label">
+                    <ion-icon name="calendar-outline"></ion-icon>
+                    End Date
+                </label>
+                <input type="date" id="endDate" class="date-input" max="" value="">
+            </div>
+        </div>
+    </div>
+
+    <!-- Analysis Filters -->
+    <div class="filters-section">
+        <div class="filters-header">
+            <h3 class="filters-title">Advanced Filters</h3>
+            <button class="filter-toggle" onclick="toggleFilters()">
+                <ion-icon name="chevron-down-outline"></ion-icon>
+                Show Filters
+            </button>
+        </div>
+        <div class="filters-content" id="filtersContent" style="display: none;">
+            <div class="filters-grid">
+                <div class="filter-group">
+                    <label class="filter-label">Transaction Status</label>
+                    <div class="checkbox-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="statusDone" checked>
+                            <span class="checkbox-custom"></span>
+                            Completed
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="statusPending" checked>
+                            <span class="checkbox-custom"></span>
+                            Pending
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="statusCancelled">
+                            <span class="checkbox-custom"></span>
+                            Cancelled
+                        </label>
+                    </div>
+                </div>
+                <div class="filter-group">
+                    <label class="filter-label">Amount Range</label>
+                    <div class="range-inputs">
+                        <input type="number" id="minAmount" placeholder="Min" class="range-input">
+                        <span class="range-separator">to</span>
+                        <input type="number" id="maxAmount" placeholder="Max" class="range-input">
+                    </div>
+                </div>
+                <div class="filter-group">
+                    <label class="filter-label">Product Categories</label>
+                    <select id="categoryFilter" class="category-select">
+                        <option value="">All Categories</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label class="filter-label">Customer Type</label>
+                    <select id="customerFilter" class="customer-select">
+                        <option value="">All Customers</option>
+                        <option value="new">New Customers</option>
+                        <option value="returning">Returning Customers</option>
+                        <option value="vip">VIP Customers</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Analysis Actions -->
+    <div class="analysis-actions">
+        <button class="btn-secondary" onclick="resetFilters()">
+            <ion-icon name="refresh-outline"></ion-icon>
+            Reset Filters
+        </button>
+        <button class="btn-primary" onclick="generateAnalysis()">
+            <ion-icon name="analytics-outline"></ion-icon>
+            Generate Analysis
+        </button>
+        <button class="btn-secondary" onclick="scheduleReport()">
+            <ion-icon name="time-outline"></ion-icon>
+            Schedule Report
+        </button>
+    </div>
+
+    <!-- Recent Activity -->
+    <div class="recent-activity">
+        <div class="activity-header">
+            <h3 class="activity-title">Recent Business Activity</h3>
+            <button class="view-all-btn" onclick="viewAllActivity()">View All</button>
+        </div>
+        <div class="activity-list" id="activityList">
+            <div class="activity-item">
+                <div class="activity-icon sales">
+                    <ion-icon name="cart-outline"></ion-icon>
+                </div>
+                <div class="activity-content">
+                    <div class="activity-text">New sale: 150,000 IQD</div>
+                    <div class="activity-time">2 minutes ago</div>
+                </div>
+            </div>
+            <div class="activity-item">
+                <div class="activity-icon purchase">
+                    <ion-icon name="cube-outline"></ion-icon>
+                </div>
+                <div class="activity-content">
+                    <div class="activity-text">Purchase completed: 75,000 IQD</div>
+                    <div class="activity-time">15 minutes ago</div>
+                </div>
+            </div>
+            <div class="activity-item">
+                <div class="activity-icon expense">
+                    <ion-icon name="card-outline"></ion-icon>
+                </div>
+                <div class="activity-content">
+                    <div class="activity-text">Daily expense: 25,000 IQD</div>
+                    <div class="activity-time">1 hour ago</div>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 
-<script src="/javascript/analysis.js"></script>
+<!-- Settings Modal -->
+<div class="modal-overlay" id="settingsModal" style="display: none;">
+    <div class="modal settings-modal">
+        <div class="modal-header">
+            <h3 class="modal-title">Analytics Settings</h3>
+            <button class="modal-close" onclick="closeSettings()">
+                <ion-icon name="close-outline"></ion-icon>
+            </button>
+        </div>
+        <div class="modal-content">
+            <div class="settings-section">
+                <h4 class="settings-subsection-title">Dashboard Preferences</h4>
+                <div class="setting-item">
+                    <label class="setting-label">Default Analysis Type</label>
+                    <select class="setting-select">
+                        <option value="combined">Combined Analysis</option>
+                        <option value="local">Local Store</option>
+                        <option value="main">Main Storage</option>
+                    </select>
+                </div>
+                <div class="setting-item">
+                    <label class="setting-label">Default Date Range</label>
+                    <select class="setting-select">
+                        <option value="month">This Month</option>
+                        <option value="quarter">This Quarter</option>
+                        <option value="year">This Year</option>
+                    </select>
+                </div>
+            </div>
+            <div class="settings-section">
+                <h4 class="settings-subsection-title">Notifications</h4>
+                <div class="setting-item">
+                    <label class="setting-label">
+                        <input type="checkbox" checked>
+                        Low profit alerts
+                    </label>
+                </div>
+                <div class="setting-item">
+                    <label class="setting-label">
+                        <input type="checkbox">
+                        High expense warnings
+                    </label>
+                </div>
+            </div>
+        </div>
+        <div class="modal-actions">
+            <button class="btn-secondary" onclick="closeSettings()">Cancel</button>
+            <button class="btn-primary" onclick="saveSettings()">Save Settings</button>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* ===== ANALYTICS DASHBOARD ===== */
+    .analytics-dashboard {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 40px 20px;
+        margin-left: 260px;
+        margin-top: 40px;
+    }
+
+    /* ===== DASHBOARD HEADER ===== */
+    .dashboard-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 32px;
+        padding: 24px;
+        background: #ffffff;
+        border-radius: 16px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+        border: 1px solid rgba(0, 0, 0, 0.06);
+    }
+
+    .header-content {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+    }
+
+    .header-icon {
+        width: 56px;
+        height: 56px;
+        border-radius: 14px;
+        background: linear-gradient(135deg, #007AFF, #5856D6);
+        color: #ffffff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+
+    .header-icon ion-icon {
+        font-size: 28px;
+    }
+
+    .header-text {
+        flex: 1;
+    }
+
+    .dashboard-title {
+        font-size: 32px;
+        font-weight: 700;
+        color: #1d1d1f;
+        margin: 0 0 8px 0;
+        letter-spacing: -0.5px;
+    }
+
+    .dashboard-subtitle {
+        font-size: 18px;
+        color: #8e8e93;
+        margin: 0;
+        font-weight: 400;
+    }
+
+    .header-actions {
+        display: flex;
+        gap: 12px;
+    }
+
+    .btn-export,
+    .btn-settings {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 12px 16px;
+        background: #007AFF;
+        color: #ffffff;
+        border: none;
+        border-radius: 10px;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        text-decoration: none;
+    }
+
+    .btn-settings {
+        background: rgba(0, 0, 0, 0.04);
+        color: #1d1d1f;
+    }
+
+    .btn-export:hover {
+        background: #0056b3;
+    }
+
+    .btn-settings:hover {
+        background: rgba(0, 0, 0, 0.08);
+    }
+
+    .btn-export ion-icon,
+    .btn-settings ion-icon {
+        font-size: 16px;
+    }
+
+    /* ===== STATS OVERVIEW ===== */
+    .stats-overview {
+        margin-bottom: 32px;
+    }
+
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 20px;
+    }
+
+    .stat-card {
+        background: #ffffff;
+        border-radius: 16px;
+        padding: 24px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+        border: 1px solid rgba(0, 0, 0, 0.06);
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        transition: transform 0.2s ease;
+    }
+
+    .stat-card:hover {
+        transform: translateY(-2px);
+    }
+
+    .stat-card.revenue .stat-icon {
+        background: linear-gradient(135deg, #34C759, #30d158);
+        color: #ffffff;
+    }
+
+    .stat-card.profit .stat-icon {
+        background: linear-gradient(135deg, #007AFF, #5856D6);
+        color: #ffffff;
+    }
+
+    .stat-card.transactions .stat-icon {
+        background: linear-gradient(135deg, #FF9500, #ff6b35);
+        color: #ffffff;
+    }
+
+    .stat-card.customers .stat-icon {
+        background: linear-gradient(135deg, #AF52DE, #9b59b6);
+        color: #ffffff;
+    }
+
+    .stat-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+
+    .stat-icon ion-icon {
+        font-size: 24px;
+    }
+
+    .stat-content {
+        flex: 1;
+    }
+
+    .stat-value {
+        font-size: 24px;
+        font-weight: 700;
+        color: #1d1d1f;
+        margin-bottom: 4px;
+    }
+
+    .stat-label {
+        font-size: 14px;
+        color: #8e8e93;
+        margin-bottom: 4px;
+        font-weight: 500;
+    }
+
+    .stat-change {
+        font-size: 12px;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
+
+    .stat-change.positive {
+        color: #34C759;
+    }
+
+    .stat-change.negative {
+        color: #FF3B30;
+    }
+
+    .stat-change.neutral {
+        color: #8e8e93;
+    }
+
+    /* ===== ANALYSIS TYPE SELECTOR ===== */
+    .analysis-type-selector {
+        background: #ffffff;
+        border-radius: 16px;
+        padding: 24px;
+        margin-bottom: 24px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+        border: 1px solid rgba(0, 0, 0, 0.06);
+    }
+
+    .selector-header {
+        margin-bottom: 20px;
+        text-align: center;
+    }
+
+    .selector-title {
+        font-size: 20px;
+        font-weight: 600;
+        color: #1d1d1f;
+        margin: 0 0 8px 0;
+    }
+
+    .selector-subtitle {
+        font-size: 14px;
+        color: #8e8e93;
+        margin: 0;
+    }
+
+    .type-cards {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+        gap: 16px;
+    }
+
+    .type-card {
+        border: 2px solid #f0f0f0;
+        border-radius: 12px;
+        padding: 20px;
+        cursor: pointer;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        display: flex;
+        gap: 16px;
+    }
+
+    .type-card:hover {
+        border-color: #007AFF;
+        box-shadow: 0 4px 12px rgba(0, 122, 255, 0.1);
+    }
+
+    .type-card.active {
+        border-color: #007AFF;
+        background: rgba(0, 122, 255, 0.05);
+    }
+
+    .type-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 10px;
+        background: rgba(0, 122, 255, 0.1);
+        color: #007AFF;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+
+    .type-icon ion-icon {
+        font-size: 24px;
+    }
+
+    .type-content {
+        flex: 1;
+    }
+
+    .type-title {
+        font-size: 16px;
+        font-weight: 600;
+        color: #1d1d1f;
+        margin: 0 0 6px 0;
+    }
+
+    .type-description {
+        font-size: 14px;
+        color: #8e8e93;
+        margin: 0 0 12px 0;
+        line-height: 1.4;
+    }
+
+    .type-features {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+    }
+
+    .feature {
+        font-size: 11px;
+        padding: 4px 8px;
+        background: rgba(0, 122, 255, 0.1);
+        color: #007AFF;
+        border-radius: 12px;
+        font-weight: 500;
+    }
+
+    /* ===== DATE RANGE SECTION ===== */
+    .date-range-section {
+        background: #ffffff;
+        border-radius: 16px;
+        padding: 24px;
+        margin-bottom: 24px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+        border: 1px solid rgba(0, 0, 0, 0.06);
+    }
+
+    .range-header {
+        margin-bottom: 20px;
+    }
+
+    .range-title {
+        font-size: 18px;
+        font-weight: 600;
+        color: #1d1d1f;
+        margin: 0 0 16px 0;
+    }
+
+    .range-presets {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .preset-btn {
+        padding: 8px 16px;
+        background: rgba(0, 0, 0, 0.04);
+        color: #1d1d1f;
+        border: none;
+        border-radius: 8px;
+        font-size: 13px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .preset-btn:hover {
+        background: rgba(0, 0, 0, 0.08);
+    }
+
+    .preset-btn.active {
+        background: #007AFF;
+        color: #ffffff;
+    }
+
+    .date-inputs {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 20px;
+    }
+
+    .input-group {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .input-label {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 13px;
+        font-weight: 600;
+        color: #8e8e93;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .input-label ion-icon {
+        font-size: 16px;
+        color: #007AFF;
+    }
+
+    .date-input {
+        padding: 12px 16px;
+        border: 1.5px solid #e5e5ea;
+        border-radius: 10px;
+        font-size: 16px;
+        font-family: inherit;
+        background: #ffffff;
+        color: #1d1d1f;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        outline: none;
+    }
+
+    .date-input:focus {
+        border-color: #007AFF;
+        box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.1);
+    }
+
+    /* ===== FILTERS SECTION ===== */
+    .filters-section {
+        background: #ffffff;
+        border-radius: 16px;
+        padding: 24px;
+        margin-bottom: 24px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+        border: 1px solid rgba(0, 0, 0, 0.06);
+    }
+
+    .filters-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 16px;
+    }
+
+    .filters-title {
+        font-size: 18px;
+        font-weight: 600;
+        color: #1d1d1f;
+        margin: 0;
+    }
+
+    .filter-toggle {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 16px;
+        background: rgba(0, 0, 0, 0.04);
+        color: #1d1d1f;
+        border: none;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .filter-toggle:hover {
+        background: rgba(0, 0, 0, 0.08);
+    }
+
+    .filter-toggle ion-icon {
+        font-size: 16px;
+        transition: transform 0.2s ease;
+    }
+
+    .filter-toggle.active ion-icon {
+        transform: rotate(180deg);
+    }
+
+    .filters-content {
+        border-top: 1px solid #f0f0f0;
+        padding-top: 20px;
+    }
+
+    .filters-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 20px;
+    }
+
+    .filter-group {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .filter-label {
+        font-size: 13px;
+        font-weight: 600;
+        color: #8e8e93;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .checkbox-group {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .checkbox-label {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 14px;
+        color: #1d1d1f;
+        cursor: pointer;
+    }
+
+    .checkbox-custom {
+        width: 18px;
+        height: 18px;
+        border: 2px solid #e5e5ea;
+        border-radius: 4px;
+        position: relative;
+        transition: all 0.2s ease;
+    }
+
+    .checkbox-label input:checked + .checkbox-custom {
+        background: #007AFF;
+        border-color: #007AFF;
+    }
+
+    .checkbox-label input:checked + .checkbox-custom::after {
+        content: '✓';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        color: #ffffff;
+        font-size: 12px;
+        font-weight: bold;
+    }
+
+    .checkbox-label input {
+        display: none;
+    }
+
+    .range-inputs {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .range-input {
+        flex: 1;
+        padding: 10px 12px;
+        border: 1.5px solid #e5e5ea;
+        border-radius: 8px;
+        font-size: 14px;
+        background: #ffffff;
+        color: #1d1d1f;
+        outline: none;
+        transition: border-color 0.2s ease;
+    }
+
+    .range-input:focus {
+        border-color: #007AFF;
+    }
+
+    .range-separator {
+        font-size: 14px;
+        color: #8e8e93;
+        font-weight: 500;
+    }
+
+    .category-select,
+    .customer-select,
+    .setting-select {
+        width: 100%;
+        padding: 10px 12px;
+        border: 1.5px solid #e5e5ea;
+        border-radius: 8px;
+        font-size: 14px;
+        background: #ffffff;
+        color: #1d1d1f;
+        outline: none;
+        transition: border-color 0.2s ease;
+    }
+
+    .category-select:focus,
+    .customer-select:focus,
+    .setting-select:focus {
+        border-color: #007AFF;
+    }
+
+    /* ===== ANALYSIS ACTIONS ===== */
+    .analysis-actions {
+        display: flex;
+        justify-content: center;
+        gap: 12px;
+        margin-bottom: 32px;
+        padding: 20px;
+        background: #ffffff;
+        border-radius: 16px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+        border: 1px solid rgba(0, 0, 0, 0.06);
+    }
+
+    .btn-primary {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 14px 24px;
+        background: #007AFF;
+        color: #ffffff;
+        border: none;
+        border-radius: 12px;
+        font-size: 15px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        text-decoration: none;
+    }
+
+    .btn-primary:hover {
+        background: #0056b3;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(0, 122, 255, 0.3);
+    }
+
+    .btn-primary ion-icon {
+        font-size: 18px;
+    }
+
+    .btn-secondary {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 14px 24px;
+        background: rgba(0, 0, 0, 0.04);
+        color: #1d1d1f;
+        border: none;
+        border-radius: 12px;
+        font-size: 15px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        text-decoration: none;
+    }
+
+    .btn-secondary:hover {
+        background: rgba(0, 0, 0, 0.08);
+    }
+
+    .btn-secondary ion-icon {
+        font-size: 16px;
+    }
+
+    /* ===== RECENT ACTIVITY ===== */
+    .recent-activity {
+        background: #ffffff;
+        border-radius: 16px;
+        padding: 24px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+        border: 1px solid rgba(0, 0, 0, 0.06);
+    }
+
+    .activity-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+        padding-bottom: 16px;
+        border-bottom: 1px solid #f0f0f0;
+    }
+
+    .activity-title {
+        font-size: 18px;
+        font-weight: 600;
+        color: #1d1d1f;
+        margin: 0;
+    }
+
+    .view-all-btn {
+        padding: 6px 12px;
+        background: rgba(0, 122, 255, 0.1);
+        color: #007AFF;
+        border: none;
+        border-radius: 6px;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .view-all-btn:hover {
+        background: rgba(0, 122, 255, 0.15);
+    }
+
+    .activity-list {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .activity-item {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px;
+        border-radius: 8px;
+        transition: background 0.2s ease;
+    }
+
+    .activity-item:hover {
+        background: #f8f9fa;
+    }
+
+    .activity-icon {
+        width: 36px;
+        height: 36px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+
+    .activity-icon.sales {
+        background: rgba(52, 199, 89, 0.1);
+        color: #34C759;
+    }
+
+    .activity-icon.purchase {
+        background: rgba(0, 122, 255, 0.1);
+        color: #007AFF;
+    }
+
+    .activity-icon.expense {
+        background: rgba(255, 149, 0, 0.1);
+        color: #FF9500;
+    }
+
+    .activity-icon ion-icon {
+        font-size: 16px;
+    }
+
+    .activity-content {
+        flex: 1;
+    }
+
+    .activity-text {
+        font-size: 14px;
+        font-weight: 500;
+        color: #1d1d1f;
+        margin-bottom: 2px;
+    }
+
+    .activity-time {
+        font-size: 12px;
+        color: #8e8e93;
+    }
+
+    /* ===== MODAL ===== */
+    .modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+        padding: 20px;
+    }
+
+    .modal {
+        background: #ffffff;
+        border-radius: 16px;
+        padding: 24px;
+        max-width: 500px;
+        width: 100%;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+    }
+
+    .settings-modal {
+        max-width: 600px;
+    }
+
+    .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+        padding-bottom: 16px;
+        border-bottom: 1px solid #f0f0f0;
+    }
+
+    .modal-title {
+        font-size: 18px;
+        font-weight: 600;
+        color: #1d1d1f;
+        margin: 0;
+    }
+
+    .modal-close {
+        width: 32px;
+        height: 32px;
+        border: none;
+        background: none;
+        color: #8e8e93;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 6px;
+        transition: all 0.2s ease;
+    }
+
+    .modal-close:hover {
+        background: rgba(0, 0, 0, 0.04);
+        color: #1d1d1f;
+    }
+
+    .modal-content {
+        margin-bottom: 24px;
+    }
+
+    .settings-section {
+        margin-bottom: 24px;
+    }
+
+    .settings-subsection-title {
+        font-size: 16px;
+        font-weight: 600;
+        color: #1d1d1f;
+        margin: 0 0 12px 0;
+    }
+
+    .setting-item {
+        margin-bottom: 16px;
+    }
+
+    .setting-label {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 14px;
+        color: #1d1d1f;
+        cursor: pointer;
+    }
+
+    .modal-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 12px;
+    }
+
+    /* ===== RESPONSIVE DESIGN ===== */
+    @media (max-width: 1024px) {
+        .analytics-dashboard {
+            padding: 20px 16px;
+        }
+
+        .dashboard-header {
+            flex-direction: column;
+            gap: 16px;
+            text-align: center;
+        }
+
+        .stats-grid {
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        }
+
+        .type-cards {
+            grid-template-columns: 1fr;
+        }
+
+        .analysis-actions {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .analysis-actions button {
+            justify-content: center;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .dashboard-title {
+            font-size: 24px;
+        }
+
+        .stats-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .filters-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .range-presets {
+            justify-content: center;
+        }
+
+        .date-inputs {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
+<script>
+    let currentAnalysisType = 'combined';
+    let currentDateRange = 'custom';
+    let dashboardData = {};
+
+    // Initialize dashboard
+    document.addEventListener('DOMContentLoaded', function() {
+        initializeDashboard();
+        loadDashboardData();
+        setDefaultDates();
+    });
+
+    function initializeDashboard() {
+        // Set today's date as default
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('startDate').value = today;
+        document.getElementById('endDate').value = today;
+        document.getElementById('startDate').max = today;
+        document.getElementById('endDate').max = today;
+    }
+
+    function loadDashboardData() {
+        // Simulate loading dashboard data
+        setTimeout(() => {
+            updateDashboardStats({
+                totalRevenue: 2450000,
+                totalProfit: 875000,
+                totalTransactions: 156,
+                totalCustomers: 89,
+                revenueChange: 12.5,
+                profitChange: 8.3,
+                transactionChange: 5.2,
+                customerChange: 15.7
+            });
+        }, 1000);
+    }
+
+    function updateDashboardStats(data) {
+        dashboardData = data;
+        
+        // Format numbers with thousand separators
+        document.getElementById('totalRevenue').textContent = data.totalRevenue.toLocaleString() + ' IQD';
+        document.getElementById('totalProfit').textContent = data.totalProfit.toLocaleString() + ' IQD';
+        document.getElementById('totalTransactions').textContent = data.totalTransactions.toLocaleString();
+        document.getElementById('totalCustomers').textContent = data.totalCustomers.toLocaleString();
+
+        // Update change indicators
+        updateChangeIndicator('revenueChange', data.revenueChange);
+        updateChangeIndicator('profitChange', data.profitChange);
+        updateChangeIndicator('transactionChange', data.transactionChange);
+        updateChangeIndicator('customerChange', data.customerChange);
+    }
+
+    function updateChangeIndicator(elementId, change) {
+        const element = document.getElementById(elementId);
+        const isPositive = change > 0;
+        const arrow = isPositive ? '↗' : '↘';
+        const changeClass = isPositive ? 'positive' : 'negative';
+        
+        element.className = `stat-change ${changeClass}`;
+        element.textContent = `${arrow} ${Math.abs(change)}%`;
+    }
+
+    function selectAnalysisType(type) {
+        // Update active type card
+        document.querySelectorAll('.type-card').forEach(card => {
+            card.classList.remove('active');
+        });
+        document.querySelector(`[data-type="${type}"]`).classList.add('active');
+        
+        currentAnalysisType = type;
+        
+        // Update dashboard data based on type
+        updateDashboardForType(type);
+    }
+
+    function updateDashboardForType(type) {
+        // This would make API calls to get type-specific data
+        console.log(`Updating dashboard for analysis type: ${type}`);
+    }
+
+    function setDateRange(range) {
+        // Update active preset button
+        document.querySelectorAll('.preset-btn').forEach(btn => {
+            btn.classList.remove('active');
+        });
+        event.target.classList.add('active');
+        
+        currentDateRange = range;
+        
+        const now = new Date();
+        let startDate, endDate;
+        
+        switch(range) {
+            case 'today':
+                startDate = endDate = now.toISOString().split('T')[0];
+                break;
+            case 'week':
+                startDate = new Date(now.setDate(now.getDate() - 7)).toISOString().split('T')[0];
+                endDate = new Date().toISOString().split('T')[0];
+                break;
+            case 'month':
+                startDate = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
+                endDate = new Date().toISOString().split('T')[0];
+                break;
+            case 'quarter':
+                const quarter = Math.floor(now.getMonth() / 3);
+                startDate = new Date(now.getFullYear(), quarter * 3, 1).toISOString().split('T')[0];
+                endDate = new Date().toISOString().split('T')[0];
+                break;
+            case 'year':
+                startDate = new Date(now.getFullYear(), 0, 1).toISOString().split('T')[0];
+                endDate = new Date().toISOString().split('T')[0];
+                break;
+            case 'custom':
+                // Don't change dates for custom range
+                return;
+        }
+        
+        document.getElementById('startDate').value = startDate;
+        document.getElementById('endDate').value = endDate;
+    }
+
+    function setDefaultDates() {
+        const today = new Date().toISOString().split('T')[0];
+        const firstDayOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0];
+        
+        document.getElementById('startDate').value = firstDayOfMonth;
+        document.getElementById('endDate').value = today;
+    }
+
+    function toggleFilters() {
+        const filtersContent = document.getElementById('filtersContent');
+        const toggleBtn = document.querySelector('.filter-toggle');
+        
+        if (filtersContent.style.display === 'none') {
+            filtersContent.style.display = 'block';
+            toggleBtn.classList.add('active');
+            toggleBtn.innerHTML = '<ion-icon name="chevron-up-outline"></ion-icon> Hide Filters';
+        } else {
+            filtersContent.style.display = 'none';
+            toggleBtn.classList.remove('active');
+            toggleBtn.innerHTML = '<ion-icon name="chevron-down-outline"></ion-icon> Show Filters';
+        }
+    }
+
+    function resetFilters() {
+        // Reset all filters to default values
+        document.getElementById('statusDone').checked = true;
+        document.getElementById('statusPending').checked = true;
+        document.getElementById('statusCancelled').checked = false;
+        document.getElementById('minAmount').value = '';
+        document.getElementById('maxAmount').value = '';
+        document.getElementById('categoryFilter').value = '';
+        document.getElementById('customerFilter').value = '';
+        
+        // Reset to default date range
+        setDateRange('month');
+    }
+
+    function generateAnalysis() {
+        const startDate = document.getElementById('startDate').value;
+        const endDate = document.getElementById('endDate').value;
+        
+        if (!startDate || !endDate) {
+            alert('Please select both start and end dates');
+            return;
+        }
+        
+        if (new Date(startDate) > new Date(endDate)) {
+            alert('Start date cannot be after end date');
+            return;
+        }
+        
+        // Collect all filter values
+        const filters = {
+            analysisType: currentAnalysisType,
+            dateRange: {
+                start: startDate,
+                end: endDate
+            },
+            status: {
+                done: document.getElementById('statusDone').checked,
+                pending: document.getElementById('statusPending').checked,
+                cancelled: document.getElementById('statusCancelled').checked
+            },
+            amount: {
+                min: document.getElementById('minAmount').value,
+                max: document.getElementById('maxAmount').value
+            },
+            category: document.getElementById('categoryFilter').value,
+            customerType: document.getElementById('customerFilter').value
+        };
+        
+        // Show loading state
+        const btn = document.querySelector('.btn-primary');
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '<ion-icon name="refresh-outline"></ion-icon> Generating...';
+        btn.disabled = true;
+        
+        // Make API call to generate analysis
+        window.location.href = `/analysis/get/${startDate}/${endDate}?type=${currentAnalysisType}`;
+    }
+
+    function exportReport() {
+        alert('Export functionality will be implemented');
+    }
+
+    function showSettings() {
+        document.getElementById('settingsModal').style.display = 'flex';
+    }
+
+    function closeSettings() {
+        document.getElementById('settingsModal').style.display = 'none';
+    }
+
+    function saveSettings() {
+        // Save settings logic
+        closeSettings();
+        alert('Settings saved successfully!');
+    }
+
+    function scheduleReport() {
+        alert('Schedule report functionality will be implemented');
+    }
+
+    function viewAllActivity() {
+        alert('View all activity functionality will be implemented');
+    }
+
+    // Close modal when clicking outside
+    document.getElementById('settingsModal').addEventListener('click', function(e) {
+        if (e.target === this) {
+            closeSettings();
+        }
+    });
+</script>
 
 <%- include("../layout/footer") -%>
