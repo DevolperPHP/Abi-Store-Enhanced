@@ -29,6 +29,7 @@ const localstoreStorage = require('./routes/localstore/storage')
 const localstoreSell = require('./routes/localstore/sell')
 const localstoreOrders = require('./routes/localstore/orders')
 const localstoreDailyMoney = require('./routes/localstore/dailyMoney')
+const localstoreDailySummary = require('./routes/localstore/dailySummary')
 const transfer = require('./routes/admin/transfer')
 
 
@@ -71,6 +72,7 @@ app.use('/localstore/storage', localstoreStorage)
 app.use('/localstore/sell', localstoreSell)
 app.use('/localstore/orders', localstoreOrders)
 app.use('/localstore/dailymoney', localstoreDailyMoney)
+app.use('/localstore/dailysummary', localstoreDailySummary)
 app.use('/transfer', transfer)
 
 app.listen(PORT, (err) => {

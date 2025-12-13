@@ -1,0 +1,405 @@
+<%- include("../layout/navbar") -%>
+
+<div class="cashier-content">
+    <!-- Page Header -->
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">Daily Summary</h1>
+            <p class="page-subtitle">Overview of all transactions and performance</p>
+        </div>
+        <div>
+            <a href="/localstore/sell" class="btn btn-secondary">
+                <ion-icon name="arrow-back-outline"></ion-icon>
+                Back to POS
+            </a>
+        </div>
+    </div>
+
+    <!-- Date Filter -->
+    <div class="modern-card">
+        <div class="modern-card-header">
+            <div>
+                <h3 class="modern-card-title">
+                    <ion-icon name="calendar-outline" style="margin-right: 8px; color: var(--primary-color);"></ion-icon>
+                    Select Date
+                </h3>
+                <p class="modern-card-subtitle">Choose a date to view summary</p>
+            </div>
+        </div>
+        <form action="/localstore/dailysummary" method="get" class="date-filter-form">
+            <div class="date-input-group">
+                <input type="date" name="date" class="form-control" value="<%= selectedDate %>" required>
+                <button type="submit" class="btn btn-primary">
+                    <ion-icon name="search-outline"></ion-icon>
+                    View Summary
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Summary Stats -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-card-icon" style="background: rgba(0, 122, 255, 0.1);">
+                <ion-icon name="receipt-outline" style="color: var(--primary-color);"></ion-icon>
+            </div>
+            <div class="stat-card-content">
+                <div class="stat-card-label">Total Orders</div>
+                <div class="stat-card-value"><%= summaryStats.totalOrders %></div>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-card-icon" style="background: rgba(52, 199, 89, 0.1);">
+                <ion-icon name="cash-outline" style="color: var(--success-color);"></ion-icon>
+            </div>
+            <div class="stat-card-content">
+                <div class="stat-card-label">Total Sales</div>
+                <div class="stat-card-value"><%= summaryStats.totalSales.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") %> IQD</div>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-card-icon" style="background: rgba(255, 59, 48, 0.1);">
+                <ion-icon name="card-outline" style="color: #ff3b30;"></ion-icon>
+            </div>
+            <div class="stat-card-content">
+                <div class="stat-card-label">Total Expenses</div>
+                <div class="stat-card-value"><%= summaryStats.totalExpenses.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") %> IQD</div>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-card-icon" style="background: rgba(175, 82, 222, 0.1);">
+                <ion-icon name="trending-up-outline" style="color: #af52de;"></ion-icon>
+            </div>
+            <div class="stat-card-content">
+                <div class="stat-card-label">Net Profit</div>
+                <div class="stat-card-value" style="color: <%= summaryStats.netProfit >= 0 ? 'var(--success-color)' : '#ff3b30' %>">
+                    <%= summaryStats.netProfit.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") %> IQD
+                </div>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-card-icon" style="background: rgba(255, 204, 0, 0.1);">
+                <ion-icon name="calculator-outline" style="color: #ffcc00;"></ion-icon>
+            </div>
+            <div class="stat-card-content">
+                <div class="stat-card-label">Avg Order Value</div>
+                <div class="stat-card-value"><%= summaryStats.avgOrderValue.toFixed(0).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") %> IQD</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Orders Section -->
+    <div class="modern-card">
+        <div class="modern-card-header">
+            <div>
+                <h3 class="modern-card-title">
+                    <ion-icon name="receipt-outline" style="margin-right: 8px; color: var(--primary-color);"></ion-icon>
+                    Orders (<%= orders.length %>)
+                </h3>
+                <p class="modern-card-subtitle">All orders for <%= selectedDate %></p>
+            </div>
+        </div>
+
+        <% if(orders.length > 0) { %>
+            <div style="overflow-x: auto;">
+                <table class="modern-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 80px;">Order ID</th>
+                            <th>Date</th>
+                            <th style="width: 100px;">Items</th>
+                            <th style="width: 150px;">Total</th>
+                            <th style="width: 120px;">Status</th>
+                            <th style="width: 100px;">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% orders.forEach(order => { %>
+                            <tr>
+                                <td><strong>#<%= order.bid %></strong></td>
+                                <td><%= order.Date %></td>
+                                <td><%= order.products.length %> item(s)</td>
+                                <td><strong><%= order.total.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") %> IQD</strong></td>
+                                <td>
+                                    <% if(order.status === 'done') { %>
+                                        <span class="status-badge status-success">Completed</span>
+                                    <% } else { %>
+                                        <span class="status-badge status-pending">Pending</span>
+                                    <% } %>
+                                </td>
+                                <td>
+                                    <a href="/localstore/orders/get-data/<%= order.id %>" class="btn btn-primary btn-icon" title="View Details">
+                                        <ion-icon name="eye-outline"></ion-icon>
+                                    </a>
+                                </td>
+                            </tr>
+                        <% }) %>
+                    </tbody>
+                </table>
+            </div>
+        <% } else { %>
+            <div style="text-align: center; padding: 48px 24px; color: var(--text-secondary);">
+                <ion-icon name="receipt-outline" style="font-size: 64px; opacity: 0.3;"></ion-icon>
+                <h3 style="margin: 16px 0 8px; color: var(--text-primary);">No orders found</h3>
+                <p style="margin: 0; font-size: 16px;">No orders were placed on this date.</p>
+            </div>
+        <% } %>
+    </div>
+
+    <!-- Daily Transactions Section -->
+    <div class="modern-card">
+        <div class="modern-card-header">
+            <div>
+                <h3 class="modern-card-title">
+                    <ion-icon name="card-outline" style="margin-right: 8px; color: var(--primary-color);"></ion-icon>
+                    Daily Expenses (<%= dailyTransactions.length %>)
+                </h3>
+                <p class="modern-card-subtitle">All expenses for <%= selectedDate %></p>
+            </div>
+        </div>
+
+        <% if(dailyTransactions.length > 0) { %>
+            <div style="overflow-x: auto;">
+                <table class="modern-table">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Description</th>
+                            <th style="width: 150px;">Total Expenses</th>
+                            <th style="width: 100px;">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% dailyTransactions.forEach(transaction => { %>
+                            <tr>
+                                <td><%= transaction.Date %></td>
+                                <td>
+                                    <% if(transaction.purchase && transaction.purchase.length > 0) { %>
+                                        <%= transaction.purchase.length %> expense(s)
+                                    <% } else { %>
+                                        No expenses recorded
+                                    <% } %>
+                                </td>
+                                <td><strong><%= (transaction.total || 0).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") %> IQD</strong></td>
+                                <td>
+                                    <a href="/localstore/dailymoney/get/<%= transaction.id %>" class="btn btn-primary btn-icon" title="View Details">
+                                        <ion-icon name="eye-outline"></ion-icon>
+                                    </a>
+                                </td>
+                            </tr>
+                        <% }) %>
+                    </tbody>
+                </table>
+            </div>
+        <% } else { %>
+            <div style="text-align: center; padding: 48px 24px; color: var(--text-secondary);">
+                <ion-icon name="card-outline" style="font-size: 64px; opacity: 0.3;"></ion-icon>
+                <h3 style="margin: 16px 0 8px; color: var(--text-primary);">No expenses found</h3>
+                <p style="margin: 0; font-size: 16px;">No daily expenses were recorded on this date.</p>
+            </div>
+        <% } %>
+    </div>
+
+    <!-- Top Products Section -->
+    <% if(topProducts.length > 0) { %>
+    <div class="modern-card">
+        <div class="modern-card-header">
+            <div>
+                <h3 class="modern-card-title">
+                    <ion-icon name="trending-up-outline" style="margin-right: 8px; color: var(--primary-color);"></ion-icon>
+                    Top Selling Products
+                </h3>
+                <p class="modern-card-subtitle">Best performing products for <%= selectedDate %></p>
+            </div>
+        </div>
+
+        <div class="top-products-grid">
+            <% topProducts.forEach((product, index) => { %>
+                <div class="top-product-card">
+                    <div class="top-product-rank">#<%= index + 1 %></div>
+                    <div class="top-product-info">
+                        <div class="top-product-name"><%= product.name %></div>
+                        <div class="top-product-stats">
+                            <span class="product-qty"><%= product.qty %> sold</span>
+                            <span class="product-revenue"><%= product.total.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") %> IQD</span>
+                        </div>
+                    </div>
+                </div>
+            <% }) %>
+        </div>
+    </div>
+    <% } %>
+</div>
+
+<style>
+/* Date Filter Form */
+.date-filter-form {
+    margin-top: 20px;
+}
+
+.date-input-group {
+    display: flex;
+    gap: 12px;
+    align-items: end;
+}
+
+.date-input-group .form-control {
+    flex: 1;
+    max-width: 300px;
+}
+
+/* Stats Grid */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.stat-card {
+    background: white;
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    transition: var(--transition);
+}
+
+.stat-card:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    transform: translateY(-2px);
+}
+
+.stat-card-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.stat-card-icon ion-icon {
+    font-size: 28px;
+}
+
+.stat-card-content {
+    flex: 1;
+}
+
+.stat-card-label {
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin-bottom: 4px;
+    font-weight: 500;
+}
+
+.stat-card-value {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+/* Top Products */
+.top-products-grid {
+    display: grid;
+    gap: 12px;
+}
+
+.top-product-card {
+    background: var(--background-primary);
+    border-radius: 10px;
+    padding: 16px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    transition: var(--transition);
+}
+
+.top-product-card:hover {
+    background: var(--border-color);
+}
+
+.top-product-rank {
+    width: 48px;
+    height: 48px;
+    border-radius: 10px;
+    background: var(--primary-color);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+
+.top-product-info {
+    flex: 1;
+}
+
+.top-product-name {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 6px;
+}
+
+.top-product-stats {
+    display: flex;
+    gap: 16px;
+    font-size: 13px;
+}
+
+.product-qty {
+    color: var(--success-color);
+    font-weight: 600;
+}
+
+.product-revenue {
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .date-input-group {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .date-input-group .form-control {
+        max-width: 100%;
+    }
+
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .stat-card {
+        padding: 16px;
+    }
+
+    .stat-card-icon {
+        width: 48px;
+        height: 48px;
+    }
+
+    .stat-card-icon ion-icon {
+        font-size: 24px;
+    }
+
+    .stat-card-value {
+        font-size: 20px;
+    }
+}
+</style>
+
+<%- include("../layout/footer") -%>
