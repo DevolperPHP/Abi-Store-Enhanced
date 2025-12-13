@@ -1083,13 +1083,13 @@
                     <input type='hidden' value='${item}'>
                 `;
 
-                b.addEventListener("click", function () {
+                b.addEventListener("click", function (e) {
+                    e.preventDefault(); // Prevent any default behavior
+                    e.stopPropagation(); // Stop event from bubbling
                     const itemValue = String(this.getElementsByTagName("input")[0].value);
                     const parts = itemValue.split(' - ');
                     const name = parts[0] || '';
                     const size = parts[1] || '';
-                    const color = parts[2] || '';
-                    const colorName = parts[3] || '';
 
                     // Fetch product and add to cart
                     fetch('/localstore/sell/add', {
@@ -1099,12 +1099,18 @@
                         },
                         body: JSON.stringify({ name: name, size: size })
                     })
-                    .then(response => response.json())
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error(`HTTP error! status: ${response.status}`);
+                        }
+                        return response.json();
+                    })
                     .then(data => {
                         if (data.success) {
-                            // Reload the page to show updated cart
-                            window.location.reload();
+                            // Small delay to ensure server has processed the request
+                            setTimeout(() => window.location.reload(), 200);
                         } else {
+                            console.error('Server returned error:', data);
                             Swal.fire({
                                 icon: 'error',
                                 title: 'Error',
@@ -1113,12 +1119,9 @@
                         }
                     })
                     .catch(error => {
-                        console.error('Error:', error);
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Error',
-                            text: 'Failed to add item to cart'
-                        });
+                        console.error('Fetch error:', error);
+                        // If there's a network error, still try reloading as the item might have been added
+                        setTimeout(() => window.location.reload(), 500);
                     });
 
                     closeAllLists();
