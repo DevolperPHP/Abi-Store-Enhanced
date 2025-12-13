@@ -28,12 +28,12 @@ router.post('/new', async (req, res) => {
             req.flash('daily-err', 'File already exist')
             res.redirect('/localstore/dailymoney/dashboard')
         } else {
-            new DailyMoney({
+            const newTransaction = await new DailyMoney({
                 Date: currentDate,
                 isCashier: true
             }).save()
 
-            res.redirect('/localstore/dailymoney/pending')
+            res.redirect(`/localstore/dailymoney/get/${newTransaction.id}`)
         }
     } catch (err) {
         console.log(err);

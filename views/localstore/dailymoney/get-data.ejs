@@ -1,38 +1,259 @@
-<%- include('../layout/navbar') -%>
+<%- include("../layout/navbar") -%>
 
-<div class="daily-money-data">
-    <p class="title"><%= data.Date%></p>
-    <table class="table table-striped">
-        <thead>
-            <tr>
-                <th>Title</th>
-                <th>Cost</th>
-                <th>Remove</th>
-            </tr>
-        </thead>
+<div class="cashier-content">
+    <!-- Page Header -->
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">Daily Money Report</h1>
+            <p class="page-subtitle">Track daily expenses and purchases</p>
+        </div>
+        <div>
+            <a href="/localstore/dailymoney/dashboard" class="btn btn-secondary">
+                <ion-icon name="arrow-back-outline"></ion-icon>
+                Back to Dashboard
+            </a>
+        </div>
+    </div>
 
-        <tbody>
-            <% data.purchase.forEach(getData => {%>
-                <tr>
-                    <td><%= getData.title%></td>
-                    <td><%= getData.cost.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")%> IQD</td>
-                    <td><form action="/localstore/dailymoney/remove/<%= data.id%>/<%= getData.title%>/<%= getData.cost%>?_method=PUT" method="post">
-                        <button class="remove"><ion-icon class="icon" name="remove-outline"></ion-icon></button>
-                    </form></td>
-                </tr>
-            <%}) %>
-            <tr>
-                <form action="/localstore/dailymoney/add/<%= data.id%>?_method=PUT" method="post">
-                    <td><input type="text" name="title" placeholder="Title" required></td>
-                    <td><input type="number" name="cost" placeholder="Cost" required></td>
-                    <td><button class="confirm"><ion-icon class="icon" name="checkmark-outline"></ion-icon></button></td>
-                </form>
-            </tr>
-            <tr>
-                <td colspan="3">Total: <%= total.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")%> IQD</td>
-            </tr>
-        </tbody>
-    </table>
+    <!-- Daily Money Info Card -->
+    <div class="modern-card">
+        <div class="modern-card-header">
+            <div>
+                <h3 class="modern-card-title">
+                    <ion-icon name="calendar-outline" style="margin-right: 8px; color: var(--primary-color);"></ion-icon>
+                    <%= data.Date %>
+                </h3>
+                <p class="modern-card-subtitle">Daily expense tracking</p>
+            </div>
+        </div>
+    </div>
+
+        <!-- Add New Purchase Form -->
+    <div class="modern-card">
+        <div class="modern-card-header">
+            <div>
+                <h3 class="modern-card-title">
+                    <ion-icon name="add-circle-outline" style="margin-right: 8px; color: var(--success-color);"></ion-icon>
+                    Add New Expense
+                </h3>
+                <p class="modern-card-subtitle">Record a new purchase or expense</p>
+            </div>
+        </div>
+
+        <form action="/localstore/dailymoney/add/<%= data.id%>?_method=PUT" method="post" class="expense-form">
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">
+                        <ion-icon name="pricetags-outline" style="margin-right: 8px;"></ion-icon>
+                        Expense Title
+                    </label>
+                    <input type="text" name="title" class="form-control" placeholder="e.g., Office Supplies, Transport, etc." required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">
+                        <ion-icon name="cash-outline" style="margin-right: 8px;"></ion-icon>
+                        Cost (IQD)
+                    </label>
+                    <input type="number" name="cost" class="form-control" placeholder="Enter amount" min="0" step="1" required>
+                </div>
+                <br>
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-success">
+                        <ion-icon name="checkmark-outline"></ion-icon>
+                        Add Expense
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- Purchases Table -->
+    <div class="modern-card">
+        <div class="modern-card-header">
+            <div>
+                <h3 class="modern-card-title">
+                    <ion-icon name="receipt-outline" style="margin-right: 8px; color: var(--primary-color);"></ion-icon>
+                    Purchases & Expenses
+                </h3>
+                <p class="modern-card-subtitle"><%= data.purchase.length %> item(s) recorded</p>
+            </div>
+        </div>
+
+        <% if(data.purchase.length > 0) { %>
+            <div style="overflow-x: auto;">
+                <table class="modern-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 60px;">#</th>
+                            <th>Title</th>
+                            <th style="width: 150px;">Cost</th>
+                            <th style="width: 100px;">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% data.purchase.forEach((item, index) => { %>
+                            <tr>
+                                <td><span class="row-number"><%= index + 1 %></span></td>
+                                <td><strong><%= item.title %></strong></td>
+                                <td><%= item.cost.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")%> IQD</td>
+                                <td>
+                                    <form action="/localstore/dailymoney/remove/<%= data.id%>/<%= item.title%>/<%= item.cost%>?_method=PUT" method="post" style="display: inline;">
+                                        <button type="submit" class="btn btn-danger btn-icon" title="Remove item" onclick="return confirm('Are you sure you want to remove this item?');">
+                                            <ion-icon name="trash-outline"></ion-icon>
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                        <% }) %>
+                    </tbody>
+                    <tfoot>
+                        <tr class="total-row">
+                            <td colspan="2" style="text-align: right; font-weight: 700; font-size: 18px;">TOTAL:</td>
+                            <td style="font-size: 20px; font-weight: 700; color: var(--primary-color);">
+                                <%= total.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")%> IQD
+                            </td>
+                            <td></td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        <% } else { %>
+            <div style="text-align: center; padding: 48px 24px; color: var(--text-secondary);">
+                <ion-icon name="receipt-outline" style="font-size: 64px; opacity: 0.3;"></ion-icon>
+                <h3 style="margin: 16px 0 8px; color: var(--text-primary);">No purchases recorded</h3>
+                <p style="margin: 0; font-size: 16px;">Add your first expense using the form below.</p>
+            </div>
+        <% } %>
+    </div>
 </div>
 
-<%- include('../layout/footer') -%>
+<style>
+/* Page Header */
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.page-title {
+    font-size: 32px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0 0 8px 0;
+}
+
+.page-subtitle {
+    font-size: 14px;
+    color: var(--text-secondary);
+    margin: 0;
+}
+
+/* Row Number */
+.row-number {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    background: var(--background-primary);
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-secondary);
+}
+
+/* Table Footer */
+.modern-table tfoot tr {
+    background: var(--background-primary);
+}
+
+.modern-table tfoot td {
+    padding: 16px;
+    border-top: 2px solid var(--primary-color);
+}
+
+.total-row td {
+    border-top: 2px solid var(--primary-color) !important;
+}
+
+/* Expense Form */
+.expense-form {
+    margin-top: 20px;
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr auto;
+    gap: 16px;
+    align-items: end;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.form-label {
+    display: flex;
+    align-items: center;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0;
+}
+
+.form-label ion-icon {
+    color: var(--primary-color);
+}
+
+.form-control {
+    padding: 12px 16px;
+    border: 2px solid var(--border-color);
+    border-radius: var(--border-radius);
+    font-size: 14px;
+    transition: var(--transition);
+    background: white;
+}
+
+.form-control:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.1);
+}
+
+.form-actions {
+    display: flex;
+    align-items: center;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .page-header {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .page-header .btn {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .form-row {
+        grid-template-columns: 1fr;
+    }
+
+    .form-actions {
+        width: 100%;
+    }
+
+    .form-actions .btn {
+        width: 100%;
+    }
+}
+</style>
+
+<%- include("../layout/footer") -%>
