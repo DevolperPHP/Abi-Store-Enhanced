@@ -1070,26 +1070,30 @@
             results.forEach(({ item }, index) => {
                 b = document.createElement("DIV");
 
-                // Extract all parts from the item string (format: "Name - Size - Color - ColorName")
+                // Extract name and size from the item string (assuming format "Name - Size")
+                const parts = item.split(' - ');
+                const productName = parts[0];
+                const productSize = parts[1] || '';
                 const displayName = item;
 
-                // Create the simplified HTML structure
+                // Create the HTML structure
                 b.innerHTML = `
+                    <div class="autocomplete-icon">
+                        <ion-icon name="cube-outline"></ion-icon>
+                    </div>
                     <div class="autocomplete-text">
                         <div class="autocomplete-name">
                             <strong>${displayName.substr(0, val.length)}</strong>${displayName.substr(val.length)}
                         </div>
+                        ${productSize ? `<div class="autocomplete-description">Size: ${productSize}</div>` : ''}
                     </div>
+                    <div class="autocomplete-badge">Add to Cart</div>
                     <input type='hidden' value='${item}'>
                 `;
 
                 b.addEventListener("click", function () {
                     const itemValue = String(this.getElementsByTagName("input")[0].value);
-                    const parts = itemValue.split(' - ');
-                    const name = parts[0] || '';
-                    const size = parts[1] || '';
-                    const color = parts[2] || '';
-                    const colorName = parts[3] || '';
+                    const [name, size] = itemValue.split(' - ');
 
                     // Fetch product and add to cart
                     fetch('/localstore/sell/add', {
@@ -1232,6 +1236,7 @@
     cursor: pointer;
     display: flex;
     align-items: center;
+    gap: 12px;
     transition: all 0.15s ease;
     border-left: 3px solid transparent;
     margin: 0 4px;
@@ -1240,6 +1245,7 @@
 
 .autocomplete-items div:hover {
     background: var(--background-primary);
+    border-left-color: var(--primary-color);
 }
 
 .autocomplete-items div.autocomplete-active {
@@ -1252,14 +1258,49 @@
     font-weight: 600;
 }
 
+.autocomplete-items .autocomplete-icon {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--background-primary);
+    border-radius: 8px;
+    flex-shrink: 0;
+}
+
+.autocomplete-items .autocomplete-icon ion-icon {
+    font-size: 18px;
+    color: var(--primary-color);
+}
+
 .autocomplete-items .autocomplete-text {
     flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
 }
 
 .autocomplete-items .autocomplete-name {
     font-size: 14px;
     font-weight: 500;
     color: var(--text-primary);
+}
+
+.autocomplete-items .autocomplete-description {
+    font-size: 12px;
+    color: var(--text-secondary);
+}
+
+.autocomplete-items .autocomplete-badge {
+    padding: 4px 8px;
+    background: var(--primary-color);
+    color: white;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
 }
 
 .autocomplete-items .no-results {

@@ -15,7 +15,7 @@ router.use(middleWare)
 router.get('/', async (req, res) => {
     try {
         const products = await Product.find({})
-        const data = products.map((item) => `${item.name} - ${item.size}`)
+        const data = products.map((item) => `${item.name} - ${item.size} - ${item.color} - ${item.colorName}`)
         const uniqueArray = [... new Set(data)]
 
         const cartItems = req.user.localstoreCart;
