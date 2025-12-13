@@ -10,6 +10,18 @@
     </script>
 <%} %>
 
+<% if(order_suc && order_suc.length > 0){%>
+    <script>
+        Swal.fire({
+            icon: 'success',
+            title: 'Success',
+            text: `<%= order_suc%>`,
+            timer: 2000,
+            showConfirmButton: false
+        })
+    </script>
+<%} %>
+
 <div class="cashier-content">
     <!-- Page Header -->
     <div class="page-header">

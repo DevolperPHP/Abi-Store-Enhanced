@@ -30,6 +30,7 @@ router.get('/', async (req, res) => {
             user: req.user,
             orders: orders,
             err: req.flash('err'),
+            order_suc: req.flash('order-suc'),
         });
     } catch (err) {
         console.log(err);
@@ -115,6 +116,75 @@ router.get('/edit/:id', async (req, res) => {
     }
 })
 
+router.post('/update/:id', async (req, res) => {
+    try {
+        const order = await Sell.findOne({ _id: req.params.id });
+        if (!order) {
+            req.flash('err', 'Order not found');
+            return res.redirect('/localstore/orders');
+        }
+
+        const updatedProducts = [];
+        let newTotal = 0;
+
+        // Process each product in the order
+        for (let i = 0; i < order.products.length; i++) {
+            const productId = req.body[`product_id_${i}`];
+            const newQty = parseInt(req.body[`qty_${i}`]) || 0;
+            const oldQty = order.products[i].qty;
+
+            // Find the product to get current price
+            const product = await Product.findOne({ _id: productId });
+
+            if (product) {
+                // Calculate the difference in quantity
+                const qtyDiff = newQty - oldQty;
+
+                // Update product stock if quantity changed
+                if (qtyDiff !== 0) {
+                    // If increasing, reduce stock; if decreasing, increase stock
+                    product.stock -= qtyDiff;
+                    await product.save();
+                }
+
+                // Calculate new total for this item
+                const itemTotal = newQty * product.sell_price;
+                newTotal += itemTotal;
+
+                // Only include products with quantity > 0
+                if (newQty > 0) {
+                    updatedProducts.push({
+                        ...order.products[i],
+                        qty: newQty,
+                        total: itemTotal
+                    });
+                }
+            }
+        }
+
+        // Update the order with new products and total
+        order.products = updatedProducts;
+        order.total = newTotal;
+        order.note = req.body.order_note || order.note;
+
+        // If no products left, delete the order
+        if (updatedProducts.length === 0) {
+            await Sell.deleteOne({ _id: req.params.id });
+            req.flash('order-suc', 'Order deleted (no items left)');
+            return res.redirect('/localstore/orders');
+        }
+
+        await order.save();
+
+        req.flash('order-suc', 'Order updated successfully');
+        res.redirect(`/localstore/orders/get-data/${req.params.id}`);
+    } catch (err) {
+        console.error("Error updating order:", err);
+        req.flash('err', 'Error updating order');
+        res.redirect(`/localstore/orders/edit/${req.params.id}`);
+    }
+});
+
 router.get('/return/:orderId/:itemId', async (req, res) => {
     try {
         const { orderId, itemId } = req.params
@@ -199,4 +269,35 @@ router.put('/return/:orderId/:itemId', async (req, res) => {
         res.status(500).send("Internal server error");
     }
 });
+
+// Delete order route
+router.delete('/delete/:id', async (req, res) => {
+    try {
+        const order = await Sell.findOne({ _id: req.params.id });
+
+        if (!order) {
+            req.flash('err', 'Order not found');
+            return res.redirect('/localstore/orders');
+        }
+
+        // Return items to stock
+        for (const item of order.products) {
+            await Product.updateOne(
+                { _id: item._id },
+                { $inc: { stock: item.qty } }
+            );
+        }
+
+        // Delete the order
+        await Sell.deleteOne({ _id: req.params.id });
+
+        req.flash('order-suc', 'Order deleted successfully');
+        res.redirect('/localstore/orders');
+    } catch (err) {
+        console.error("Error deleting order:", err);
+        req.flash('err', 'Error deleting order');
+        res.redirect('/localstore/orders');
+    }
+});
+
 module.exports = router

@@ -1,67 +1,603 @@
 <%- include("../layout/navbar") -%>
-    <div class="get-sell">
-        <p class="title">Order</p>
-        <div class="info">
-            <p>Name: <%= data.name%>
-            </p>
-            <p>Date: <%= data.Date%>
-            </p>
-            <p>ID: <%= data.bid%>
-            </p>
-        </div>
 
-        <table class="table table-striped table-hover">
-            <thead>
-                <tr>
-                    <th>#</th>
-                    <th class="only-pc">Image</th>
-                    <th>Name</th>
-                    <th>Size</th>
-                    <th>Color</th>
-                    <th>Price</th>
-                    <th>Qty</th>
-                    <th>Total</th>
-                    <th>Return</th>
-                </tr>
-            </thead>
-            <tbody>
-                <% for (let i=0; i < data.products.length; i++) {%>
-                    <tr>
-                        <td>
-                            <%= i+1%>
-                        </td>
-                        <td class="only-pc"><img src="/upload/images/<%= data.products[i].image%>"></td>
-                        <td>
-                            <%= data.products[i].name%>
-                        </td>
-                        <td>
-                            <%= data.products[i].size%>
-                        </td>
-                        <td>
-                            <div class="color" style="background-color: <%= data.products[i].color%>"></div>
-                        </td>
-                        <td>
-                            <%= data.products[i].price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, "," )%>
-                        </td>
-                        <td>
-                            <%= data.products[i].qty%>
-                        </td>
-                        <td>
-                            <%= data.products[i].total.toString().replace(/\B(?=(\d{3})+(?!\d))/g, "," )%>
-                        </td>
-                        <td><button class="btn btn-danger"
-                                onclick="window.location.href='/localstore/orders/return/<%= data.id%>/<%= data.products[i]._id%>'">Return</button>
-                        </td>
-                    </tr>
-                    <%} %>
-                        <tr>
-                            <td colspan="5">Total: <%= data.total.toString().replace(/\B(?=(\d{3})+(?!\d))/g, "," )%>
-                                    IQD</td>
-                            <td colspan="5">Qty: <%= totalQty.toString().replace(/\B(?=(\d{3})+(?!\d))/g, "," )%>
-                                    IQD</td>
-                        </tr>
-            </tbody>
-        </table>
+<div class="cashier-content">
+    <!-- Page Header -->
+    <div class="page-header" style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 16px;">
+        <div>
+            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 8px;">
+                <a href="/localstore/orders/get-data/<%= data.id %>" class="back-btn">
+                    <ion-icon name="arrow-back-outline"></ion-icon>
+                </a>
+                <h1 class="page-title" style="margin: 0;">Edit Order #<%= data.bid %></h1>
+                <span class="order-status-badge status-pending">
+                    <ion-icon name="create-outline"></ion-icon>
+                    Editing
+                </span>
+            </div>
+            <p class="page-subtitle">Modify order items and quantities</p>
+        </div>
+        <div class="header-actions">
+            <button class="btn btn-secondary" onclick="window.location.href='/localstore/orders/get-data/<%= data.id %>'">
+                <ion-icon name="close-outline"></ion-icon>
+                Cancel
+            </button>
+            <button class="btn btn-success" onclick="saveChanges()">
+                <ion-icon name="save-outline"></ion-icon>
+                Save Changes
+            </button>
+        </div>
     </div>
 
-    <%- include("../layout/footer") -%>
+    <!-- Edit Order Layout -->
+    <div class="order-layout">
+        <!-- Main Content -->
+        <div class="order-main">
+            <!-- Order Info Cards -->
+            <div class="order-info-grid">
+                <div class="info-card">
+                    <div class="info-card-icon" style="background: rgba(0, 122, 255, 0.1); color: #007AFF;">
+                        <ion-icon name="person-outline"></ion-icon>
+                    </div>
+                    <div class="info-card-content">
+                        <span class="info-label">Cashier</span>
+                        <span class="info-value"><%= data.name %></span>
+                    </div>
+                </div>
+                <div class="info-card">
+                    <div class="info-card-icon" style="background: rgba(48, 209, 88, 0.1); color: #30D158;">
+                        <ion-icon name="calendar-outline"></ion-icon>
+                    </div>
+                    <div class="info-card-content">
+                        <span class="info-label">Date & Time</span>
+                        <span class="info-value"><%= data.Date %></span>
+                    </div>
+                </div>
+                <div class="info-card">
+                    <div class="info-card-icon" style="background: rgba(255, 149, 0, 0.1); color: #FF9500;">
+                        <ion-icon name="cube-outline"></ion-icon>
+                    </div>
+                    <div class="info-card-content">
+                        <span class="info-label">Total Items</span>
+                        <span class="info-value"><%= totalQty %> units</span>
+                    </div>
+                </div>
+                <div class="info-card">
+                    <div class="info-card-icon" style="background: rgba(175, 82, 222, 0.1); color: #AF52DE;">
+                        <ion-icon name="pricetag-outline"></ion-icon>
+                    </div>
+                    <div class="info-card-content">
+                        <span class="info-label">Order ID</span>
+                        <span class="info-value">#<%= data.bid %></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Edit Products Table -->
+            <div class="modern-card">
+                <div class="modern-card-header">
+                    <div>
+                        <h3 class="modern-card-title">Edit Order Items</h3>
+                        <p class="modern-card-subtitle"><%= data.products.length %> product(s) in this order</p>
+                    </div>
+                </div>
+
+                <form id="editOrderForm" action="/localstore/orders/update/<%= data.id %>" method="post">
+                    <div style="overflow-x: auto;">
+                        <table class="modern-table">
+                            <thead>
+                                <tr>
+                                    <th style="width: 50px;">#</th>
+                                    <th style="width: 70px;">Image</th>
+                                    <th>Product</th>
+                                    <th>Size</th>
+                                    <th>Color</th>
+                                    <th>Price</th>
+                                    <th style="width: 100px;">Quantity</th>
+                                    <th>Total</th>
+                                </tr>
+                            </thead>
+                            <tbody id="editProductsBody">
+                                <% for (let i = 0; i < data.products.length; i++) { %>
+                                    <tr class="product-row" data-index="<%= i %>">
+                                        <td><span class="row-number"><%= i + 1 %></span></td>
+                                        <td>
+                                            <img src="/upload/images/<%= data.products[i].image %>" alt="<%= data.products[i].name %>" class="product-image">
+                                        </td>
+                                        <td>
+                                            <strong><%= data.products[i].name %></strong>
+                                            <div style="font-size: 11px; color: var(--text-secondary); margin-top: 2px;">
+                                                ID: <%= data.products[i]._id %>
+                                            </div>
+                                        </td>
+                                        <td><span class="size-badge"><%= data.products[i].size %></span></td>
+                                        <td><%= data.products[i].colorName %></td>
+                                        <td class="price-display"><%= data.products[i].price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") %> IQD</td>
+                                        <td>
+                                            <div class="qty-input-group">
+                                                <button type="button" class="btn-qty" onclick="changeQty(<%= i %>, -1)">-</button>
+                                                <input type="number" class="form-control qty-input" name="qty_<%= i %>" value="<%= data.products[i].qty %>" min="0" max="999" readonly>
+                                                <button type="button" class="btn-qty" onclick="changeQty(<%= i %>, 1)">+</button>
+                                            </div>
+                                            <input type="hidden" name="product_id_<%= i %>" value="<%= data.products[i]._id %>">
+                                        </td>
+                                        <td>
+                                            <strong class="total-display" id="total_<%= i %>"><%= data.products[i].total.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") %> IQD</strong>
+                                            <input type="hidden" name="total_<%= i %>" value="<%= data.products[i].total %>">
+                                        </td>
+                                    </tr>
+                                <% } %>
+                            </tbody>
+                            <tfoot>
+                                <tr class="subtotal-row">
+                                    <td colspan="7" style="text-align: right; font-weight: 600;">Subtotal:</td>
+                                    <td id="subtotalDisplay"><%= data.total.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") %> IQD</td>
+                                </tr>
+                                <tr class="total-row">
+                                    <td colspan="7" style="text-align: right; font-weight: 700; font-size: 18px;">TOTAL:</td>
+                                    <td id="grandTotal" style="font-size: 20px; font-weight: 700; color: var(--primary-color);">
+                                        <%= data.total.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") %> IQD
+                                    </td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+
+                    <!-- Order Notes -->
+                    <div style="margin-top: 20px;">
+                        <label class="form-label">
+                            <ion-icon name="document-text-outline" style="margin-right: 8px; vertical-align: middle;"></ion-icon>
+                            Order Notes
+                        </label>
+                        <textarea name="order_note" class="form-control" placeholder="Add notes for this order (optional)" rows="3" style="resize: none;"><%= data.note || '' %></textarea>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="order-sidebar">
+            <!-- Order Summary Card -->
+            <div class="modern-card summary-card">
+                <div class="modern-card-header" style="border-bottom: none; margin-bottom: 0; padding-bottom: 0;">
+                    <div>
+                        <h3 class="modern-card-title">Order Summary</h3>
+                    </div>
+                </div>
+                <div class="summary-content">
+                    <div class="summary-row">
+                        <span>Items</span>
+                        <span><%= data.products.length %> products</span>
+                    </div>
+                    <div class="summary-row">
+                        <span>Quantity</span>
+                        <span id="summaryQty"><%= totalQty %> units</span>
+                    </div>
+                    <div class="summary-row">
+                        <span>Subtotal</span>
+                        <span id="summarySubtotal"><%= data.total.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") %> IQD</span>
+                    </div>
+                    <div class="summary-divider"></div>
+                    <div class="summary-row total">
+                        <span>Total</span>
+                        <span id="summaryTotal"><%= data.total.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") %> IQD</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="action-buttons-vertical">
+                <button class="btn btn-success action-btn-full" onclick="saveChanges()">
+                    <ion-icon name="save-outline"></ion-icon>
+                    <span>Save Changes</span>
+                </button>
+
+                <a href="/localstore/orders/get-data/<%= data.id %>" class="btn btn-secondary action-btn-full">
+                    <ion-icon name="close-outline"></ion-icon>
+                    <span>Cancel</span>
+                </a>
+
+                <a href="/localstore/orders/return/<%= data.id %>/all" class="btn btn-warning action-btn-full">
+                    <ion-icon name="return-down-back-outline"></ion-icon>
+                    <span>Return All Items</span>
+                </a>
+            </div>
+
+            <!-- Help Card -->
+            <div class="help-card">
+                <ion-icon name="help-circle-outline"></ion-icon>
+                <div>
+                    <strong>Editing Tips</strong>
+                    <span>Click +/- to adjust quantities. Total updates automatically.</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+/* Order Layout */
+.order-layout {
+    display: grid;
+    grid-template-columns: 1fr 340px;
+    gap: 24px;
+}
+
+.order-main {
+    min-width: 0;
+}
+
+.order-sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+/* Back Button */
+.back-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    background: var(--background-primary);
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+    text-decoration: none;
+    transition: var(--transition);
+}
+
+.back-btn:hover {
+    background: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
+}
+
+/* Order Status Badge */
+.order-status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.status-pending {
+    background: rgba(255, 149, 0, 0.1);
+    color: #FF9500;
+}
+
+/* Header Actions */
+.header-actions {
+    display: flex;
+    gap: 12px;
+}
+
+/* Order Info Grid */
+.order-info-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.info-card {
+    background: white;
+    border-radius: var(--border-radius);
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    box-shadow: var(--shadow-light);
+    border: 1px solid var(--border-color);
+    transition: var(--transition);
+}
+
+.info-card:hover {
+    box-shadow: var(--shadow-medium);
+    transform: translateY(-2px);
+}
+
+.info-card-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+}
+
+.info-card-content {
+    display: flex;
+    flex-direction: column;
+}
+
+.info-label {
+    font-size: 12px;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 4px;
+}
+
+.info-value {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+/* Row Number */
+.row-number {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    background: var(--background-primary);
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-secondary);
+}
+
+/* Size Badge */
+.size-badge {
+    display: inline-block;
+    padding: 4px 10px;
+    background: var(--background-primary);
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+/* Quantity Input */
+.qty-input-group {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.btn-qty {
+    width: 28px;
+    height: 28px;
+    border: 1px solid var(--border-color);
+    background: var(--background-primary);
+    border-radius: 6px;
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-primary);
+    cursor: pointer;
+    transition: var(--transition);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-qty:hover {
+    background: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
+}
+
+.qty-input {
+    width: 60px !important;
+    height: 32px;
+    text-align: center;
+    font-weight: 600;
+    font-size: 14px;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    padding: 4px;
+}
+
+/* Table Footer Rows */
+.modern-table tfoot tr {
+    background: var(--background-primary);
+}
+
+.modern-table tfoot td {
+    padding: 12px 16px;
+    border-top: 1px solid var(--border-color);
+}
+
+.total-row {
+    background: linear-gradient(135deg, #f0f4ff 0%, #e8f0fe 100%) !important;
+}
+
+.total-row td {
+    border-top: 2px solid var(--primary-color) !important;
+}
+
+/* Summary Card */
+.summary-card {
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    color: white;
+}
+
+.summary-card:hover {
+    transform: none;
+}
+
+.summary-card .modern-card-title {
+    color: white;
+}
+
+.summary-content {
+    padding-top: 16px;
+}
+
+.summary-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+    font-size: 14px;
+}
+
+.summary-row.total {
+    font-size: 22px;
+    font-weight: 700;
+    padding: 16px 0 8px;
+}
+
+.summary-divider {
+    height: 1px;
+    background: rgba(255, 255, 255, 0.1);
+    margin: 8px 0;
+}
+
+/* Action Buttons */
+.action-buttons-vertical {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.action-btn-full {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 14px 20px;
+    font-size: 15px;
+    font-weight: 500;
+    border-radius: var(--border-radius);
+    text-decoration: none;
+    width: 100%;
+}
+
+/* Help Card */
+.help-card {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 16px;
+    background: var(--background-primary);
+    border-radius: var(--border-radius);
+    border: 1px solid var(--border-color);
+}
+
+.help-card ion-icon {
+    font-size: 24px;
+    color: var(--primary-color);
+    flex-shrink: 0;
+}
+
+.help-card div {
+    display: flex;
+    flex-direction: column;
+}
+
+.help-card strong {
+    font-size: 13px;
+    color: var(--text-primary);
+    margin-bottom: 4px;
+}
+
+.help-card span {
+    font-size: 11px;
+    color: var(--text-secondary);
+    line-height: 1.4;
+}
+
+/* Responsive */
+@media (max-width: 1100px) {
+    .order-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .order-info-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 600px) {
+    .order-info-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .header-actions {
+        flex-direction: column;
+        width: 100%;
+    }
+}
+</style>
+
+<script>
+    // Product prices from server
+    const productPrices = <%- JSON.stringify(data.products.map(p => p.price)) %>;
+
+    function changeQty(index, delta) {
+        const input = document.querySelector(`input[name="qty_${index}"]`);
+        const currentQty = parseInt(input.value) || 0;
+        const newQty = Math.max(0, currentQty + delta);
+        input.value = newQty;
+
+        updateRowTotal(index, newQty);
+        updateGrandTotal();
+    }
+
+    function updateRowTotal(index, qty) {
+        const price = productPrices[index];
+        const total = qty * price;
+        const totalElement = document.getElementById(`total_${index}`);
+        const hiddenTotal = document.querySelector(`input[name="total_${index}"]`);
+
+        totalElement.textContent = formatNumber(total) + ' IQD';
+        hiddenTotal.value = total;
+    }
+
+    function updateGrandTotal() {
+        let grandTotal = 0;
+        let totalQty = 0;
+
+        <% for (let i = 0; i < data.products.length; i++) { %>
+            const qty_<%= i %> = parseInt(document.querySelector('input[name="qty_<%= i %>"]').value) || 0;
+            totalQty += qty_<%= i %>;
+            grandTotal += qty_<%= i %> * productPrices[<%= i %>];
+        <% } %>
+
+        // Update displays
+        document.getElementById('grandTotal').textContent = formatNumber(grandTotal) + ' IQD';
+        document.getElementById('subtotalDisplay').textContent = formatNumber(grandTotal) + ' IQD';
+        document.getElementById('summarySubtotal').textContent = formatNumber(grandTotal) + ' IQD';
+        document.getElementById('summaryTotal').textContent = formatNumber(grandTotal) + ' IQD';
+        document.getElementById('summaryQty').textContent = totalQty + ' units';
+    }
+
+    function formatNumber(num) {
+        return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    }
+
+    function saveChanges() {
+        Swal.fire({
+            title: 'Save Changes?',
+            text: 'This will update the order with the new quantities.',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#30D158',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: 'Yes, save it'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                document.getElementById('editOrderForm').submit();
+            }
+        });
+    }
+
+    // Add input event listeners to all quantity inputs
+    document.addEventListener('DOMContentLoaded', function() {
+        <% for (let i = 0; i < data.products.length; i++) { %>
+            document.querySelector('input[name="qty_<%= i %>"]').addEventListener('change', function() {
+                const qty = parseInt(this.value) || 0;
+                updateRowTotal(<%= i %>, qty);
+                updateGrandTotal();
+            });
+        <% } %>
+    });
+</script>
+
+<%- include("../layout/footer") -%>
