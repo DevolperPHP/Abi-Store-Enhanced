@@ -40,6 +40,9 @@ router.get('/', async (req, res) => {
             totalQty = 0
         }
 
+        // Get count of held orders (temporary orders, not confirmed)
+        const heldOrdersCount = await Sell.countDocuments({ status: 'pending', isCashier: true })
+
         res.render('localstore/sell/sell', {
             user: req.user,
             data: uniqueArray,
@@ -47,7 +50,8 @@ router.get('/', async (req, res) => {
             order_suc: req.flash('order-suc'),
             err: req.flash('data-err'),
             total,
-            totalQty
+            totalQty,
+            heldOrdersCount
         })
     } catch (err) {
         console.log(err);
@@ -324,14 +328,15 @@ router.post('/clear-cart', async (req, res) => {
 
 router.get('/pending', async (req, res) => {
     try {
-        const pendingOrders = await Sell.find({ status: 'pending' }).sort({ Date: -1 });
+        // Only get held orders from cashier (isCashier: true), not shop orders
+        const pendingOrders = await Sell.find({ status: 'pending', isCashier: true }).sort({ sortDate: -1 });
         res.render('localstore/sell/pending-orders', {
             orders: pendingOrders,
             user: req.user
         });
     } catch (err) {
         console.error(err);
-        req.flash('data-err', 'Error fetching pending orders.');
+        req.flash('data-err', 'Error fetching held orders.');
         res.redirect('/localstore/sell');
     }
 });

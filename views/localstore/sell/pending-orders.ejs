@@ -3,14 +3,26 @@
 <div class="cashier-content">
     <!-- Page Header -->
     <div class="page-header">
-        <h1 class="page-title">Pending Orders</h1>
-        <p class="page-subtitle">Recall or delete orders that are on hold</p>
+        <h1 class="page-title">Held Orders</h1>
+        <p class="page-subtitle">Temporary orders waiting to be completed - these are NOT confirmed sales</p>
+    </div>
+
+    <!-- Info Banner -->
+    <div style="background: linear-gradient(135deg, rgba(0, 122, 255, 0.1) 0%, rgba(0, 100, 220, 0.15) 100%); border: 1px solid var(--primary-color); border-radius: var(--border-radius); padding: 16px 20px; margin-bottom: 24px; display: flex; align-items: center; gap: 12px;">
+        <ion-icon name="information-circle-outline" style="font-size: 24px; color: var(--primary-color);"></ion-icon>
+        <div>
+            <strong style="color: var(--text-primary);">What are held orders?</strong>
+            <p style="margin: 4px 0 0; font-size: 13px; color: var(--text-secondary);">Held orders are temporary carts saved when a customer needs more time. They are NOT completed sales and won't appear in reports until confirmed.</p>
+        </div>
     </div>
 
     <div class="modern-card">
         <div class="modern-card-header">
             <div>
-                <h3 class="modern-card-title">Held Orders</h3>
+                <h3 class="modern-card-title">
+                    <ion-icon name="pause-circle-outline" style="margin-right: 8px; color: #ff9500;"></ion-icon>
+                    Held Orders
+                </h3>
                 <p class="modern-card-subtitle"><%= orders.length %> order(s) on hold</p>
             </div>
              <a href="/localstore/sell" class="btn btn-primary">
@@ -24,9 +36,9 @@
                 <table class="modern-table">
                     <thead>
                         <tr>
-                            <th>Order ID</th>
+                            <th>Hold ID</th>
                             <th>Date</th>
-                            <th>Cashier</th>
+                            <th>Held By</th>
                             <th>Items</th>
                             <th>Total</th>
                             <th>Actions</th>
@@ -35,19 +47,29 @@
                     <tbody>
                         <% for (let order of orders) { %>
                             <tr>
-                                <td><strong>#<%= order.bid %></strong></td>
+                                <td>
+                                    <span style="display: inline-flex; align-items: center; gap: 6px;">
+                                        <ion-icon name="pause-circle" style="color: #ff9500;"></ion-icon>
+                                        <strong>#<%= order.bid %></strong>
+                                    </span>
+                                </td>
                                 <td><%= order.Date %></td>
                                 <td><%= order.name %></td>
-                                <td><%= order.products.reduce((sum, item) => sum + item.qty, 0) %></td>
-                                <td><%= order.total.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") %> IQD</td>
+                                <td>
+                                    <span style="background: var(--background-primary); padding: 4px 10px; border-radius: 4px; font-weight: 600;">
+                                        <%= order.products.reduce((sum, item) => sum + item.qty, 0) %> items
+                                    </span>
+                                </td>
+                                <td><strong><%= order.total.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") %> IQD</strong></td>
                                 <td style="display: flex; gap: 8px;">
                                     <form action="/localstore/sell/recall/<%= order._id %>" method="POST" style="margin: 0;">
-                                        <button type="submit" class="btn btn-success btn-icon" title="Recall Order">
-                                            <ion-icon name="play-back-outline"></ion-icon>
+                                        <button type="submit" class="btn btn-success" title="Recall to Cart">
+                                            <ion-icon name="play-outline"></ion-icon>
+                                            Recall
                                         </button>
                                     </form>
-                                    <form action="/localstore/sell/pending/<%= order._id %>?_method=DELETE" method="POST" style="margin: 0;" onsubmit="return confirm('Are you sure you want to delete this pending order?');">
-                                        <button type="submit" class="btn btn-danger btn-icon" title="Delete Order">
+                                    <form action="/localstore/sell/pending/<%= order._id %>?_method=DELETE" method="POST" style="margin: 0;" onsubmit="return confirm('Are you sure you want to delete this held order?');">
+                                        <button type="submit" class="btn btn-danger btn-icon" title="Delete">
                                             <ion-icon name="trash-outline"></ion-icon>
                                         </button>
                                     </form>
@@ -59,8 +81,9 @@
             </div>
         <% } else { %>
             <div style="text-align: center; padding: 48px 24px; color: var(--text-secondary);">
-                <ion-icon name="pause-circle-outline" style="font-size: 64px; opacity: 0.3;"></ion-icon>
-                <p style="margin-top: 16px; font-size: 16px;">No orders are currently on hold.</p>
+                <ion-icon name="checkmark-circle-outline" style="font-size: 64px; opacity: 0.3; color: var(--success-color);"></ion-icon>
+                <h3 style="margin: 16px 0 8px; color: var(--text-primary);">All Clear!</h3>
+                <p style="margin: 0; font-size: 16px;">No orders are currently on hold. All customers have been served.</p>
             </div>
         <% } %>
     </div>
