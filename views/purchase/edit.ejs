@@ -1,62 +1,889 @@
 <%- include("../layout/navbar") -%>
-<div class="purchase">
-  
-    <br><br>
-    <br>
-    <p class="title">Edit</p>
-    <div class="autocomplete" style="width:300px; display: none;">
-        <input id="myInput" type="text" placeholder="Search for item">
-      </div>
 
-      <table class="table table-striped table-hover">
-        <thead>
-            <tr>
-                <th>#</th>
-                <th class="only-pc">Image</th>
-                <th>Name</th>
-                <th>Qty</th>
-                <th>Size</th>
-                <th>Color</th>
-                <th>Cost</th>
-                <th>Selling price</th>
-                <th>Total</th>
-                <th>Delete</th>
-            </tr>
-        </thead>
+<!-- Modern Edit Container -->
+<div class="edit-container">
+    <!-- Edit Header -->
+    <div class="edit-header">
+        <div class="header-content">
+            <div class="header-icon">
+                <ion-icon name="create-outline"></ion-icon>
+            </div>
+            <div class="header-text">
+                <h1 class="edit-title">Edit Purchase</h1>
+                <p class="edit-subtitle">Modify purchase details and items</p>
+            </div>
+        </div>
+        <div class="header-actions">
+            <button class="btn-back" onclick="window.location.href='/purchase/get-purchases'">
+                <ion-icon name="arrow-back-outline"></ion-icon>
+                Back to Purchases
+            </button>
+        </div>
+    </div>
 
-        <tbody>
-            <% for (let i = 0; i < data.purchase.length; i++) {%>
-                <tr>
-                    <td><%= i+1%></td>
-                    <td class="only-pc"><img src="/upload/images/<%= data.purchase[i].image%>" alt="Product image"></td>
-                    <td><%= data.purchase[i].name%></td>
-                    <td><%= data.purchase[i].qty%></td>
-                    <td><%= data.purchase[i].size%></td>
-                    <td><div class="color" style="background-color: <%= data.purchase[i].color%>;"></div></td>
-                    <td><%= data.purchase[i].cost.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")%></td>
-                    <td><%= data.purchase[i].sell.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")%></td>
-                    <td><%= data.purchase[i].cost*data.purchase[i].qty%></td>
-                    <td><form action="/purchase/edit/remove/<%= data.id%>/<%= data.purchase[i].id%>?_method=PUT" method="post">
-                        <button><ion-icon class="icon" name="remove-outline"></ion-icon></button>
-                    </form></td>
-                </tr>
-            <% } %>
-            <tr>
-              <td colspan="10">Total : <%= total.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")%> IQD</td>
-            </tr>
-        </tbody>
-      </table>
+    <!-- Purchase Info Card -->
+    <div class="purchase-info-card">
+        <div class="info-header">
+            <h3 class="info-title">
+                <ion-icon name="receipt-outline"></ion-icon>
+                Purchase Information
+            </h3>
+        </div>
+        <div class="info-content">
+            <div class="info-row">
+                <div class="info-item">
+                    <span class="info-label">Purchase ID</span>
+                    <span class="info-value">#<%= data.id%></span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Date</span>
+                    <span class="info-value"><%= data.Date%></span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">User</span>
+                    <span class="info-value"><%= data.user%></span>
+                </div>
+            </div>
+        </div>
+    </div>
 
-      <center>
+    <!-- Items Section -->
+    <div class="items-section">
+        <div class="section-header">
+            <h3 class="section-title">Purchase Items</h3>
+            <p class="section-subtitle">Remove items or modify quantities</p>
+        </div>
 
-      <form action="/purchase/edit/confirm/<%= data.id%>?_method=PUT" method="post">
-        <input type="number" value="<%= data.cost%>" placeholder="Cost" name="cost" required>
-        <input type="text" value="<%= data.trader%>" placeholder="Trader name" name="trader" required>
-        
-        <br><br>
-        <button class="btn btn-success">Confirm</button>
-      </form>
-    </center>
+        <div class="items-table-container">
+            <table class="modern-table">
+                <tbody>
+                    <% for (let i = 0; i < data.purchase.length; i++) { %>
+                        <tr class="item-row">
+                            <td class="col-num">
+                                <span class="item-number"><%= i + 1%></span>
+                            </td>
+                            <td class="col-image">
+                                <div class="product-image-container">
+                                    <% if (data.purchase[i].image) { %>
+                                        <img src="/upload/images/<%= data.purchase[i].image%>" alt="<%= data.purchase[i].name%>" class="product-image">
+                                    <% } else { %>
+                                        <div class="image-placeholder">
+                                            <ion-icon name="image-outline"></ion-icon>
+                                        </div>
+                                    <% } %>
+                                </div>
+                            </td>
+                            <td class="col-name">
+                                <div class="product-name"><%= data.purchase[i].name%></div>
+                            </td>
+                            <td class="col-qty">
+                                <div class="quantity-display">
+                                    <ion-icon name="cube-outline"></ion-icon>
+                                    <span><%= data.purchase[i].qty%></span>
+                                </div>
+                            </td>
+                            <td class="col-specs">
+                                <div class="specs-container">
+                                    <div class="spec-item">
+                                        <ion-icon name="resize" class="spec-icon"></ion-icon>
+                                        <span class="spec-text"><%= data.purchase[i].size%></span>
+                                    </div>
+                                    <div class="spec-item">
+                                        <div class="color-indicator" style="background-color: <%= data.purchase[i].color%>"></div>
+                                        <span class="spec-text">Color</span>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="col-pricing">
+                                <div class="pricing-display">
+                                    <div class="price-row">
+                                        <span class="price-label">Cost:</span>
+                                        <span class="price-value cost"><%= data.purchase[i].cost.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")%> IQD</span>
+                                    </div>
+                                    <div class="price-row">
+                                        <span class="price-label">Selling:</span>
+                                        <span class="price-value selling"><%= data.purchase[i].sell.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")%> IQD</span>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="col-total">
+                                <div class="total-amount">
+                                    <%= (data.purchase[i].cost * data.purchase[i].qty).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")%> IQD
+                                </div>
+                            </td>
+                            <td class="col-actions">
+                                <form action="/purchase/edit/remove/<%= data.id%>/<%= data.purchase[i].id%>?_method=PUT" method="post" class="remove-form">
+                                    <button type="submit" class="btn-remove" onclick="return confirm('Are you sure you want to remove this item?')">
+                                        <ion-icon name="trash-outline"></ion-icon>
+                                        Remove
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                    <% } %>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Total Summary -->
+        <div class="total-summary">
+            <div class="summary-card">
+                <div class="summary-row">
+                    <span class="summary-label">Current Total</span>
+                    <span class="summary-value"><%= total.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")%> IQD</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Form Section -->
+    <div class="edit-form-section">
+        <div class="form-card">
+            <div class="form-header">
+                <h3 class="form-title">
+                    <ion-icon name="settings-outline"></ion-icon>
+                    Purchase Details
+                </h3>
+                <p class="form-subtitle">Update additional costs and trader information</p>
+            </div>
+
+            <form action="/purchase/edit/confirm/<%= data.id%>?_method=PUT" method="post" class="edit-form">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="cost" class="form-label">
+                            <ion-icon name="calculator-outline"></ion-icon>
+                            Additional Costs
+                        </label>
+                        <div class="input-wrapper">
+                            <input 
+                                type="number" 
+                                id="cost" 
+                                name="cost" 
+                                value="<%= data.cost%>" 
+                                class="form-input" 
+                                required
+                                placeholder="Enter additional costs"
+                            >
+                            <span class="input-suffix">IQD</span>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="trader" class="form-label">
+                            <ion-icon name="person-outline"></ion-icon>
+                            Trader Name
+                        </label>
+                        <div class="input-wrapper">
+                            <input 
+                                type="text" 
+                                id="trader" 
+                                name="trader" 
+                                value="<%= data.trader%>" 
+                                class="form-input" 
+                                required
+                                placeholder="Enter trader name"
+                            >
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <button type="button" class="btn-secondary" onclick="window.location.href='/purchase/get-purchases'">
+                        <ion-icon name="close-outline"></ion-icon>
+                        Cancel
+                    </button>
+                    <button type="submit" class="btn-primary">
+                        <ion-icon name="checkmark-outline"></ion-icon>
+                        Confirm Changes
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
 </div>
+
+<style>
+    /* ===== EDIT CONTAINER ===== */
+    .edit-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 40px 20px;
+        margin-left: 260px;
+        margin-top: 40px;
+    }
+
+    /* ===== EDIT HEADER ===== */
+    .edit-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 32px;
+        padding: 24px;
+        background: #ffffff;
+        border-radius: 16px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+        border: 1px solid rgba(0, 0, 0, 0.06);
+    }
+
+    .header-content {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+    }
+
+    .header-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        background: linear-gradient(135deg, #007AFF, #5856D6);
+        color: #ffffff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+
+    .header-icon ion-icon {
+        font-size: 24px;
+    }
+
+    .header-text {
+        flex: 1;
+    }
+
+    .edit-title {
+        font-size: 24px;
+        font-weight: 600;
+        color: #1d1d1f;
+        margin: 0 0 4px 0;
+        letter-spacing: -0.3px;
+    }
+
+    .edit-subtitle {
+        font-size: 16px;
+        color: #8e8e93;
+        margin: 0;
+        font-weight: 400;
+    }
+
+    /* ===== BUTTONS ===== */
+    .btn-back {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 16px;
+        background: rgba(0, 0, 0, 0.04);
+        color: #1d1d1f;
+        border: none;
+        border-radius: 10px;
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        text-decoration: none;
+    }
+
+    .btn-back:hover {
+        background: rgba(0, 0, 0, 0.08);
+    }
+
+    .btn-back ion-icon {
+        font-size: 16px;
+    }
+
+    /* ===== PURCHASE INFO CARD ===== */
+    .purchase-info-card {
+        background: #ffffff;
+        border-radius: 16px;
+        padding: 24px;
+        margin-bottom: 24px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+        border: 1px solid rgba(0, 0, 0, 0.06);
+    }
+
+    .info-header {
+        margin-bottom: 20px;
+        padding-bottom: 16px;
+        border-bottom: 1px solid #f0f0f0;
+    }
+
+    .info-title {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 18px;
+        font-weight: 600;
+        color: #1d1d1f;
+        margin: 0;
+    }
+
+    .info-title ion-icon {
+        font-size: 20px;
+        color: #007AFF;
+    }
+
+    .info-row {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 20px;
+    }
+
+    .info-item {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+    }
+
+    .info-label {
+        font-size: 13px;
+        font-weight: 600;
+        color: #8e8e93;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .info-value {
+        font-size: 16px;
+        font-weight: 500;
+        color: #1d1d1f;
+    }
+
+    /* ===== ITEMS SECTION ===== */
+    .items-section {
+        background: #ffffff;
+        border-radius: 16px;
+        padding: 24px;
+        margin-bottom: 24px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+        border: 1px solid rgba(0, 0, 0, 0.06);
+    }
+
+    .section-header {
+        margin-bottom: 20px;
+        padding-bottom: 16px;
+        border-bottom: 1px solid #f0f0f0;
+    }
+
+    .section-title {
+        font-size: 20px;
+        font-weight: 600;
+        color: #1d1d1f;
+        margin: 0 0 4px 0;
+    }
+
+    .section-subtitle {
+        font-size: 14px;
+        color: #8e8e93;
+        margin: 0;
+    }
+
+    .items-table-container {
+        overflow-x: auto;
+        border-radius: 12px;
+        border: 1px solid #f0f0f0;
+        margin-bottom: 20px;
+    }
+
+    .modern-table {
+        width: 100%;
+        border-collapse: collapse;
+        background: #ffffff;
+    }
+
+    .modern-table th {
+        background: #f8f9fa;
+        padding: 16px 12px;
+        text-align: left;
+        font-size: 13px;
+        font-weight: 600;
+        color: #8e8e93;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        border-bottom: 1px solid #f0f0f0;
+        white-space: nowrap;
+    }
+
+    .modern-table td {
+        border-bottom: 1px solid #f5f5f5;
+        vertical-align: middle;
+        padding: 16px 12px;
+    }
+
+    .item-row:hover {
+        background: #f8f9fa;
+    }
+
+    /* Table Column Sizes */
+    .col-num { width: 50px; text-align: center; }
+    .col-image { width: 70px; }
+    .col-name { min-width: 180px; }
+    .col-qty { width: 80px; text-align: center; }
+    .col-specs { width: 120px; }
+    .col-pricing { width: 160px; }
+    .col-total { width: 100px; text-align: right; font-weight: 600; }
+    .col-actions { width: 100px; text-align: center; }
+
+    /* Item Number */
+    .item-number {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 28px;
+        height: 28px;
+        background: #f0f0f0;
+        border-radius: 50%;
+        font-size: 13px;
+        font-weight: 600;
+        color: #8e8e93;
+    }
+
+    /* Product Image */
+    .product-image-container {
+        width: 50px;
+        height: 50px;
+        border-radius: 8px;
+        overflow: hidden;
+        background: #f5f5f7;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .product-image {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .image-placeholder {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(135deg, #f0f0f0, #e0e0e0);
+        color: #8e8e93;
+    }
+
+    .image-placeholder ion-icon {
+        font-size: 20px;
+    }
+
+    /* Product Name */
+    .product-name {
+        font-size: 15px;
+        font-weight: 600;
+        color: #1d1d1f;
+        line-height: 1.3;
+    }
+
+    /* Quantity Display */
+    .quantity-display {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 10px;
+        background: #f0f9ff;
+        color: #007AFF;
+        border-radius: 16px;
+        font-size: 13px;
+        font-weight: 600;
+    }
+
+    .quantity-display ion-icon {
+        font-size: 13px;
+    }
+
+    /* Specifications */
+    .specs-container {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+    }
+
+    .spec-item {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 13px;
+    }
+
+    .spec-icon {
+        font-size: 13px;
+        color: #8e8e93;
+        width: 14px;
+        text-align: center;
+    }
+
+    .color-indicator {
+        width: 14px;
+        height: 14px;
+        border-radius: 3px;
+        border: 1px solid rgba(0, 0, 0, 0.1);
+    }
+
+    .spec-text {
+        color: #1d1d1f;
+        font-weight: 500;
+    }
+
+    /* Pricing Display */
+    .pricing-display {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+
+    .price-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 13px;
+    }
+
+    .price-label {
+        color: #8e8e93;
+        font-weight: 500;
+    }
+
+    .price-value {
+        font-weight: 600;
+    }
+
+    .price-value.cost {
+        color: #007AFF;
+    }
+
+    .price-value.selling {
+        color: #34C759;
+    }
+
+    /* Total Amount */
+    .total-amount {
+        font-size: 15px;
+        font-weight: 700;
+        color: #007AFF;
+        text-align: right;
+    }
+
+    /* Remove Button */
+    .btn-remove {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 8px 12px;
+        background: rgba(255, 59, 48, 0.1);
+        color: #FF3B30;
+        border: none;
+        border-radius: 8px;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .btn-remove:hover {
+        background: rgba(255, 59, 48, 0.15);
+        transform: translateY(-1px);
+    }
+
+    .btn-remove ion-icon {
+        font-size: 14px;
+    }
+
+    .remove-form {
+        display: inline-block;
+    }
+
+    /* Total Summary */
+    .total-summary {
+        margin-top: 20px;
+    }
+
+    .summary-card {
+        background: #f8f9fa;
+        border-radius: 12px;
+        padding: 16px;
+        border: 1px solid #f0f0f0;
+    }
+
+    .summary-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .summary-label {
+        font-size: 16px;
+        font-weight: 600;
+        color: #1d1d1f;
+    }
+
+    .summary-value {
+        font-size: 20px;
+        font-weight: 700;
+        color: #007AFF;
+    }
+
+    /* ===== EDIT FORM SECTION ===== */
+    .edit-form-section {
+        background: #ffffff;
+        border-radius: 16px;
+        padding: 24px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+        border: 1px solid rgba(0, 0, 0, 0.06);
+    }
+
+    .form-header {
+        margin-bottom: 24px;
+        padding-bottom: 20px;
+        border-bottom: 1px solid #f0f0f0;
+    }
+
+    .form-title {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 20px;
+        font-weight: 600;
+        color: #1d1d1f;
+        margin: 0 0 6px 0;
+    }
+
+    .form-title ion-icon {
+        font-size: 22px;
+        color: #007AFF;
+    }
+
+    .form-subtitle {
+        font-size: 14px;
+        color: #8e8e93;
+        margin: 0;
+    }
+
+    .edit-form {
+        display: flex;
+        flex-direction: column;
+        gap: 24px;
+    }
+
+    .form-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 20px;
+    }
+
+    .form-group {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .form-label {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 14px;
+        font-weight: 600;
+        color: #1d1d1f;
+        margin: 0;
+    }
+
+    .form-label ion-icon {
+        font-size: 16px;
+        color: #007AFF;
+    }
+
+    .input-wrapper {
+        position: relative;
+        display: flex;
+        align-items: center;
+    }
+
+    .form-input {
+        width: 100%;
+        padding: 12px 16px;
+        border: 1.5px solid #e5e5ea;
+        border-radius: 10px;
+        font-size: 16px;
+        font-family: inherit;
+        background: #ffffff;
+        color: #1d1d1f;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        outline: none;
+    }
+
+    .form-input:focus {
+        border-color: #007AFF;
+        box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.1);
+    }
+
+    .input-suffix {
+        position: absolute;
+        right: 12px;
+        font-size: 14px;
+        color: #8e8e93;
+        font-weight: 500;
+        pointer-events: none;
+    }
+
+    .form-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 12px;
+        padding-top: 20px;
+        border-top: 1px solid #f0f0f0;
+    }
+
+    .btn-primary {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 12px 24px;
+        background: #007AFF;
+        color: #ffffff;
+        border: none;
+        border-radius: 12px;
+        font-size: 15px;
+        font-weight: 600;
+        font-family: inherit;
+        cursor: pointer;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        text-decoration: none;
+    }
+
+    .btn-primary:hover {
+        background: #0056b3;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(0, 122, 255, 0.3);
+    }
+
+    .btn-primary ion-icon {
+        font-size: 16px;
+    }
+
+    .btn-secondary {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 12px 24px;
+        background: rgba(0, 0, 0, 0.04);
+        color: #1d1d1f;
+        border: none;
+        border-radius: 12px;
+        font-size: 15px;
+        font-weight: 500;
+        font-family: inherit;
+        cursor: pointer;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        text-decoration: none;
+    }
+
+    .btn-secondary:hover {
+        background: rgba(0, 0, 0, 0.08);
+    }
+
+    .btn-secondary ion-icon {
+        font-size: 16px;
+    }
+
+    /* ===== RESPONSIVE DESIGN ===== */
+    @media (max-width: 1024px) {
+        .edit-container {
+            padding: 20px 16px;
+        }
+
+        .edit-header {
+            flex-direction: column;
+            gap: 16px;
+            text-align: center;
+        }
+
+        .form-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .form-actions {
+            flex-direction: column-reverse;
+        }
+
+        .form-actions button {
+            width: 100%;
+            justify-content: center;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .edit-title {
+            font-size: 20px;
+        }
+
+        .purchase-info-card,
+        .items-section,
+        .edit-form-section {
+            padding: 20px;
+        }
+
+        .info-row {
+            grid-template-columns: 1fr;
+            gap: 16px;
+        }
+
+        .modern-table th,
+        .modern-table td {
+            padding: 12px 8px;
+        }
+
+        .col-specs {
+            display: none;
+        }
+
+        .col-pricing {
+            display: none;
+        }
+
+        .col-actions {
+            width: 80px;
+        }
+
+        .btn-remove {
+            padding: 6px 10px;
+            font-size: 12px;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .edit-container {
+            padding: 16px 12px;
+        }
+
+        .edit-title {
+            font-size: 18px;
+        }
+
+        .purchase-info-card,
+        .items-section,
+        .edit-form-section {
+            padding: 16px;
+        }
+
+        .col-image {
+            width: 50px;
+        }
+
+        .product-image-container {
+            width: 40px;
+            height: 40px;
+        }
+
+        .col-name {
+            min-width: 120px;
+        }
+
+        .col-total {
+            display: none;
+        }
+    }
+</style>
 
 <%- include("../layout/footer") -%>
