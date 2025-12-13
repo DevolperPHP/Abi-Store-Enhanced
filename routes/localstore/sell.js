@@ -158,6 +158,56 @@ router.put('/remove/:id', async (req, res) => {
     }
 })
 
+router.put('/update-qty/:id', async (req, res) => {
+    try {
+        const productId = req.params.id;
+        const newQty = parseInt(req.body.qty);
+
+        if (isNaN(newQty) || newQty < 0) {
+            req.flash('data-err', 'Invalid quantity.');
+            return res.redirect('/localstore/sell');
+        }
+
+        const product = await Product.findOne({ _id: productId });
+        if (!product) {
+            req.flash('data-err', 'Product not found.');
+            return res.redirect('/localstore/sell');
+        }
+
+        if (newQty > product.stock) {
+            req.flash('data-err', `Only ${product.stock} items left in stock.`);
+            return res.redirect('/localstore/sell');
+        }
+
+        if (newQty === 0) {
+            // Remove item if quantity is 0
+            await User.updateOne({ _id: req.user._id }, {
+                $pull: {
+                    localstoreCart: {
+                        id: productId
+                    }
+                }
+            });
+        } else {
+            // Update quantity
+            await User.updateOne(
+                { _id: req.user._id, 'localstoreCart.id': productId },
+                {
+                    $set: {
+                        'localstoreCart.$.qty': newQty
+                    }
+                }
+            );
+        }
+
+        res.redirect('/localstore/sell');
+    } catch (err) {
+        console.error('Error updating quantity:', err);
+        req.flash('data-err', 'Error updating quantity.');
+        res.redirect('/localstore/sell');
+    }
+})
+
 router.get('/search-by-name/:name', async (req, res) => {
     try {
         const searchValue = req.params.name

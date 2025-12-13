@@ -65,34 +65,6 @@
         </div>
     <% } %>
 
-    <!-- Keyboard Shortcuts Bar -->
-    <div class="shortcuts-bar">
-        <div class="shortcut-item">
-            <kbd>F1</kbd>
-            <span>Focus Barcode</span>
-        </div>
-        <div class="shortcut-item">
-            <kbd>F2</kbd>
-            <span>Focus Search</span>
-        </div>
-        <div class="shortcut-item">
-            <kbd>F3</kbd>
-            <span>Apply Discount</span>
-        </div>
-        <div class="shortcut-item">
-            <kbd>F4</kbd>
-            <span>Hold Order</span>
-        </div>
-        <div class="shortcut-item">
-            <kbd>F8</kbd>
-            <span>Clear Cart</span>
-        </div>
-        <div class="shortcut-item">
-            <kbd>F12</kbd>
-            <span>Confirm Sale</span>
-        </div>
-    </div>
-
     <!-- Main POS Layout -->
     <div class="pos-layout">
         <!-- Left Panel: Products & Cart -->
@@ -158,7 +130,7 @@
                                     <th style="width: 60px;">Action</th>
                                 </tr>
                             </thead>
-                            <tbody id="cartBody">
+                            <tbody>
                                 <% for (let i = 0; i < products.length; i++) { %>
                                     <tr>
                                         <td>
@@ -168,7 +140,15 @@
                                         <td><span class="size-badge"><%= products[i].size%></span></td>
                                         <td><%= products[i].colorName%></td>
                                         <td>
-                                            <span class="qty-badge"><%= products[i].qty%></span>
+                                            <div class="qty-input-group">
+                                                <button type="button" class="btn-qty" onclick="updateCartQty('<%= products[i]._id%>', -1, <%= products[i].sell_price %>)">
+                                                    <ion-icon name="remove-outline"></ion-icon>
+                                                </button>
+                                                <span class="qty-badge"><%= products[i].qty%></span>
+                                                <button type="button" class="btn-qty" onclick="updateCartQty('<%= products[i]._id%>', 1, <%= products[i].sell_price %>)">
+                                                    <ion-icon name="add-outline"></ion-icon>
+                                                </button>
+                                            </div>
                                         </td>
                                         <td><%= products[i].sell_price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")%> IQD</td>
                                         <td><strong class="item-total"><%= products[i].total.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")%> IQD</strong></td>
@@ -182,30 +162,6 @@
                                     </tr>
                                 <% } %>
                             </tbody>
-                            <tfoot>
-                                <tr class="subtotal-row">
-                                    <td colspan="6" style="text-align: right; font-weight: 600;">Subtotal:</td>
-                                    <td colspan="2" id="subtotalDisplay">
-                                        <%= total.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")%> IQD
-                                    </td>
-                                </tr>
-                                <tr class="discount-row" id="discountRow" style="display: none;">
-                                    <td colspan="6" style="text-align: right; font-weight: 600; color: var(--success-color);">Discount:</td>
-                                    <td colspan="2" id="discountDisplay" style="color: var(--success-color);">- 0 IQD</td>
-                                </tr>
-                                <tr class="total-row">
-                                    <td colspan="6" style="text-align: right; font-weight: 700; font-size: 18px;">TOTAL:</td>
-                                    <td colspan="2" id="totalTable" style="font-size: 20px; font-weight: 700; color: var(--primary-color);">
-                                        <%= total.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")%> IQD
-                                    </td>
-                                </tr>
-                                <tr class="qty-row">
-                                    <td colspan="6" style="text-align: right; font-weight: 500; color: var(--text-secondary);">Total Quantity:</td>
-                                    <td colspan="2" style="color: var(--text-secondary);">
-                                        <%= totalQty.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")%> items
-                                    </td>
-                                </tr>
-                            </tfoot>
                         </table>
                     </div>
                 <% } else { %>
@@ -522,6 +478,13 @@
     font-weight: 600;
 }
 
+/* Quantity Input Group */
+.qty-input-group {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
 .qty-badge {
     display: inline-flex;
     align-items: center;
@@ -534,6 +497,33 @@
     border-radius: 6px;
     font-size: 14px;
     font-weight: 600;
+}
+
+.btn-qty {
+    width: 28px;
+    height: 32px;
+    border: 1px solid var(--border-color);
+    background: var(--background-primary);
+    border-radius: 6px;
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-primary);
+    cursor: pointer;
+    transition: var(--transition);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+}
+
+.btn-qty:hover {
+    background: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
+}
+
+.btn-qty ion-icon {
+    font-size: 16px;
 }
 
 /* Empty Cart */
@@ -910,6 +900,56 @@
                     .catch(err => console.error(err));
             }
         });
+    }
+
+    function updateCartQty(productId, delta, price) {
+        // Find the row containing this product
+        const buttons = document.querySelectorAll(`button[onclick*="${productId}"]`);
+        let row = null;
+        let qtySpan = null;
+        let totalCell = null;
+
+        for (let button of buttons) {
+            if (button.querySelector('ion-icon[name="remove-outline"]') || button.querySelector('ion-icon[name="add-outline"]')) {
+                row = button.closest('tr');
+                qtySpan = row.querySelector('.qty-badge');
+                totalCell = row.querySelector('.item-total');
+                break;
+            }
+        }
+
+        if (!row) return;
+
+        // Get current quantity
+        const currentQty = parseInt(qtySpan.textContent);
+        let newQty = currentQty + delta;
+
+        if (newQty < 0) newQty = 0;
+
+        // Update the display
+        qtySpan.textContent = newQty;
+
+        // Update item total display
+        const itemTotal = newQty * price;
+        totalCell.textContent = formatNumber(itemTotal) + ' IQD';
+
+        // Submit the form to update quantity
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = `/localstore/sell/update-qty/${productId}?_method=PUT`;
+
+        const qtyInput = document.createElement('input');
+        qtyInput.type = 'hidden';
+        qtyInput.name = 'qty';
+        qtyInput.value = newQty;
+
+        form.appendChild(qtyInput);
+        document.body.appendChild(form);
+        form.submit();
+    }
+
+    function formatNumber(num) {
+        return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
     }
 </script>
 
