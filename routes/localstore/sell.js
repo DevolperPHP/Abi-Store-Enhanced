@@ -58,6 +58,71 @@ router.get('/', async (req, res) => {
     }
 })
 
+router.post('/add', async (req, res) => {
+    try {
+        const { name, size, qty = 1 } = req.body;
+        const user = req.user;
+
+        // Find product by name and size
+        const data = await Product.findOne({ name: name, size: size });
+
+        if (!data) {
+            if (req.headers.accept && req.headers.accept.includes('application/json')) {
+                return res.status(404).json({ success: false, message: 'Item not found' });
+            }
+            req.flash('data-err', 'Item not found');
+            return res.redirect('/localstore/sell');
+        }
+
+        if (data.stock <= 0) {
+            if (req.headers.accept && req.headers.accept.includes('application/json')) {
+                return res.status(400).json({ success: false, message: 'Out of stock' });
+            }
+            req.flash('data-err', 'Out of stock');
+            return res.redirect('/localstore/sell');
+        }
+
+        const filter = user.localstoreCart.find((item) => item.id === data.id);
+
+        if (filter) {
+            const oldQty = filter.qty;
+            if (oldQty >= data.stock) {
+                if (req.headers.accept && req.headers.accept.includes('application/json')) {
+                    return res.status(400).json({ success: false, message: 'Out of stock' });
+                }
+                req.flash('data-err', 'Out of stock');
+            } else {
+                await User.updateOne({ _id: user._id, 'localstoreCart.id': data.id }, {
+                    $set: {
+                        'localstoreCart.$.qty': oldQty + qty
+                    }
+                });
+            }
+        } else {
+            await User.updateOne({ _id: user._id }, {
+                $push: {
+                    localstoreCart: {
+                        id: data.id,
+                        qty: qty,
+                    }
+                }
+            });
+        }
+
+        if (req.headers.accept && req.headers.accept.includes('application/json')) {
+            return res.json({ success: true, message: 'Item added to cart' });
+        }
+
+        res.redirect('/localstore/sell');
+    } catch (err) {
+        console.log(err);
+        if (req.headers.accept && req.headers.accept.includes('application/json')) {
+            return res.status(500).json({ success: false, message: 'Error adding item to cart' });
+        }
+        res.redirect('/localstore/sell');
+    }
+});
+
 router.put('/add-by-barcode/:barcode', async (req, res) => {
     try {
         const data = await Product.findOne({ barcode: req.params.barcode })

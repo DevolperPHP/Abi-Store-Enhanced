@@ -505,6 +505,9 @@ body.sidebar-collapsed .collapse-toggle {
     top: 64px;
     left: 0;
     width: 100%;
+    box-shadow: none;
+    border-bottom: none;
+    padding-bottom: 30px;
 }
 
 .nav-group {

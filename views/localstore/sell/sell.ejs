@@ -1054,14 +1054,87 @@
             this.parentNode.appendChild(a);
 
             const results = fuse.search(val);
-            results.forEach(({ item }) => {
+
+            if (results.length === 0) {
+                // Show no results message
                 b = document.createElement("DIV");
-                b.innerHTML = `<strong>${item.substr(0, val.length)}</strong>${item.substr(val.length)}`;
-                b.innerHTML += `<input type='hidden' value='${item}'>`;
+                b.classList.add("no-results");
+                b.innerHTML = `
+                    <ion-icon name="search-outline"></ion-icon>
+                    <p class="no-results-text">No products found for "${val}"</p>
+                `;
+                a.appendChild(b);
+                return;
+            }
+
+            results.forEach(({ item }, index) => {
+                b = document.createElement("DIV");
+
+                // Extract name and size from the item string (assuming format "Name - Size")
+                const parts = item.split(' - ');
+                const productName = parts[0];
+                const productSize = parts[1] || '';
+                const displayName = item;
+
+                // Create the HTML structure
+                b.innerHTML = `
+                    <div class="autocomplete-icon">
+                        <ion-icon name="cube-outline"></ion-icon>
+                    </div>
+                    <div class="autocomplete-text">
+                        <div class="autocomplete-name">
+                            <strong>${displayName.substr(0, val.length)}</strong>${displayName.substr(val.length)}
+                        </div>
+                        ${productSize ? `<div class="autocomplete-description">Size: ${productSize}</div>` : ''}
+                    </div>
+                    <div class="autocomplete-badge">Add to Cart</div>
+                    <input type='hidden' value='${item}'>
+                `;
+
                 b.addEventListener("click", function () {
-                    window.location.href = `/localstore/sell/search-by-name/${String(this.getElementsByTagName("input")[0].value)}`;
+                    const itemValue = String(this.getElementsByTagName("input")[0].value);
+                    const [name, size] = itemValue.split(' - ');
+
+                    // Fetch product and add to cart
+                    fetch('/localstore/sell/add', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ name: name, size: size })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            // Reload the page to show updated cart
+                            window.location.reload();
+                        } else {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: data.message || 'Failed to add item to cart'
+                            });
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: 'Failed to add item to cart'
+                        });
+                    });
+
                     closeAllLists();
                 });
+
+                // Add hover effect for better UX
+                b.addEventListener("mouseenter", function () {
+                    removeActive(a.getElementsByTagName("div"));
+                    this.classList.add("autocomplete-active");
+                    currentFocus = Array.prototype.indexOf.call(a.getElementsByTagName("div"), this);
+                });
+
                 a.appendChild(b);
             });
         });
@@ -1070,14 +1143,18 @@
             let x = document.getElementById(this.id + "autocomplete-list");
             if (x) x = x.getElementsByTagName("div");
             if (e.keyCode == 40) {
+                e.preventDefault();
                 currentFocus++;
                 addActive(x);
             } else if (e.keyCode == 38) {
+                e.preventDefault();
                 currentFocus--;
                 addActive(x);
             } else if (e.keyCode == 13) {
                 e.preventDefault();
-                if (currentFocus > -1 && x) x[currentFocus].click();
+                if (currentFocus > -1 && x && x[currentFocus]) {
+                    x[currentFocus].click();
+                }
             }
         });
 
@@ -1086,7 +1163,14 @@
             removeActive(x);
             if (currentFocus >= x.length) currentFocus = 0;
             if (currentFocus < 0) currentFocus = x.length - 1;
-            x[currentFocus].classList.add("autocomplete-active");
+            if (x[currentFocus]) {
+                x[currentFocus].classList.add("autocomplete-active");
+                // Ensure the active item is visible
+                const container = document.getElementById(inp.id + "autocomplete-list");
+                if (container && x[currentFocus].offsetTop > container.scrollHeight - 100) {
+                    container.scrollTop = x[currentFocus].offsetTop - 50;
+                }
+            }
         }
 
         function removeActive(x) {
@@ -1099,7 +1183,9 @@
             const x = document.getElementsByClassName("autocomplete-items");
             for (let i = 0; i < x.length; i++) {
                 if (elmnt != x[i] && elmnt != inp) {
-                    x[i].parentNode.removeChild(x[i]);
+                    if (x[i].parentNode.contains(x[i])) {
+                        x[i].parentNode.removeChild(x[i]);
+                    }
                 }
             }
         }
@@ -1112,5 +1198,151 @@
     const data = "<%= data %>".split(",");
     autocomplete(document.getElementById("myInput"), data);
 </script>
+
+<style>
+/* Professional Autocomplete Styling */
+.autocomplete-items {
+    position: absolute;
+    z-index: 9999;
+    background: white;
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08), 0 2px 8px rgba(0, 0, 0, 0.04);
+    max-height: 400px;
+    overflow-y: auto;
+    margin-top: 8px;
+    padding: 8px 0;
+}
+
+.autocomplete-items::-webkit-scrollbar {
+    width: 8px;
+}
+
+.autocomplete-items::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.autocomplete-items::-webkit-scrollbar-thumb {
+    background: var(--border-color);
+    border-radius: 4px;
+}
+
+.autocomplete-items::-webkit-scrollbar-thumb:hover {
+    background: var(--text-secondary);
+}
+
+.autocomplete-items div {
+    padding: 12px 16px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    transition: all 0.15s ease;
+    border-left: 3px solid transparent;
+    margin: 0 4px;
+    border-radius: 8px;
+}
+
+.autocomplete-items div:hover {
+    background: var(--background-primary);
+    border-left-color: var(--primary-color);
+}
+
+.autocomplete-items div.autocomplete-active {
+    background: rgba(0, 122, 255, 0.08);
+    border-left-color: var(--primary-color);
+}
+
+.autocomplete-items div strong {
+    color: var(--primary-color);
+    font-weight: 600;
+}
+
+.autocomplete-items .autocomplete-icon {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--background-primary);
+    border-radius: 8px;
+    flex-shrink: 0;
+}
+
+.autocomplete-items .autocomplete-icon ion-icon {
+    font-size: 18px;
+    color: var(--primary-color);
+}
+
+.autocomplete-items .autocomplete-text {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.autocomplete-items .autocomplete-name {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+.autocomplete-items .autocomplete-description {
+    font-size: 12px;
+    color: var(--text-secondary);
+}
+
+.autocomplete-items .autocomplete-badge {
+    padding: 4px 8px;
+    background: var(--primary-color);
+    color: white;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+.autocomplete-items .no-results {
+    padding: 32px 16px;
+    text-align: center;
+    color: var(--text-secondary);
+    cursor: default;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.autocomplete-items .no-results:hover {
+    background: transparent;
+    border-left-color: transparent;
+}
+
+.autocomplete-items .no-results ion-icon {
+    font-size: 32px;
+    opacity: 0.3;
+}
+
+.autocomplete-items .no-results-text {
+    font-size: 13px;
+}
+
+/* No results state */
+.autocomplete-no-results {
+    padding: 24px 16px;
+    text-align: center;
+    color: var(--text-secondary);
+}
+
+.autocomplete-no-results ion-icon {
+    font-size: 32px;
+    opacity: 0.3;
+    margin-bottom: 8px;
+}
+
+.autocomplete-no-results p {
+    font-size: 13px;
+    margin: 0;
+}
+</style>
 
 <%- include("../layout/footer") -%>
