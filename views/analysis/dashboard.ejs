@@ -575,175 +575,6 @@
         box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.1);
     }
 
-    /* ===== FILTERS SECTION ===== */
-    .filters-section {
-        background: #ffffff;
-        border-radius: 16px;
-        padding: 24px;
-        margin-bottom: 24px;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
-        border: 1px solid rgba(0, 0, 0, 0.06);
-    }
-
-    .filters-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 16px;
-    }
-
-    .filters-title {
-        font-size: 18px;
-        font-weight: 600;
-        color: #1d1d1f;
-        margin: 0;
-    }
-
-    .filter-toggle {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        padding: 8px 16px;
-        background: rgba(0, 0, 0, 0.04);
-        color: #1d1d1f;
-        border: none;
-        border-radius: 8px;
-        font-size: 14px;
-        font-weight: 500;
-        cursor: pointer;
-        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-
-    .filter-toggle:hover {
-        background: rgba(0, 0, 0, 0.08);
-    }
-
-    .filter-toggle ion-icon {
-        font-size: 16px;
-        transition: transform 0.2s ease;
-    }
-
-    .filter-toggle.active ion-icon {
-        transform: rotate(180deg);
-    }
-
-    .filters-content {
-        border-top: 1px solid #f0f0f0;
-        padding-top: 20px;
-    }
-
-    .filters-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-        gap: 20px;
-    }
-
-    .filter-group {
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
-    }
-
-    .filter-label {
-        font-size: 13px;
-        font-weight: 600;
-        color: #8e8e93;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-    }
-
-    .checkbox-group {
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
-    }
-
-    .checkbox-label {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        font-size: 14px;
-        color: #1d1d1f;
-        cursor: pointer;
-    }
-
-    .checkbox-custom {
-        width: 18px;
-        height: 18px;
-        border: 2px solid #e5e5ea;
-        border-radius: 4px;
-        position: relative;
-        transition: all 0.2s ease;
-    }
-
-    .checkbox-label input:checked + .checkbox-custom {
-        background: #007AFF;
-        border-color: #007AFF;
-    }
-
-    .checkbox-label input:checked + .checkbox-custom::after {
-        content: '✓';
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        color: #ffffff;
-        font-size: 12px;
-        font-weight: bold;
-    }
-
-    .checkbox-label input {
-        display: none;
-    }
-
-    .range-inputs {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-    }
-
-    .range-input {
-        flex: 1;
-        padding: 10px 12px;
-        border: 1.5px solid #e5e5ea;
-        border-radius: 8px;
-        font-size: 14px;
-        background: #ffffff;
-        color: #1d1d1f;
-        outline: none;
-        transition: border-color 0.2s ease;
-    }
-
-    .range-input:focus {
-        border-color: #007AFF;
-    }
-
-    .range-separator {
-        font-size: 14px;
-        color: #8e8e93;
-        font-weight: 500;
-    }
-
-    .category-select,
-    .customer-select,
-    .setting-select {
-        width: 100%;
-        padding: 10px 12px;
-        border: 1.5px solid #e5e5ea;
-        border-radius: 8px;
-        font-size: 14px;
-        background: #ffffff;
-        color: #1d1d1f;
-        outline: none;
-        transition: border-color 0.2s ease;
-    }
-
-    .category-select:focus,
-    .customer-select:focus,
-    .setting-select:focus {
-        border-color: #007AFF;
-    }
-
     /* ===== ANALYSIS ACTIONS ===== */
     .analysis-actions {
         display: flex;
@@ -1048,9 +879,7 @@
             grid-template-columns: 1fr;
         }
 
-        .filters-grid {
-            grid-template-columns: 1fr;
-        }
+        /* filters-grid removed with filters section */
 
         .range-presets {
             justify-content: center;
@@ -1070,7 +899,7 @@
     // Initialize dashboard
     document.addEventListener('DOMContentLoaded', function() {
         initializeDashboard();
-        loadDashboardData();
+        // loadDashboardData(); // Commented out - stats section removed
         setDefaultDates();
     });
 
@@ -1102,13 +931,18 @@
     function updateDashboardStats(data) {
         dashboardData = data;
         
-        // Format numbers with thousand separators
-        document.getElementById('totalRevenue').textContent = data.totalRevenue.toLocaleString() + ' IQD';
-        document.getElementById('totalProfit').textContent = data.totalProfit.toLocaleString() + ' IQD';
-        document.getElementById('totalTransactions').textContent = data.totalTransactions.toLocaleString();
-        document.getElementById('totalCustomers').textContent = data.totalCustomers.toLocaleString();
+        // Update elements only if they exist (stats overview section may have been removed)
+        const revenueElement = document.getElementById('totalRevenue');
+        const profitElement = document.getElementById('totalProfit');
+        const transactionsElement = document.getElementById('totalTransactions');
+        const customersElement = document.getElementById('totalCustomers');
+        
+        if (revenueElement) revenueElement.textContent = data.totalRevenue.toLocaleString() + ' IQD';
+        if (profitElement) profitElement.textContent = data.totalProfit.toLocaleString() + ' IQD';
+        if (transactionsElement) transactionsElement.textContent = data.totalTransactions.toLocaleString();
+        if (customersElement) customersElement.textContent = data.totalCustomers.toLocaleString();
 
-        // Update change indicators
+        // Update change indicators only if they exist
         updateChangeIndicator('revenueChange', data.revenueChange);
         updateChangeIndicator('profitChange', data.profitChange);
         updateChangeIndicator('transactionChange', data.transactionChange);
@@ -1117,6 +951,8 @@
 
     function updateChangeIndicator(elementId, change) {
         const element = document.getElementById(elementId);
+        if (!element) return; // Element may not exist if stats section was removed
+        
         const isPositive = change > 0;
         const arrow = isPositive ? '↗' : '↘';
         const changeClass = isPositive ? 'positive' : 'negative';
@@ -1194,31 +1030,12 @@
     }
 
     function toggleFilters() {
-        const filtersContent = document.getElementById('filtersContent');
-        const toggleBtn = document.querySelector('.filter-toggle');
-        
-        if (filtersContent.style.display === 'none') {
-            filtersContent.style.display = 'block';
-            toggleBtn.classList.add('active');
-            toggleBtn.innerHTML = '<ion-icon name="chevron-up-outline"></ion-icon> Hide Filters';
-        } else {
-            filtersContent.style.display = 'none';
-            toggleBtn.classList.remove('active');
-            toggleBtn.innerHTML = '<ion-icon name="chevron-down-outline"></ion-icon> Show Filters';
-        }
+        // Filters section has been removed - function kept for compatibility
+        console.log('Filters section has been removed');
     }
 
     function resetFilters() {
-        // Reset all filters to default values
-        document.getElementById('statusDone').checked = true;
-        document.getElementById('statusPending').checked = true;
-        document.getElementById('statusCancelled').checked = false;
-        document.getElementById('minAmount').value = '';
-        document.getElementById('maxAmount').value = '';
-        document.getElementById('categoryFilter').value = '';
-        document.getElementById('customerFilter').value = '';
-        
-        // Reset to default date range
+        // Reset to default date range only (filters section removed)
         setDateRange('month');
     }
 
@@ -1235,26 +1052,6 @@
             alert('Start date cannot be after end date');
             return;
         }
-        
-        // Collect all filter values
-        const filters = {
-            analysisType: currentAnalysisType,
-            dateRange: {
-                start: startDate,
-                end: endDate
-            },
-            status: {
-                done: document.getElementById('statusDone').checked,
-                pending: document.getElementById('statusPending').checked,
-                cancelled: document.getElementById('statusCancelled').checked
-            },
-            amount: {
-                min: document.getElementById('minAmount').value,
-                max: document.getElementById('maxAmount').value
-            },
-            category: document.getElementById('categoryFilter').value,
-            customerType: document.getElementById('customerFilter').value
-        };
         
         // Show loading state
         const btn = document.querySelector('.btn-primary');

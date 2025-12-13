@@ -1,0 +1,959 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- Main CSS Files -->
+  <link rel="stylesheet" href="/css/base.css">
+  <link rel="stylesheet" href="/css/components.css">
+  <link rel="stylesheet" href="/css/layout.css">
+  <link rel="stylesheet" href="/css/pages.css">
+  <link rel="stylesheet" href="/css/responsive.css">
+  <link rel="stylesheet" href="/css/animations.css">
+  <link rel="stylesheet" href="/css/transfer.css">
+  <!-- LocalStore Specific Styles -->
+  <link rel="stylesheet" href="/css/localstore.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <script type="module" src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.esm.js"></script>
+  <script nomodule src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.js"></script>
+  <title>LocalStore POS - Cashier System</title>
+  <link rel="icon" href="/images/logo.ico" type="image/x-icon">
+</head>
+
+<body>
+  <!-- Apple-style LocalStore Top Navigation -->
+  <nav class="localstore-navbar">
+    <div class="localstore-nav-container">
+      <button class="mobile-menu-toggle" onclick="toggleLocalStoreSidebar()">
+        <ion-icon name="menu-outline"></ion-icon>
+      </button>
+      
+      <div class="localstore-nav-brand">
+        <div class="brand-icon">
+          <ion-icon name="cash-outline"></ion-icon>
+        </div>
+        <div class="brand-content">
+          <span class="brand-title">LocalStore POS</span>
+          <span class="brand-subtitle">Cashier System</span>
+        </div>
+      </div>
+      
+      <div class="localstore-nav-center">
+        <div class="pos-status">
+          <div class="status-indicator active">
+            <div class="status-dot"></div>
+            <span class="status-text">System Active</span>
+          </div>
+          <div class="nav-time">
+            <ion-icon name="time-outline"></ion-icon>
+            <span id="localstore-clock"></span>
+          </div>
+        </div>
+      </div>
+      
+      <div class="localstore-nav-actions">
+        <!-- Quick POS Actions -->
+        <button class="pos-action-btn" title="Hold Order (F1)" onclick="holdCurrentOrder()">
+          <ion-icon name="pause-circle-outline"></ion-icon>
+          <span class="action-label">Hold</span>
+        </button>
+        
+        <button class="pos-action-btn" title="Clear Cart (F2)" onclick="clearCurrentCart()">
+          <ion-icon name="trash-outline"></ion-icon>
+          <span class="action-label">Clear</span>
+        </button>
+        
+        <button class="pos-action-btn primary" title="Process Payment (F3)" onclick="processCurrentPayment()">
+          <ion-icon name="card-outline"></ion-icon>
+          <span class="action-label">Pay</span>
+        </button>
+        
+        <!-- User Profile -->
+        <div class="localstore-profile" onclick="toggleLocalStoreProfileMenu()">
+          <div class="profile-avatar">
+            <% if(user && user.name) { %>
+              <%= user.name.charAt(0).toUpperCase() %>
+            <% } else { %>
+              <ion-icon name="person-circle-outline"></ion-icon>
+            <% } %>
+          </div>
+          <div class="profile-info">
+            <span class="profile-name"><%= user ? user.name : 'Cashier' %></span>
+            <span class="profile-role">Point of Sale</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Apple-style LocalStore Sidebar Navigation -->
+  <aside class="localstore-sidebar" id="localstoreSidebar">
+    
+    <nav class="localstore-sidebar-nav">
+      <br>
+      
+      <!-- Main POS Functions -->
+      <div class="nav-group">
+        <div class="nav-item active" data-page="pos-main" onclick="navigateToLocalStore('/localstore/sell')">
+          <ion-icon name="cash-outline" class="nav-icon"></ion-icon>
+          <span class="nav-text">Point of Sale</span>
+          <div class="nav-badge">Main</div>
+        </div>
+        <div class="nav-item" data-page="pending-orders" onclick="navigateToLocalStore('/localstore/sell/pending-orders')">
+          <ion-icon name="pause-circle-outline" class="nav-icon"></ion-icon>
+          <span class="nav-text">Pending Orders</span>
+          <div class="nav-badge" id="pendingCount">0</div>
+        </div>
+      </div>
+      
+      <!-- Sales Management -->
+      <div class="nav-group">
+        <div class="nav-group-title">Sales Management</div>
+        <div class="nav-item" data-page="sales-dashboard" onclick="navigateToLocalStore('/localstore/dashboard')">
+          <ion-icon name="bar-chart-outline" class="nav-icon"></ion-icon>
+          <span class="nav-text">Sales Dashboard</span>
+          <ion-icon name="chevron-forward-outline" class="chevron-icon"></ion-icon>
+        </div>
+        <div class="nav-item" data-page="daily-money" onclick="navigateToLocalStore('/localstore/dailyMoney')">
+          <ion-icon name="calendar-outline" class="nav-icon"></ion-icon>
+          <span class="nav-text">Daily Money</span>
+          <ion-icon name="chevron-forward-outline" class="chevron-icon"></ion-icon>
+        </div>
+        <div class="nav-item" data-page="orders" onclick="navigateToLocalStore('/localstore/orders')">
+          <ion-icon name="receipt-outline" class="nav-icon"></ion-icon>
+          <span class="nav-text">Order History</span>
+          <ion-icon name="chevron-forward-outline" class="chevron-icon"></ion-icon>
+        </div>
+      </div>
+      
+      <!-- Quick Actions -->
+      <div class="nav-group">
+        <div class="nav-group-title">Quick Actions</div>
+        <div class="nav-item" onclick="quickSearch()">
+          <ion-icon name="search-outline" class="nav-icon"></ion-icon>
+          <span class="nav-text">Quick Search</span>
+          <div class="quick-key">Ctrl+F</div>
+        </div>
+        <div class="nav-item" onclick="toggleFullscreen()">
+          <ion-icon name="expand-outline" class="nav-icon"></ion-icon>
+          <span class="nav-text">Fullscreen Mode</span>
+          <div class="quick-key">F11</div>
+        </div>
+        <div class="nav-item" onclick="showKeyboardShortcuts()">
+          <ion-icon name="keyboard-outline" class="nav-icon"></ion-icon>
+          <span class="nav-text">Keyboard Shortcuts</span>
+          <div class="quick-key">?</div>
+        </div>
+      </div>
+      
+      <!-- System Tools -->
+      <div class="nav-group">
+        <div class="nav-group-title">System Tools</div>
+        <div class="nav-item" onclick="openCalculator()">
+          <ion-icon name="calculator-outline" class="nav-icon"></ion-icon>
+          <span class="nav-text">Calculator</span>
+          <div class="quick-key">Calc</div>
+        </div>
+        <div class="nav-item" onclick="printReceipt()">
+          <ion-icon name="print-outline" class="nav-icon"></ion-icon>
+          <span class="nav-text">Print Receipt</span>
+          <div class="quick-key">Ctrl+P</div>
+        </div>
+        <div class="nav-item" onclick="showSystemInfo()">
+          <ion-icon name="information-circle-outline" class="nav-icon"></ion-icon>
+          <span class="nav-text">System Info</span>
+          <ion-icon name="chevron-forward-outline" class="chevron-icon"></ion-icon>
+        </div>
+      </div>
+      
+      <!-- Navigation -->
+      <div class="nav-group">
+        <div class="nav-group-title">Navigation</div>
+        <div class="nav-item" onclick="navigateToLocalStore('/storage')">
+          <ion-icon name="server-outline" class="nav-icon"></ion-icon>
+          <span class="nav-text">Inventory</span>
+          <ion-icon name="external-outline" class="chevron-icon"></ion-icon>
+        </div>
+        <div class="nav-item" onclick="navigateToLocalStore('/')">
+          <ion-icon name="home-outline" class="nav-icon"></ion-icon>
+          <span class="nav-text">Admin Dashboard</span>
+          <ion-icon name="external-outline" class="chevron-icon"></ion-icon>
+        </div>
+      </div>
+    </nav>
+    
+    <!-- Sidebar Footer -->
+    <div class="localstore-sidebar-footer">
+      <div class="system-status">
+        <div class="status-item">
+          <ion-icon name="wifi-outline" class="status-icon"></ion-icon>
+          <span class="status-label">Connected</span>
+        </div>
+        <div class="status-item">
+          <ion-icon name="hardware-chip-outline" class="status-icon"></ion-icon>
+          <span class="status-label">System OK</span>
+        </div>
+      </div>
+      
+      <button class="sidebar-logout" onclick="confirmLocalStoreLogout()">
+        <ion-icon name="log-out-outline"></ion-icon>
+        <span>Exit POS</span>
+      </button>
+    </div>
+  </aside>
+
+  <!-- Sidebar Overlay for Mobile -->
+  <div class="localstore-sidebar-overlay" onclick="closeLocalStoreSidebar()"></div>
+
+  <!-- JavaScript for LocalStore functionality -->
+  <script src="/javascript/active-page-cashier.js"></script>
+  
+  <script>
+    // LocalStore specific functionality
+    function toggleLocalStoreSidebar() {
+      const sidebar = document.getElementById('localstoreSidebar');
+      const overlay = document.querySelector('.localstore-sidebar-overlay');
+      const container = document.querySelector('.localstore-container');
+      const menuToggle = document.querySelector('.mobile-menu-toggle');
+      
+      sidebar.classList.toggle('open');
+      overlay.classList.toggle('active');
+      container.classList.toggle('sidebar-open');
+      
+      // Update menu icon
+      const icon = menuToggle.querySelector('ion-icon');
+      if (sidebar.classList.contains('open')) {
+        icon.setAttribute('name', 'close-outline');
+      } else {
+        icon.setAttribute('name', 'menu-outline');
+      }
+    }
+    
+    function closeLocalStoreSidebar() {
+      const sidebar = document.getElementById('localstoreSidebar');
+      const overlay = document.querySelector('.localstore-sidebar-overlay');
+      const container = document.querySelector('.localstore-container');
+      const menuToggle = document.querySelector('.mobile-menu-toggle');
+      
+      sidebar.classList.remove('open');
+      overlay.classList.remove('active');
+      container.classList.remove('sidebar-open');
+      
+      // Reset menu icon
+      const icon = menuToggle.querySelector('ion-icon');
+      icon.setAttribute('name', 'menu-outline');
+    }
+    
+    function navigateToLocalStore(url) {
+      // Add loading animation to clicked item
+      const clickedItem = event.currentTarget;
+      const originalContent = clickedItem.innerHTML;
+      
+      clickedItem.style.opacity = '0.6';
+      clickedItem.innerHTML = '<ion-icon name="loader-outline" class="nav-icon spinning"></ion-icon><span class="nav-text">Loading...</span>';
+      
+      // Close sidebar on mobile
+      if (window.innerWidth <= 768) {
+        closeLocalStoreSidebar();
+      }
+      
+      // Add a small delay for better UX
+      setTimeout(() => {
+        window.location.href = url;
+      }, 300);
+    }
+    
+    function toggleLocalStoreProfileMenu() {
+      const profileMenu = document.querySelector('.localstore-profile');
+      profileMenu.classList.toggle('active');
+    }
+    
+    // POS-specific functions
+    function holdCurrentOrder() {
+      // Trigger hold order functionality
+      if (typeof holdOrder === 'function') {
+        holdOrder();
+      }
+    }
+    
+    function clearCurrentCart() {
+      // Trigger clear cart functionality
+      if (typeof clearCart === 'function') {
+        clearCart();
+      }
+    }
+    
+    function processCurrentPayment() {
+      // Trigger payment processing
+      if (typeof processPayment === 'function') {
+        processPayment();
+      }
+    }
+    
+    // Quick actions
+    function quickSearch() {
+      const searchInput = document.getElementById('barcodeInput') || document.getElementById('searchInput');
+      if (searchInput) {
+        searchInput.focus();
+        closeLocalStoreSidebar();
+      }
+    }
+    
+    function toggleFullscreen() {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen();
+      } else {
+        document.exitFullscreen();
+      }
+    }
+    
+    function showKeyboardShortcuts() {
+      Swal.fire({
+        title: 'Keyboard Shortcuts',
+        html: `
+          <div style="text-align: left; font-family: monospace;">
+            <p><strong>F1</strong> - Hold Order</p>
+            <p><strong>F2</strong> - Clear Cart</p>
+            <p><strong>F3</strong> - Process Payment</p>
+            <p><strong>Ctrl+F</strong> - Focus Search</p>
+            <p><strong>Ctrl+P</strong> - Print Receipt</p>
+            <p><strong>F11</strong> - Toggle Fullscreen</p>
+            <p><strong>Esc</strong> - Clear Selection</p>
+            <p><strong>?</strong> - Show This Help</p>
+          </div>
+        `,
+        icon: 'info',
+        confirmButtonText: 'Got it!'
+      });
+    }
+    
+    function openCalculator() {
+      // Open system calculator (would integrate with actual calculator in production)
+      window.open('calculator:', '_blank');
+    }
+    
+    function printReceipt() {
+      // Trigger receipt printing
+      if (typeof printCurrentReceipt === 'function') {
+        printCurrentReceipt();
+      } else {
+        window.print();
+      }
+    }
+    
+    function showSystemInfo() {
+      Swal.fire({
+        title: 'System Information',
+        html: `
+          <div style="text-align: left;">
+            <p><strong>LocalStore POS v2.0</strong></p>
+            <p>Cashier System</p>
+            <p>Status: <span style="color: #34C759;">Online</span></p>
+            <p>User: <%= user ? user.name : 'Cashier' %></p>
+            <p>Session: Active</p>
+          </div>
+        `,
+        icon: 'info',
+        confirmButtonText: 'Close'
+      });
+    }
+    
+    function confirmLocalStoreLogout() {
+      Swal.fire({
+        title: 'Exit POS System',
+        text: 'Are you sure you want to exit the cashier system?',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#FF3B30',
+        cancelButtonColor: '#86868B',
+        confirmButtonText: 'Exit POS',
+        cancelButtonText: 'Stay',
+        customClass: {
+          popup: 'modern-alert',
+          confirmButton: 'modern-confirm-btn',
+          cancelButton: 'modern-cancel-btn'
+        }
+      }).then((result) => {
+        if (result.isConfirmed) {
+          window.location.href = '/';
+        }
+      });
+    }
+    
+    // Enhanced clock with POS time format
+    function updateLocalStoreClock() {
+      const clockElement = document.getElementById('localstore-clock');
+      if (!clockElement) return;
+      
+      const now = new Date();
+      const options = {
+        hour: 'numeric',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: true,
+        timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone
+      };
+      
+      clockElement.textContent = now.toLocaleTimeString('en-US', options);
+    }
+    
+    // Update pending orders count
+    function updatePendingOrdersCount() {
+      // This would typically fetch from an API
+      const count = Math.floor(Math.random() * 5); // Simulated count
+      const badge = document.getElementById('pendingCount');
+      if (badge) {
+        badge.textContent = count;
+        badge.style.display = count > 0 ? 'flex' : 'none';
+      }
+    }
+    
+    // Keyboard shortcuts for POS
+    function setupPOSKeyboardShortcuts() {
+      document.addEventListener('keydown', function(e) {
+        // Close sidebar with Escape key
+        if (e.key === 'Escape') {
+          closeLocalStoreSidebar();
+        }
+        
+        // POS shortcuts
+        switch(e.key) {
+          case 'F1':
+            e.preventDefault();
+            holdCurrentOrder();
+            break;
+          case 'F2':
+            e.preventDefault();
+            clearCurrentCart();
+            break;
+          case 'F3':
+            e.preventDefault();
+            processCurrentPayment();
+            break;
+          case 'F11':
+            e.preventDefault();
+            toggleFullscreen();
+            break;
+          case '?':
+            if (e.shiftKey) {
+              e.preventDefault();
+              showKeyboardShortcuts();
+            }
+            break;
+        }
+        
+        // Toggle sidebar with Ctrl/Cmd + M
+        if ((e.ctrlKey || e.metaKey) && e.key === 'm') {
+          e.preventDefault();
+          toggleLocalStoreSidebar();
+        }
+        
+        // Quick search with Ctrl/Cmd + F
+        if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
+          e.preventDefault();
+          quickSearch();
+        }
+        
+        // Print with Ctrl/Cmd + P
+        if ((e.ctrlKey || e.metaKey) && e.key === 'p') {
+          e.preventDefault();
+          printReceipt();
+        }
+      });
+    }
+    
+    // Initialize LocalStore navigation
+    function initLocalStoreNavigation() {
+      updateLocalStoreClock();
+      setInterval(updateLocalStoreClock, 1000);
+      
+      updatePendingOrdersCount();
+      setInterval(updatePendingOrdersCount, 30000); // Update every 30 seconds
+      
+      setupPOSKeyboardShortcuts();
+      
+      // Close sidebar when clicking outside on mobile
+      document.addEventListener('click', function(e) {
+        if (window.innerWidth <= 768) {
+          const sidebar = document.getElementById('localstoreSidebar');
+          const menuToggle = document.querySelector('.mobile-menu-toggle');
+          
+          if (!sidebar.contains(e.target) && !menuToggle.contains(e.target)) {
+            closeLocalStoreSidebar();
+          }
+        }
+      });
+    }
+    
+    // Initialize on page load
+    document.addEventListener('DOMContentLoaded', function() {
+      initLocalStoreNavigation();
+      
+      // Handle window resize
+      window.addEventListener('resize', function() {
+        if (window.innerWidth > 768) {
+          closeLocalStoreSidebar();
+        }
+      });
+    });
+  </script>
+  
+  <style>
+    /* LocalStore Specific Styles */
+    .localstore-navbar {
+      position: fixed !important;
+      top: 0;
+      left: 0;
+      right: 0;
+      width: 100vw;
+      height: 72px;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(20px) saturate(180%);
+      -webkit-backdrop-filter: blur(20px) saturate(180%);
+      border-bottom: 1px solid rgba(0, 122, 255, 0.1);
+      z-index: 10000;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+
+    .localstore-nav-container {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 100%;
+      padding: 0 24px;
+      width: 100%;
+    }
+
+    .localstore-nav-brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-shrink: 0;
+    }
+
+    .brand-icon {
+      width: 44px;
+      height: 44px;
+      background: linear-gradient(135deg, #007AFF, #5AC8FA);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 20px;
+      box-shadow: 0 4px 12px rgba(0, 122, 255, 0.3);
+    }
+
+    .brand-content {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .brand-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: #1d1d1f;
+      line-height: 1.2;
+    }
+
+    .brand-subtitle {
+      font-size: 12px;
+      color: #86868b;
+      line-height: 1.2;
+    }
+
+    .localstore-nav-center {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+    }
+
+    .pos-status {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .status-indicator {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 16px;
+      background: rgba(52, 199, 89, 0.1);
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 500;
+    }
+
+    .status-indicator.active .status-dot {
+      width: 8px;
+      height: 8px;
+      background: #34C759;
+      border-radius: 50%;
+      animation: pulse 2s infinite;
+    }
+
+    .nav-time {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 16px;
+      background: rgba(0, 122, 255, 0.1);
+      border-radius: 20px;
+      color: #007AFF;
+      font-size: 14px;
+      font-weight: 500;
+    }
+
+    .localstore-nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .pos-action-btn {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 10px 16px;
+      border: none;
+      border-radius: 10px;
+      background: rgba(0, 0, 0, 0.05);
+      color: #1d1d1f;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .pos-action-btn:hover {
+      background: rgba(0, 0, 0, 0.08);
+      transform: translateY(-1px);
+    }
+
+    .pos-action-btn.primary {
+      background: linear-gradient(135deg, #34C759, #30d158);
+      color: white;
+      box-shadow: 0 4px 12px rgba(52, 199, 89, 0.3);
+    }
+
+    .pos-action-btn.primary:hover {
+      background: linear-gradient(135deg, #30d158, #28a745);
+      transform: translateY(-1px);
+      box-shadow: 0 6px 16px rgba(52, 199, 89, 0.4);
+    }
+
+    .action-label {
+      display: none;
+    }
+
+    @media (min-width: 768px) {
+      .action-label {
+        display: inline;
+      }
+    }
+
+    .localstore-profile {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 8px 16px;
+      border-radius: 12px;
+      background: rgba(0, 0, 0, 0.05);
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .localstore-profile:hover {
+      background: rgba(0, 0, 0, 0.08);
+    }
+
+    .localstore-profile.active {
+      background: rgba(0, 122, 255, 0.15) !important;
+    }
+
+    .localstore-sidebar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 280px;
+      height: calc(110vh - 74px);
+      background-color: #fff !important;
+      backdrop-filter: blur(20px);
+      border-right: 1px solid var(--border-color);
+      overflow-y: auto;
+      overflow-x: hidden;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      z-index: 9999;
+      transform: translateX(0);
+      box-shadow: 4px 0 24px rgba(0, 0, 0, 0.08);
+    }
+
+    .localstore-sidebar-nav {
+      padding-top: 80px;
+      padding-bottom: 120px;
+    }
+
+    .localstore-sidebar-footer {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      padding: 20px;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(20px);
+      border-top: 1px solid rgba(0, 0, 0, 0.08);
+    }
+
+    .system-status {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 16px;
+      padding: 0 4px;
+    }
+
+    .status-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      color: #86868b;
+    }
+
+    .status-icon {
+      font-size: 14px;
+      color: #34C759;
+    }
+
+    .localstore-sidebar-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 9998;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.3s ease;
+    }
+
+    .localstore-sidebar-overlay.active {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    /* Navigation Items */
+    .nav-group {
+      margin-bottom: 8px;
+    }
+
+    .nav-group-title {
+      padding: 12px 24px 8px 24px;
+      font-size: 11px;
+      font-weight: 600;
+      color: #86868b;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin: 0;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 24px;
+      color: #1d1d1f;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      position: relative;
+      font-size: 14px;
+      font-weight: 500;
+      margin: 2px 12px;
+      border-radius: 12px;
+      width: calc(100% - 24px);
+    }
+
+    .nav-item:hover {
+      background: rgba(0, 122, 255, 0.08);
+      color: #007AFF;
+      transform: translateX(4px);
+    }
+
+    .nav-item.active {
+      background: rgba(0, 122, 255, 0.12);
+      color: #007AFF;
+      font-weight: 600;
+      border-left: 3px solid #007AFF;
+    }
+
+    .nav-item.active::after {
+      content: '';
+      position: absolute;
+      right: 20px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 6px;
+      height: 6px;
+      background: #007AFF;
+      border-radius: 50%;
+    }
+
+    .nav-icon {
+      font-size: 18px;
+      width: 20px;
+      text-align: center;
+      flex-shrink: 0;
+    }
+
+    .nav-text {
+      flex: 1;
+    }
+
+    .nav-badge {
+      background: #007AFF;
+      color: white;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 10px;
+      min-width: 20px;
+      text-align: center;
+    }
+
+    .quick-key {
+      background: rgba(0, 0, 0, 0.1);
+      color: #86868b;
+      font-size: 10px;
+      font-weight: 600;
+      padding: 2px 6px;
+      border-radius: 6px;
+      font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace;
+    }
+
+    .chevron-icon {
+      font-size: 14px;
+      opacity: 0.4;
+      transition: all 0.2s ease;
+    }
+
+    .nav-item:hover .chevron-icon {
+      opacity: 0.6;
+    }
+
+    .sidebar-logout {
+      width: 100%;
+      padding: 12px 16px;
+      background: rgba(255, 59, 48, 0.1);
+      color: #FF3B30;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 14px;
+      font-weight: 500;
+      transition: all 0.2s ease;
+    }
+
+    .sidebar-logout:hover {
+      background: rgba(255, 59, 48, 0.2);
+      transform: translateY(-1px);
+    }
+
+    /* Mobile Responsive */
+    @media (max-width: 768px) {
+      .mobile-menu-toggle {
+        display: flex;
+        width: 40px;
+        height: 40px;
+        border: none;
+        background: transparent;
+        color: #1d1d1f;
+        font-size: 20px;
+        cursor: pointer;
+        border-radius: 8px;
+        transition: all 0.2s ease;
+        margin-right: 12px;
+      }
+
+      .mobile-menu-toggle:hover {
+        background: rgba(0, 0, 0, 0.05);
+      }
+
+      .localstore-sidebar {
+        transform: translateX(-100%);
+        box-shadow: 4px 0 24px rgba(0, 0, 0, 0.15);
+      }
+
+      .localstore-sidebar.open {
+        transform: translateX(0);
+      }
+
+      .localstore-sidebar-overlay {
+        display: block;
+      }
+
+      .localstore-nav-center {
+        display: none;
+      }
+
+      .profile-info {
+        display: none;
+      }
+
+      .action-label {
+        display: none;
+      }
+
+      .brand-subtitle {
+        display: none;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .localstore-nav-container {
+        padding: 0 16px;
+      }
+
+      .brand-title {
+        font-size: 16px;
+      }
+
+      .pos-action-btn {
+        padding: 8px 12px;
+      }
+
+      .localstore-profile {
+        padding: 6px 12px;
+      }
+    }
+
+    /* Animations */
+    @keyframes pulse {
+      0%, 100% {
+        opacity: 1;
+      }
+      50% {
+        opacity: 0.5;
+      }
+    }
+
+    .spinning {
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  </style>
+</body>
+</html>

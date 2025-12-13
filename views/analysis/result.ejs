@@ -253,9 +253,9 @@
                                             </td>
                                             <td class="amount-cell"><%= (sale.total || 0).toLocaleString() %> IQD</td>
                                             <td>
-                                                <span class="store-type <%= sale.isShop ? 'local' : 'main' %>">
-                                                    <ion-icon name="<%= sale.isShop ? 'storefront-outline' : 'cube-outline' %>"></ion-icon>
-                                                    <%= sale.isShop ? 'Local Store' : 'Online' %>
+                                                <span class="store-type <%= sale.isCashier ? 'local' : 'main' %>">
+                                                    <ion-icon name="<%= sale.isCashier ? 'storefront-outline' : 'cube-outline' %>"></ion-icon>
+                                                    <%= sale.isCashier ? 'Local Store' : 'Main Storage' %>
                                                 </span>
                                             </td>
                                             <td>
