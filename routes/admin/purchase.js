@@ -769,7 +769,7 @@ router.get('/edit-qty/:id/:oldQty', async (req, res) => {
     try {
         const id = req.cookies.id
         const user = await User.findOne({ _id: id })
-        const data = await Product.findOne({ _id: req.params.id })
+        const data = await Product.findOne({ id: req.params.id })
 
         if (user.isAdmin == true || user.permissions.includes("Purchase")) {
             res.render('purchase/edit-qty', {
@@ -803,6 +803,87 @@ router.put('/edit-qty/:id/:oldQty', async (req, res) => {
     } catch (err) {
         console.log(err);
 
+    }
+})
+
+// AJAX route for adding items to cart from search results
+router.put('/add-ajax/:id', async (req, res) => {
+    try {
+        const id = req.cookies.id
+        const user = await User.findOne({ _id: id })
+        const qty = Number(req.body.qty)
+        
+        if (user) {
+            if (user.isAdmin == true || user.permissions.includes("Purchase")) {
+                const data = await Product.findOne({ _id: req.params.id })
+                
+                if (!data) {
+                    return res.json({
+                        success: false,
+                        message: 'Product not found'
+                    })
+                }
+                
+                if (!qty || qty <= 0) {
+                    return res.json({
+                        success: false,
+                        message: 'Invalid quantity'
+                    })
+                }
+                
+                // Check if item already exists in cart
+                const existingItem = user.purchase.find((item) => item.id === req.params.id)
+                
+                if (existingItem) {
+                    // Update existing item quantity
+                    const newQty = existingItem.qty + qty
+                    await User.updateOne({ _id: id, 'purchase.id': req.params.id }, {
+                        $set: {
+                            'purchase.$.qty': newQty,
+                            'purchase.$.total': newQty * data.price
+                        }
+                    })
+                } else {
+                    // Add new item to cart
+                    await User.updateOne({ _id: id }, {
+                        $push: {
+                            purchase: {
+                                id: data.id,
+                                name: data.name,
+                                qty: qty,
+                                image: data.image,
+                                color: data.color,
+                                size: data.size,
+                                cost: data.price,
+                                sell: data.sell_price,
+                                total: Number(data.price) * Number(qty)
+                            }
+                        }
+                    })
+                }
+                
+                res.json({
+                    success: true,
+                    message: 'Item added to cart successfully'
+                })
+            } else {
+                res.json({
+                    success: false,
+                    message: 'Permission denied'
+                })
+            }
+        } else {
+            res.json({
+                success: false,
+                message: 'User not authenticated'
+            })
+        }
+    } catch (err) {
+        console.log('Error adding to cart:', err)
+        res.status(500).json({
+            success: false,
+            message: 'Server error occurred'
+        })
     }
 })
 

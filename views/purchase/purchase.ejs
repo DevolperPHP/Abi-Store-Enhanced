@@ -20,6 +20,12 @@
     </script>
 <%}%>
 
+<!-- Hidden form for PUT requests -->
+<form id="updateQtyForm" method="POST" style="display: none;">
+    <input type="hidden" name="_method" value="PUT">
+    <input type="hidden" name="qty" id="updateQuantityInput">
+</form>
+
 <!-- Modern Dashboard Container -->
 <div class="dashboard-container">
     <!-- Dashboard Header -->
@@ -67,6 +73,7 @@
                     </div>
                 </form>
             </div>
+
             <!-- Product Search -->
             <div class="search-method-group">
                 <label class="filter-label">
@@ -81,7 +88,6 @@
         </div>
     </div>
 
-    <br>
     <!-- Purchase Cart Section -->
     <% if (user.purchase && user.purchase.length > 0) { %>
         <!-- Cart Summary Header -->
@@ -106,7 +112,7 @@
         <!-- Cart Items Grid -->
         <div class="cart-items-grid">
             <% for (let i = 0; i < user.purchase.length; i++) {%>
-                <div class="cart-item-card">
+                <div class="cart-item-card" data-item-id="<%= user.purchase[i].id%>">
                     <div class="item-image-wrapper">
                         <img src="/upload/images/<%= user.purchase[i].image%>" alt="Product image">
                     </div>
@@ -121,20 +127,20 @@
                         <div class="item-details-row">
                             <div class="detail-chip">
                                 <ion-icon name="cube-outline"></ion-icon>
-                                <span>Qty: <strong><%= user.purchase[i].qty%></strong></span>
+                                <span>Qty: <strong class="qty-display"><%= user.purchase[i].qty%></strong></span>
                             </div>
                             <div class="detail-chip cost">
                                 <ion-icon name="wallet-outline"></ion-icon>
-                                <span>Cost: <strong><%= user.purchase[i].cost.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")%></strong></span>
+                                <span>Cost: <strong class="cost-display"><%= user.purchase[i].cost.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")%></strong></span>
                             </div>
                         </div>
                         <div class="item-footer">
                             <div class="item-total-price">
                                 <span class="price-label">Total</span>
-                                <span class="price-value"><%= user.purchase[i].total.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")%> IQD</span>
+                                <span class="price-value total-display"><%= user.purchase[i].total.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")%> IQD</span>
                             </div>
                             <div class="item-actions">
-                                <button class="action-btn edit" onclick="window.location.href='/purchase/edit-qty/<%= user.purchase[i].id%>/<%= user.purchase[i].qty%>'" title="Edit quantity">
+                                <button class="action-btn edit" onclick="editQuantity('<%= user.purchase[i].id%>', '<%= user.purchase[i].qty%>', '<%= user.purchase[i].name%>', '<%= user.purchase[i].cost%>')" title="Edit quantity">
                                     <ion-icon name="create-outline"></ion-icon>
                                 </button>
                                 <form action="/purchase/remove/<%= user.purchase[i].id%>?_method=PUT" method="post" style="display: inline;">
@@ -227,6 +233,100 @@
         this.submit();
     });
 
+    // Edit quantity function with Apple-style SweetAlert
+    function editQuantity(itemId, currentQty, itemName, unitCost) {
+        Swal.fire({
+            title: 'Edit Quantity',
+            html: `
+                <div style="margin-bottom: 16px; color: #8e8e93; font-size: 14px;">
+                    <strong style="color: #1d1d1f;">${itemName}</strong>
+                </div>
+                <div style="text-align: left; margin-bottom: 8px; color: #8e8e93; font-size: 13px;">Current Quantity: <strong style="color: #007AFF;">${currentQty}</strong></div>
+                <input 
+                    type="number" 
+                    id="quantityInput" 
+                    value="${currentQty}" 
+                    min="1" 
+                    style="
+                        width: 100%;
+                        padding: 14px 16px;
+                        border: 1px solid rgba(0, 0, 0, 0.1);
+                        border-radius: 12px;
+                        font-size: 16px;
+                        font-family: inherit;
+                        color: #1d1d1f;
+                        background: #ffffff;
+                        box-sizing: border-box;
+                        outline: none;
+                        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+                        text-align: center;
+                    "
+                    onfocus="
+                        this.style.borderColor = '#007AFF';
+                        this.style.boxShadow = '0 0 0 3px rgba(0, 122, 255, 0.1)';
+                    "
+                    onblur="
+                        this.style.borderColor = 'rgba(0, 0, 0, 0.1)';
+                        this.style.boxShadow = 'none';
+                    "
+                >
+            `,
+            showCancelButton: true,
+            showConfirmButton: true,
+            confirmButtonText: 'Update Quantity',
+            cancelButtonText: 'Cancel',
+            confirmButtonColor: '#34C759',
+            cancelButtonColor: '#8e8e93',
+            background: '#ffffff',
+            customClass: {
+                popup: 'quantity-edit-popup',
+                confirmButton: 'quantity-confirm-btn',
+                cancelButton: 'quantity-cancel-btn',
+            },
+            didOpen: () => {
+                // Focus the input when popup opens
+                document.getElementById('quantityInput').focus();
+                document.getElementById('quantityInput').select();
+            },
+            preConfirm: () => {
+                const newQty = document.getElementById('quantityInput').value;
+                if (!newQty || newQty <= 0) {
+                    Swal.showValidationMessage('Please enter a valid quantity (minimum 1)');
+                    return false;
+                }
+                return newQty;
+            }
+        }).then((result) => {
+            if (result.isConfirmed) {
+                const newQty = result.value;
+                updateQuantityPUT(itemId, newQty);
+            }
+        });
+    }
+
+    // Function to update quantity using PUT request
+    function updateQuantityPUT(itemId, newQty) {
+        // Show loading state
+        Swal.fire({
+            title: 'Updating...',
+            text: 'Please wait while we update the quantity',
+            allowOutsideClick: false,
+            didOpen: () => {
+                Swal.showLoading()
+            }
+        });
+
+        // Fill the hidden form
+        document.getElementById('updateQuantityInput').value = newQty;
+
+        // Set form action to the existing PUT endpoint
+        const form = document.getElementById('updateQtyForm');
+        form.action = `/purchase/edit-qty/${itemId}/${newQty}?_method=PUT`;
+        
+        // Submit the form
+        form.submit();
+    }
+
     // Enhanced autocomplete functionality
     function autocomplete(inp, arr) {
         let currentFocus;
@@ -315,6 +415,76 @@
 <style>
     /* ===== NEW PURCHASE PAGE STYLES ===== */
     /* Inherits dashboard-container, dashboard-header, premium-inventory-controls from main CSS */
+
+    /* ===== APPLE-STYLE SWEETALERT STYLING ===== */
+    .quantity-edit-popup {
+        border-radius: 16px !important;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15) !important;
+        border: 1px solid rgba(0, 0, 0, 0.06) !important;
+        padding: 24px !important;
+    }
+
+    .quantity-edit-popup .swal2-title {
+        font-size: 20px !important;
+        font-weight: 600 !important;
+        color: #1d1d1f !important;
+        margin: 0 0 20px 0 !important;
+        padding: 0 !important;
+    }
+
+    .quantity-confirm-btn {
+        background: #34C759 !important;
+        border: none !important;
+        border-radius: 10px !important;
+        padding: 12px 24px !important;
+        font-size: 14px !important;
+        font-weight: 600 !important;
+        color: white !important;
+        cursor: pointer !important;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        font-family: inherit !important;
+    }
+
+    .quantity-confirm-btn:hover {
+        background: #2DB04C !important;
+        transform: translateY(-1px) !important;
+        box-shadow: 0 4px 12px rgba(52, 199, 89, 0.3) !important;
+    }
+
+    .quantity-cancel-btn {
+        background: rgba(0, 0, 0, 0.04) !important;
+        border: none !important;
+        border-radius: 10px !important;
+        padding: 12px 24px !important;
+        font-size: 14px !important;
+        font-weight: 500 !important;
+        color: #8e8e93 !important;
+        cursor: pointer !important;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        font-family: inherit !important;
+    }
+
+    .quantity-cancel-btn:hover {
+        background: rgba(0, 0, 0, 0.08) !important;
+        color: #1d1d1f !important;
+    }
+
+    .quantity-edit-popup .swal2-actions {
+        margin: 20px 0 0 0 !important;
+        gap: 12px !important;
+        padding: 0 !important;
+    }
+
+    .quantity-edit-popup .swal2-content {
+        padding: 0 !important;
+        font-size: 16px !important;
+        color: #1d1d1f !important;
+        line-height: 1.5 !important;
+    }
+
+    .quantity-edit-popup .swal2-icon {
+        display: none !important;
+    }
 
     /* ===== SEARCH METHODS GRID ===== */
     .search-methods-grid {
@@ -973,6 +1143,12 @@
 
         .empty-state-card {
             padding: 60px 24px;
+        }
+
+        /* Responsive SweetAlert styling */
+        .quantity-edit-popup {
+            margin: 20px !important;
+            padding: 20px !important;
         }
     }
 </style>
