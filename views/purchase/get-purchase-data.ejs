@@ -144,7 +144,7 @@
             <div class="summary-breakdown">
                 <div class="summary-row">
                     <span class="summary-label">Items Total Cost</span>
-                    <span class="summary-value items"><%= total.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")%> IQD</span>
+                    <span class="summary-value additional" style="color: #007AFF;!important"><%= total.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")%> IQD</span>
                 </div>
                 <div class="summary-row">
                     <span class="summary-label">Additional Costs</span>
@@ -571,7 +571,7 @@
     .summary-breakdown {
         display: flex;
         flex-direction: column;
-        gap: 12px;
+        gap: 10px;
     }
 
     .summary-row {
