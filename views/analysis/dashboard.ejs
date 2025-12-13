@@ -25,51 +25,7 @@
         </div>
     </div>
 
-    <!-- Quick Stats Overview -->
-    <div class="stats-overview">
-        <div class="stats-grid">
-            <div class="stat-card revenue">
-                <div class="stat-icon">
-                    <ion-icon name="trending-up-outline"></ion-icon>
-                </div>
-                <div class="stat-content">
-                    <div class="stat-value" id="totalRevenue">-</div>
-                    <div class="stat-label">Total Revenue</div>
-                    <div class="stat-change positive" id="revenueChange">-</div>
-                </div>
-            </div>
-            <div class="stat-card profit">
-                <div class="stat-icon">
-                    <ion-icon name="cash-outline"></ion-icon>
-                </div>
-                <div class="stat-content">
-                    <div class="stat-value" id="totalProfit">-</div>
-                    <div class="stat-label">Net Profit</div>
-                    <div class="stat-change positive" id="profitChange">-</div>
-                </div>
-            </div>
-            <div class="stat-card transactions">
-                <div class="stat-icon">
-                    <ion-icon name="receipt-outline"></ion-icon>
-                </div>
-                <div class="stat-content">
-                    <div class="stat-value" id="totalTransactions">-</div>
-                    <div class="stat-label">Transactions</div>
-                    <div class="stat-change neutral" id="transactionChange">-</div>
-                </div>
-            </div>
-            <div class="stat-card customers">
-                <div class="stat-icon">
-                    <ion-icon name="people-outline"></ion-icon>
-                </div>
-                <div class="stat-content">
-                    <div class="stat-value" id="totalCustomers">-</div>
-                    <div class="stat-label">Active Customers</div>
-                    <div class="stat-change positive" id="customerChange">-</div>
-                </div>
-            </div>
-        </div>
-    </div>
+
 
     <!-- Analysis Type Selection -->
     <div class="analysis-type-selector">
@@ -154,116 +110,18 @@
         </div>
     </div>
 
-    <!-- Analysis Filters -->
-    <div class="filters-section">
-        <div class="filters-header">
-            <h3 class="filters-title">Advanced Filters</h3>
-            <button class="filter-toggle" onclick="toggleFilters()">
-                <ion-icon name="chevron-down-outline"></ion-icon>
-                Show Filters
-            </button>
-        </div>
-        <div class="filters-content" id="filtersContent" style="display: none;">
-            <div class="filters-grid">
-                <div class="filter-group">
-                    <label class="filter-label">Transaction Status</label>
-                    <div class="checkbox-group">
-                        <label class="checkbox-label">
-                            <input type="checkbox" id="statusDone" checked>
-                            <span class="checkbox-custom"></span>
-                            Completed
-                        </label>
-                        <label class="checkbox-label">
-                            <input type="checkbox" id="statusPending" checked>
-                            <span class="checkbox-custom"></span>
-                            Pending
-                        </label>
-                        <label class="checkbox-label">
-                            <input type="checkbox" id="statusCancelled">
-                            <span class="checkbox-custom"></span>
-                            Cancelled
-                        </label>
-                    </div>
-                </div>
-                <div class="filter-group">
-                    <label class="filter-label">Amount Range</label>
-                    <div class="range-inputs">
-                        <input type="number" id="minAmount" placeholder="Min" class="range-input">
-                        <span class="range-separator">to</span>
-                        <input type="number" id="maxAmount" placeholder="Max" class="range-input">
-                    </div>
-                </div>
-                <div class="filter-group">
-                    <label class="filter-label">Product Categories</label>
-                    <select id="categoryFilter" class="category-select">
-                        <option value="">All Categories</option>
-                    </select>
-                </div>
-                <div class="filter-group">
-                    <label class="filter-label">Customer Type</label>
-                    <select id="customerFilter" class="customer-select">
-                        <option value="">All Customers</option>
-                        <option value="new">New Customers</option>
-                        <option value="returning">Returning Customers</option>
-                        <option value="vip">VIP Customers</option>
-                    </select>
-                </div>
-            </div>
-        </div>
-    </div>
-
     <!-- Analysis Actions -->
     <div class="analysis-actions">
-        <button class="btn-secondary" onclick="resetFilters()">
-            <ion-icon name="refresh-outline"></ion-icon>
-            Reset Filters
-        </button>
+
         <button class="btn-primary" onclick="generateAnalysis()">
             <ion-icon name="analytics-outline"></ion-icon>
             Generate Analysis
         </button>
-        <button class="btn-secondary" onclick="scheduleReport()">
-            <ion-icon name="time-outline"></ion-icon>
-            Schedule Report
-        </button>
+
     </div>
 
     <!-- Recent Activity -->
-    <div class="recent-activity">
-        <div class="activity-header">
-            <h3 class="activity-title">Recent Business Activity</h3>
-            <button class="view-all-btn" onclick="viewAllActivity()">View All</button>
-        </div>
-        <div class="activity-list" id="activityList">
-            <div class="activity-item">
-                <div class="activity-icon sales">
-                    <ion-icon name="cart-outline"></ion-icon>
-                </div>
-                <div class="activity-content">
-                    <div class="activity-text">New sale: 150,000 IQD</div>
-                    <div class="activity-time">2 minutes ago</div>
-                </div>
-            </div>
-            <div class="activity-item">
-                <div class="activity-icon purchase">
-                    <ion-icon name="cube-outline"></ion-icon>
-                </div>
-                <div class="activity-content">
-                    <div class="activity-text">Purchase completed: 75,000 IQD</div>
-                    <div class="activity-time">15 minutes ago</div>
-                </div>
-            </div>
-            <div class="activity-item">
-                <div class="activity-icon expense">
-                    <ion-icon name="card-outline"></ion-icon>
-                </div>
-                <div class="activity-content">
-                    <div class="activity-text">Daily expense: 25,000 IQD</div>
-                    <div class="activity-time">1 hour ago</div>
-                </div>
-            </div>
-        </div>
-    </div>
+
 </div>
 
 <!-- Settings Modal -->

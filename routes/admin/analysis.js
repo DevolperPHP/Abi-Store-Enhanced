@@ -318,7 +318,7 @@ router.get('/', async (req, res) => {
     }
 })
 
-// Enhanced analysis results route
+// Enhanced analysis results route with real comparison data
 router.get('/get/:start/:end', async (req, res) => {
     try {
         const id = req.cookies.id
@@ -370,8 +370,20 @@ router.get('/get/:start/:end', async (req, res) => {
         const purchasesByDate = filterByDateRange(filteredPurchases, startDate, endDate)
         const dailyMoneyByDate = filterByDateRange(allDailyMoney, startDate, endDate)
 
-        // Calculate comprehensive metrics
-        const metrics = calculateMetrics(sellByDate, purchasesByDate, dailyMoneyByDate, analysisType)
+        // Calculate previous period for comparison (same duration, previous period)
+        const periodDuration = endDate.getTime() - startDate.getTime()
+        const previousEndDate = new Date(startDate.getTime() - 24 * 60 * 60 * 1000) // Day before start date
+        const previousStartDate = new Date(previousEndDate.getTime() - periodDuration)
+
+        const previousSellByDate = filterByDateRange(filteredSells, previousStartDate, previousEndDate)
+        const previousPurchasesByDate = filterByDateRange(filteredPurchases, previousStartDate, previousEndDate)
+        const previousDailyMoneyByDate = filterByDateRange(allDailyMoney, previousStartDate, previousEndDate)
+
+        // Calculate previous period metrics
+        const previousMetrics = calculateMetrics(previousSellByDate, previousPurchasesByDate, previousDailyMoneyByDate, analysisType)
+
+        // Calculate comprehensive metrics with comparison
+        const metrics = calculateMetrics(sellByDate, purchasesByDate, dailyMoneyByDate, analysisType, previousMetrics)
         
         // Calculate totals with proper error handling
         const sellTotal = metrics.sellTotal
@@ -391,6 +403,9 @@ router.get('/get/:start/:end', async (req, res) => {
         // Calculate trends and insights
         const trendsData = calculateTrendsData(sellByDate, purchasesByDate, dailyMoneyByDate, startDate, endDate)
 
+        // Calculate customer analytics
+        const customerAnalytics = calculateCustomerAnalytics(sellByDate)
+
         // Prepare data for the view
         const resultData = {
             user,
@@ -402,11 +417,14 @@ router.get('/get/:start/:end', async (req, res) => {
             dailyMoney: dailyMoneyByDate,
             startDate: formatDate(startDate),
             endDate: formatDate(endDate),
+            previousStartDate: formatDate(previousStartDate),
+            previousEndDate: formatDate(previousEndDate),
             analysisType: getAnalysisTypeName(analysisType),
             metrics,
             totalItems: calculateTotalItems(purchasesByDate),
             categories: allCategories,
-            trendsData // Add trends data for chart
+            trendsData, // Add trends data for chart
+            customerAnalytics // Add customer analytics
         }
 
         res.render("analysis/result", resultData)
@@ -416,8 +434,8 @@ router.get('/get/:start/:end', async (req, res) => {
     }
 })
 
-// Calculate comprehensive business metrics
-function calculateMetrics(sells, purchases, dailyMoney, analysisType) {
+// Calculate comprehensive business metrics with real comparison data
+function calculateMetrics(sells, purchases, dailyMoney, analysisType, previousPeriodData = null) {
     // Sales calculations with enhanced logic
     const sellTotal = sells.reduce((acc, sell) => {
         const saleTotal = calculateSaleTotal(sell)
@@ -459,14 +477,38 @@ function calculateMetrics(sells, purchases, dailyMoney, analysisType) {
     const avgSaleValue = salesTransactions > 0 ? sellTotal / salesTransactions : 0
     const avgPurchaseValue = purchaseTransactions > 0 ? purchaseTotal / purchaseTransactions : 0
     
-    // Store type breakdown
-    const localStoreSales = sells.filter(s => s.isShop === true).reduce((acc, sell) => {
+    // Store type breakdown - FIXED: Use isCashier for consistency
+    const localStoreSales = sells.filter(s => s.isCashier === true).reduce((acc, sell) => {
         return acc + calculateSaleTotal(sell)
     }, 0)
     
-    const mainStorageSales = sells.filter(s => s.isShop === false).reduce((acc, sell) => {
+    const mainStorageSales = sells.filter(s => s.isCashier === false || s.isCashier === null || s.isCashier === undefined).reduce((acc, sell) => {
         return acc + calculateSaleTotal(sell)
     }, 0)
+
+    // Calculate comparison percentages if previous data is available
+    let revenueChange = 0
+    let profitChange = 0
+    let transactionChange = 0
+    let orderFulfillmentRate = 0
+
+    if (previousPeriodData) {
+        revenueChange = previousPeriodData.sellTotal > 0
+            ? ((sellTotal - previousPeriodData.sellTotal) / previousPeriodData.sellTotal) * 100
+            : 0
+        
+        profitChange = previousPeriodData.netProfit > 0
+            ? ((netProfit - previousPeriodData.netProfit) / previousPeriodData.netProfit) * 100
+            : 0
+            
+        transactionChange = previousPeriodData.totalTransactions > 0
+            ? ((totalTransactions - previousPeriodData.totalTransactions) / previousPeriodData.totalTransactions) * 100
+            : 0
+    }
+
+    // Calculate order fulfillment rate (completed vs total orders)
+    const completedSales = sells.filter(s => s.status === 'done' || !s.status).length
+    orderFulfillmentRate = salesTransactions > 0 ? (completedSales / salesTransactions) * 100 : 0
 
     return {
         sellTotal,
@@ -485,7 +527,11 @@ function calculateMetrics(sells, purchases, dailyMoney, analysisType) {
         localStoreSales,
         mainStorageSales,
         localStorePercentage: totalRevenue > 0 ? (localStoreSales / totalRevenue) * 100 : 0,
-        mainStoragePercentage: totalRevenue > 0 ? (mainStorageSales / totalRevenue) * 100 : 0
+        mainStoragePercentage: totalRevenue > 0 ? (mainStorageSales / totalRevenue) * 100 : 0,
+        revenueChange,
+        profitChange,
+        transactionChange,
+        orderFulfillmentRate
     }
 }
 
@@ -505,6 +551,65 @@ function calculateTotalItems(purchases) {
     return Array.from(itemCounts.values()).reduce((sum, count) => sum + count, 0)
 }
 
+// Calculate customer analytics
+function calculateCustomerAnalytics(sells) {
+    const customerData = new Map()
+    
+    // Group sales by customer
+    sells.forEach(sale => {
+        const customerKey = sale.phone || sale.name || 'Unknown Customer'
+        const saleTotal = calculateSaleTotal(sale)
+        
+        if (!customerData.has(customerKey)) {
+            customerData.set(customerKey, {
+                name: sale.name || 'Unknown',
+                phone: sale.phone || 'N/A',
+                totalSpent: 0,
+                transactionCount: 0,
+                lastPurchase: sale.Date,
+                avgOrderValue: 0
+            })
+        }
+        
+        const customer = customerData.get(customerKey)
+        customer.totalSpent += saleTotal
+        customer.transactionCount += 1
+        customer.avgOrderValue = customer.totalSpent / customer.transactionCount
+        
+        // Update last purchase if this sale is more recent
+        if (new Date(sale.Date) > new Date(customer.lastPurchase)) {
+            customer.lastPurchase = sale.Date
+        }
+    })
+    
+    // Convert to array and sort by total spent
+    const customers = Array.from(customerData.values())
+        .sort((a, b) => b.totalSpent - a.totalSpent)
+    
+    // Calculate metrics
+    const totalCustomers = customers.length
+    const totalRevenue = customers.reduce((sum, c) => sum + c.totalSpent, 0)
+    const avgCustomerValue = totalCustomers > 0 ? totalRevenue / totalCustomers : 0
+    const avgOrderValue = customers.length > 0 ?
+        customers.reduce((sum, c) => sum + c.avgOrderValue, 0) / customers.length : 0
+    
+    // Find top customers
+    const topCustomers = customers.slice(0, 10)
+    
+    return {
+        totalCustomers,
+        totalRevenue,
+        avgCustomerValue,
+        avgOrderValue,
+        topCustomers,
+        customerDistribution: {
+            vip: customers.filter(c => c.totalSpent > avgCustomerValue * 2).length,
+            regular: customers.filter(c => c.totalSpent >= avgCustomerValue * 0.5 && c.totalSpent <= avgCustomerValue * 2).length,
+            lowValue: customers.filter(c => c.totalSpent < avgCustomerValue * 0.5).length
+        }
+    }
+}
+
 // Get analysis type display name
 function getAnalysisTypeName(type) {
     switch (type) {
@@ -518,13 +623,155 @@ function getAnalysisTypeName(type) {
     }
 }
 
-// Export data route (for future implementation)
+// Export data route - IMPLEMENTED WITH DEBUG
 router.get('/export/:start/:end', async (req, res) => {
     try {
-        // This would implement Excel/PDF export functionality
-        res.status(501).send("Export functionality not yet implemented")
+        const id = req.cookies.id
+        const user = await User.findOne({ _id: id })
+        const analysisType = req.query.type || 'combined'
+
+        if (!user?.isAdmin) {
+            req.flash("permission-error", "You do not have permission to view this page.")
+            return res.redirect("/")
+        }
+
+        // Parse dates
+        const startDate = parseDate(req.params.start)
+        const endDate = parseDate(req.params.end)
+        
+        console.log('Export Debug:', {
+            urlStart: req.params.start,
+            urlEnd: req.params.end,
+            parsedStartDate: startDate,
+            parsedEndDate: endDate,
+            analysisType: analysisType
+        })
+        
+        if (!startDate || !endDate) {
+            return res.status(400).send("Invalid date format")
+        }
+
+        // Fetch and filter data (same logic as main route)
+        const [allSells, allPurchases, allDailyMoney] = await Promise.all([
+            Sell.find({}).lean(),
+            Purchase.find({}).lean(),
+            DailyMoney.find({}).lean()
+        ])
+
+        console.log('Export Debug - Raw Data Counts:', {
+            totalSells: allSells.length,
+            totalPurchases: allPurchases.length,
+            totalDailyMoney: allDailyMoney.length
+        })
+
+        let filteredSells = allSells
+        let filteredPurchases = allPurchases
+        
+        if (analysisType === 'local') {
+            filteredSells = allSells.filter(sell => sell.isCashier === true)
+            filteredPurchases = allPurchases.filter(purchase => purchase.store === false || purchase.store === undefined || purchase.store === null)
+        } else if (analysisType === 'main') {
+            filteredSells = allSells.filter(sell => sell.isCashier === false || sell.isCashier === null || sell.isCashier === undefined)
+            filteredPurchases = allPurchases.filter(purchase => purchase.store === true)
+        }
+
+        const sellByDate = filterByDateRange(filteredSells, startDate, endDate)
+        const purchasesByDate = filterByDateRange(filteredPurchases, startDate, endDate)
+        const dailyMoneyByDate = filterByDateRange(allDailyMoney, startDate, endDate)
+
+        console.log('Export Debug - Filtered Data:', {
+            sellByDateCount: sellByDate.length,
+            purchasesByDateCount: purchasesByDate.length,
+            dailyMoneyByDateCount: dailyMoneyByDate.length
+        })
+
+        // Create CSV data
+        const csvData = []
+        
+        // Header
+        csvData.push(['Analysis Report', getAnalysisTypeName(analysisType)])
+        csvData.push(['Period', `${formatDate(startDate)} - ${formatDate(endDate)}`])
+        csvData.push(['Generated', new Date().toLocaleDateString()])
+        csvData.push([])
+        
+        // Summary
+        const metrics = calculateMetrics(sellByDate, purchasesByDate, dailyMoneyByDate, analysisType)
+        csvData.push(['SUMMARY'])
+        csvData.push(['Total Revenue', metrics.sellTotal.toLocaleString() + ' IQD'])
+        csvData.push(['Total Costs', metrics.totalCosts.toLocaleString() + ' IQD'])
+        csvData.push(['Net Profit', metrics.netProfit.toLocaleString() + ' IQD'])
+        csvData.push(['Profit Margin', metrics.profitMargin.toFixed(1) + '%'])
+        csvData.push(['Total Transactions', metrics.totalTransactions])
+        csvData.push([])
+        
+        // Sales Data
+        csvData.push(['SALES TRANSACTIONS'])
+        csvData.push(['Date', 'Customer', 'Amount', 'Store Type'])
+        sellByDate.forEach(sale => {
+            csvData.push([
+                sale.Date,
+                sale.name || 'Walk-in Customer',
+                calculateSaleTotal(sale).toLocaleString() + ' IQD',
+                sale.isCashier === true ? 'Local Store' : 'Main Storage'
+            ])
+        })
+        
+        // Purchases Data
+        csvData.push([])
+        csvData.push(['PURCHASE TRANSACTIONS'])
+        csvData.push(['Date', 'Trader', 'Total Amount', 'Store Type', 'Items Count'])
+        purchasesByDate.forEach(purchase => {
+            const purchaseTotal = (purchase.purchase || []).reduce((sum, item) => sum + (parseFloat(item.total) || 0), 0) + (parseFloat(purchase.cost) || 0)
+            csvData.push([
+                purchase.Date,
+                purchase.trader || 'Unknown Trader',
+                purchaseTotal.toLocaleString() + ' IQD',
+                purchase.store === true ? 'Main Storage' : 'Local Store',
+                (purchase.purchase || []).length
+            ])
+        })
+        
+        // Daily Money Data
+        csvData.push([])
+        csvData.push(['DAILY MONEY TRANSACTIONS'])
+        csvData.push(['Date', 'Total Amount', 'Transaction Count'])
+        const dailyMoneyByDateGrouped = dailyMoneyByDate.reduce((acc, day) => {
+            const date = day.Date
+            if (!acc[date]) {
+                acc[date] = { date, total: 0, count: 0 }
+            }
+            acc[date].total += parseFloat(day.total) || 0
+            acc[date].count += 1
+            return acc
+        }, {})
+        
+        Object.values(dailyMoneyByDateGrouped).forEach(day => {
+            csvData.push([
+                day.date,
+                day.total.toLocaleString() + ' IQD',
+                day.count
+            ])
+        })
+        
+        // Convert to CSV string
+        const csvContent = csvData.map(row => row.map(cell => `"${cell}"`).join(',')).join('\n')
+        
+        console.log('Export Debug - CSV Generated:', {
+            csvLength: csvContent.length,
+            salesRows: sellByDate.length,
+            purchaseRows: purchasesByDate.length,
+            dailyMoneyRows: Object.keys(dailyMoneyByDateGrouped).length
+        })
+        
+        // Set headers for CSV download
+        res.setHeader('Content-Type', 'text/csv')
+        res.setHeader('Content-Disposition', `attachment; filename="analysis_report_${req.params.start}_${req.params.end}.csv"`)
+        
+        res.send(csvContent)
+        
     } catch (err) {
-        res.status(500).send("Internal Server Error")
+        console.error('Export error:', err)
+        res.status(500).send("Error generating export")
     }
 })
 
