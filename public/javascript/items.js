@@ -703,7 +703,7 @@ function showAnalysisModal(data) {
                             </h3>
                             <div class="transactions-list">
                                 ${recentTransactions.sales.length > 0 ? recentTransactions.sales.map(sale => `
-                                    <div class="transaction-item">
+                                    <div class="transaction-item" onclick="window.location.href='/sell/get-data/${sale.id}'" style="cursor: pointer;">
                                         <div class="transaction-info">
                                             <div class="transaction-date">${sale.date}</div>
                                             <div class="transaction-details">Order #${sale.bid} - ${sale.customer}</div>
@@ -722,7 +722,7 @@ function showAnalysisModal(data) {
                             </h3>
                             <div class="transactions-list">
                                 ${recentTransactions.purchases.length > 0 ? recentTransactions.purchases.map(purchase => `
-                                    <div class="transaction-item">
+                                    <div class="transaction-item" onclick="window.location.href='/purchase/get-purchase/${purchase.id}'" style="cursor: pointer;">
                                         <div class="transaction-info">
                                             <div class="transaction-date">${purchase.date}</div>
                                             <div class="transaction-details">${purchase.trader}</div>

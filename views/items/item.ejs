@@ -620,6 +620,14 @@
                             gap: 12px;
                             align-items: center;
                             border: 1px solid #e5e7eb;
+                            transition: all 0.2s ease;
+                        }
+
+                        .transaction-item:hover {
+                            background: #f9fafb;
+                            border-color: #3b82f6;
+                            transform: translateY(-1px);
+                            box-shadow: 0 2px 8px rgba(59, 130, 246, 0.15);
                         }
 
                         .transaction-info {
@@ -827,11 +835,6 @@
                             </div>
                         </div>
 
-                        <!-- Performance Chart -->
-                        <div class="chart-card">
-                            <h3><ion-icon name="analytics-outline"></ion-icon> Performance Score</h3>
-                            <canvas id="myChart" style="width:100%; max-width: 100%"></canvas>
-                        </div>
 
                         <!-- Actions -->
                         <div class="actions-section">
@@ -1023,7 +1026,7 @@
                                                     </h3>
                                                     <div class="transactions-list">
                                                         ${recentTransactions.sales.length > 0 ? recentTransactions.sales.map(sale => `
-                                                            <div class="transaction-item">
+                                                            <div class="transaction-item" onclick="window.location.href='/sell/get-data/${sale.id}'" style="cursor: pointer;">
                                                                 <div class="transaction-info">
                                                                     <div class="transaction-date">${sale.date}</div>
                                                                     <div class="transaction-details">Order #${sale.bid} - ${sale.customer}</div>
@@ -1042,7 +1045,7 @@
                                                     </h3>
                                                     <div class="transactions-list">
                                                         ${recentTransactions.purchases.length > 0 ? recentTransactions.purchases.map(purchase => `
-                                                            <div class="transaction-item">
+                                                            <div class="transaction-item" onclick="window.location.href='/purchase/get-purchase/${purchase.id}'" style="cursor: pointer;">
                                                                 <div class="transaction-info">
                                                                     <div class="transaction-date">${purchase.date}</div>
                                                                     <div class="transaction-details">${purchase.trader}</div>

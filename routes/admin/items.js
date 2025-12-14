@@ -1325,11 +1325,12 @@ router.get('/analysis/:id', async (req, res) => {
                 },
                 recentTransactions: {
                     sales: salesTransactions.slice(0, 10).map(t => {
-                        const p = t.products.find(p => 
-                            (p._id && p._id.toString() === product._id.toString()) || 
+                        const p = t.products.find(p =>
+                            (p._id && p._id.toString() === product._id.toString()) ||
                             (p.id && p.id === product._id.toString())
                         );
                         return {
+                            id: t._id,
                             date: t.Date,
                             bid: t.bid,
                             qty: p?.qty || 0,
@@ -1340,6 +1341,7 @@ router.get('/analysis/:id', async (req, res) => {
                     purchases: purchaseTransactions.slice(0, 10).map(t => {
                         const p = t.purchase.find(p => p.id === product._id.toString());
                         return {
+                            id: t._id,
                             date: t.Date,
                             trader: t.trader,
                             qty: p?.qty || 0,
