@@ -1875,25 +1875,40 @@
     font-weight: 500;
 }
 
-/* Product Variants */
+/* Product Variants - Modern Apple-Style Design */
 .product-variants {
     display: flex;
-    flex-direction: column;
+    flex-wrap: wrap;
     gap: 8px;
+    padding: 12px;
+    background: rgba(245, 245, 247, 0.6);
+    border-radius: 10px;
+    border: 1px solid rgba(0, 0, 0, 0.04);
 }
 
 .variant-item {
     display: flex;
     align-items: center;
-    gap: 8px;
-    box-shadow: 0 0 10px #0000003e;
+    gap: 6px;
+    padding: 6px 10px;
+    background: white;
+    border-radius: 8px;
+    border: 1px solid rgba(0, 0, 0, 0.06);
+    transition: all 0.2s ease;
+}
+
+.variant-item:hover {
+    border-color: rgba(0, 122, 255, 0.3);
+    box-shadow: 0 2px 8px rgba(0, 122, 255, 0.12);
+    transform: translateY(-1px);
 }
 
 .variant-label {
-    font-size: 12px;
-    color: var(--text-secondary);
-    font-weight: 500;
-    min-width: 50px;
+    font-size: 11px;
+    color: #8e8e93;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
 .color-info {
@@ -1903,37 +1918,58 @@
 }
 
 .color-dot {
-    width: 16px;
-    height: 16px;
+    width: 18px;
+    height: 18px;
     border-radius: 50%;
     border: 2px solid white;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+    position: relative;
+}
+
+.color-dot::after {
+    content: '';
+    position: absolute;
+    inset: -3px;
+    border-radius: 50%;
+    border: 1px solid rgba(0, 0, 0, 0.08);
 }
 
 .variant-value {
-    font-size: 14px;
-    font-weight: 600;
-    color: var(--text-primary);
+    font-size: 13px;
+    font-weight: 500;
+    color: #1d1d1f;
+    letter-spacing: -0.01em;
 }
 
 .size-badge,
 .category-badge {
-    padding: 2px 8px;
-    border-radius: 12px;
+    padding: 4px 10px;
+    border-radius: 6px;
     font-size: 11px;
     font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
+    letter-spacing: 0.3px;
+    border: none;
+    transition: all 0.2s ease;
 }
 
 .size-badge {
-    background: rgba(0, 122, 255, 0.1);
-    color: var(--primary-color);
+    background: rgba(0, 122, 255, 0.12);
+    color: #007AFF;
 }
 
 .category-badge {
-    background: rgba(0, 122, 255, 0.1);
-    color: #007AFF;
+    background: rgba(88, 86, 214, 0.12);
+    color: #5856d6;
+}
+
+.variant-item:hover .size-badge {
+    background: rgba(0, 122, 255, 0.2);
+    box-shadow: 0 2px 6px rgba(0, 122, 255, 0.25);
+}
+
+.variant-item:hover .category-badge {
+    background: rgba(88, 86, 214, 0.2);
+    box-shadow: 0 2px 6px rgba(88, 86, 214, 0.25);
 }
 
 /* Stock Section */

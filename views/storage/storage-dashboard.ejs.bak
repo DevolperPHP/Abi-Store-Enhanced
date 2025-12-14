@@ -605,7 +605,7 @@ let observer = null;
 // URL parameter handling removed - using infinite scroll only
 
 // Advanced Fuzzy Search functionality
-const handleSearch = debounce(async (value) => {
+window.handleSearch = debounce(async (value) => {
     const searchClearBtn = document.querySelector('.search-clear');
     const searchContainer = document.querySelector('.search-box-modern');
     
@@ -658,44 +658,20 @@ function displaySuggestions(suggestions, query) {
     // Create dropdown
     const dropdown = document.createElement('div');
     dropdown.id = 'search-suggestions-dropdown';
-    dropdown.className = 'search-suggestions-dropdown';
     
     // Create suggestions HTML
     const suggestionsHTML = suggestions.map((suggestion, index) => `
         <div class="suggestion-item" data-product-id="${suggestion._id}" onclick="selectSuggestion('${suggestion._id}', '${suggestion.name.replace(/'/g, "\\'")}')">
-            <div class="suggestion-main">
-                <div class="suggestion-name">
-                    ${suggestion.highlightText}
-                </div>
-                <div class="suggestion-details">
-                    ${suggestion.displayText}
-                </div>
+            <div class="suggestion-name">
+                ${suggestion.highlightText}
             </div>
-            <div class="suggestion-meta">
-                <div class="suggestion-price">IQD ${(suggestion.sellPrice || 0).toLocaleString()}</div>
-                <div class="suggestion-stock ${suggestion.stockStatus}">
-                    ${suggestion.stock} in stock
-                </div>
+            <div class="suggestion-details">
+                ${suggestion.displayText}
             </div>
         </div>
     `).join('');
-    
-    dropdown.innerHTML = `
-        <div class="suggestions-header">
-            <span class="suggestions-title">Search Results</span>
-            <span class="suggestions-count">${suggestions.length} result${suggestions.length !== 1 ? 's' : ''}</span>
-        </div>
-        <div class="suggestions-list">
-            ${suggestionsHTML}
-        </div>
-        <div class="suggestions-footer">
-            <button class="view-all-btn" onclick="viewAllResults('${query.replace(/'/g, "\\'")}')">
-                <ion-icon name="search-outline"></ion-icon>
-                View all results for "${query}"
-            </button>
-        </div>
-    `;
-    
+
+    dropdown.innerHTML = suggestionsHTML;
     // Position dropdown as fixed relative to viewport (not constrained by Inventory Controls)
     const inputRect = searchInput.getBoundingClientRect();
     
@@ -704,307 +680,21 @@ function displaySuggestions(suggestions, query) {
     dropdown.style.left = `${inputRect.left}px`;
     dropdown.style.right = `${window.innerWidth - inputRect.right}px`;
     dropdown.style.minWidth = '300px';
-    dropdown.style.maxWidth = '600px';
-    dropdown.style.maxHeight = '500px';
+    dropdown.style.maxWidth = '500px';
     dropdown.style.zIndex = '9999';
-    dropdown.style.opacity = '0';
-    dropdown.style.transform = 'translateY(-10px) scale(0.95)';
-    dropdown.style.transition = 'all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
-
+    
     // Add to body to escape Inventory Controls container
     document.body.appendChild(dropdown);
-
-    // Add professional Apple-style CSS
-    addDropdownStyles();
-
-    // Trigger animation
-    setTimeout(() => {
-        dropdown.style.opacity = '1';
-        dropdown.style.transform = 'translateY(0) scale(1)';
-    }, 10);
-
+    
     // Add event listeners
     addSuggestionEventListeners();
 }
 
-// Add comprehensive Apple-style CSS for dropdown
-function addDropdownStyles() {
-    // Remove existing styles if any
-    const existingStyle = document.getElementById('dropdown-styles');
-    if (existingStyle) {
-        existingStyle.remove();
-    }
-
-    const style = document.createElement('style');
-    style.id = 'dropdown-styles';
-    style.textContent = `
-        .search-suggestions-dropdown {
-            background: rgba(255, 255, 255, 0.98);
-            backdrop-filter: blur(20px) saturate(180%);
-            -webkit-backdrop-filter: blur(20px) saturate(180%);
-            border: 1px solid rgba(0, 0, 0, 0.08);
-            border-radius: 12px;
-            box-shadow:
-                0 4px 16px rgba(0, 0, 0, 0.08),
-                0 16px 48px rgba(0, 0, 0, 0.12),
-                0 2px 8px rgba(0, 0, 0, 0.04);
-            overflow: hidden;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-        }
-
-        .suggestions-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 12px 16px;
-            background: rgba(245, 245, 247, 0.8);
-            border-bottom: 1px solid rgba(0, 0, 0, 0.06);
-        }
-
-        .suggestions-title {
-            font-size: 13px;
-            font-weight: 600;
-            color: #1d1d1f;
-            letter-spacing: -0.01em;
-        }
-
-        .suggestions-count {
-            font-size: 12px;
-            color: #8e8e93;
-            font-weight: 500;
-        }
-
-        .suggestions-list {
-            max-height: 350px;
-            overflow-y: auto;
-            overflow-x: hidden;
-            scrollbar-width: thin;
-            scrollbar-color: rgba(0, 0, 0, 0.2) transparent;
-        }
-
-        .suggestions-list::-webkit-scrollbar {
-            width: 6px;
-        }
-
-        .suggestions-list::-webkit-scrollbar-track {
-            background: transparent;
-        }
-
-        .suggestions-list::-webkit-scrollbar-thumb {
-            background: rgba(0, 0, 0, 0.2);
-            border-radius: 3px;
-        }
-
-        .suggestions-list::-webkit-scrollbar-thumb:hover {
-            background: rgba(0, 0, 0, 0.3);
-        }
-
-        .suggestion-item {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 12px 16px;
-            cursor: pointer;
-            transition: all 0.15s ease;
-            border-bottom: 1px solid rgba(0, 0, 0, 0.04);
-            position: relative;
-        }
-
-        .suggestion-item:last-child {
-            border-bottom: none;
-        }
-
-        .suggestion-item:hover {
-            background: rgba(0, 122, 255, 0.08);
-            transform: translateX(2px);
-        }
-
-        .suggestion-item.active {
-            background: rgba(0, 122, 255, 0.12);
-        }
-
-        .suggestion-item::before {
-            content: '';
-            position: absolute;
-            left: 0;
-            top: 0;
-            bottom: 0;
-            width: 3px;
-            background: #007AFF;
-            opacity: 0;
-            transition: opacity 0.15s ease;
-        }
-
-        .suggestion-item:hover::before,
-        .suggestion-item.active::before {
-            opacity: 1;
-        }
-
-        .suggestion-main {
-            flex: 1;
-            min-width: 0;
-            padding-right: 12px;
-        }
-
-        .suggestion-name {
-            font-size: 14px;
-            font-weight: 500;
-            color: #1d1d1f;
-            margin-bottom: 4px;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-            letter-spacing: -0.01em;
-        }
-
-        .suggestion-name mark {
-            background: rgba(0, 122, 255, 0.2);
-            color: #007AFF;
-            padding: 0 2px;
-            border-radius: 3px;
-            font-weight: 600;
-        }
-
-        .suggestion-details {
-            font-size: 12px;
-            color: #8e8e93;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-        }
-
-        .suggestion-meta {
-            display: flex;
-            flex-direction: column;
-            align-items: flex-end;
-            gap: 4px;
-            flex-shrink: 0;
-        }
-
-        .suggestion-price {
-            font-size: 13px;
-            font-weight: 600;
-            color: #1d1d1f;
-            letter-spacing: -0.01em;
-        }
-
-        .suggestion-stock {
-            font-size: 11px;
-            font-weight: 500;
-            padding: 2px 8px;
-            border-radius: 12px;
-            text-transform: lowercase;
-        }
-
-        .suggestion-stock.in-stock {
-            background: rgba(52, 199, 89, 0.15);
-            color: #30d158;
-        }
-
-        .suggestion-stock.low-stock {
-            background: rgba(255, 149, 0, 0.15);
-            color: #ff9f0a;
-        }
-
-        .suggestion-stock.out-of-stock {
-            background: rgba(255, 59, 48, 0.15);
-            color: #ff3b30;
-        }
-
-        .suggestions-footer {
-            padding: 8px;
-            background: rgba(245, 245, 247, 0.8);
-            border-top: 1px solid rgba(0, 0, 0, 0.06);
-        }
-
-        .view-all-btn {
-            width: 100%;
-            padding: 10px 16px;
-            background: #007AFF;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-size: 13px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            letter-spacing: -0.01em;
-        }
-
-        .view-all-btn:hover {
-            background: #0071e3;
-            transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(0, 122, 255, 0.3);
-        }
-
-        .view-all-btn:active {
-            transform: translateY(0);
-            box-shadow: 0 2px 8px rgba(0, 122, 255, 0.3);
-        }
-
-        .view-all-btn ion-icon {
-            font-size: 14px;
-        }
-
-        /* Empty state */
-        .suggestions-list:empty::after {
-            content: 'No results found';
-            display: block;
-            text-align: center;
-            padding: 32px 16px;
-            color: #8e8e93;
-            font-size: 14px;
-        }
-
-        /* Animation keyframes */
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(10px) scale(0.95);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0) scale(1);
-            }
-        }
-
-        .suggestion-item {
-            animation: fadeInUp 0.2s ease forwards;
-            opacity: 0;
-        }
-
-        .suggestion-item:nth-child(1) { animation-delay: 0.05s; }
-        .suggestion-item:nth-child(2) { animation-delay: 0.08s; }
-        .suggestion-item:nth-child(3) { animation-delay: 0.11s; }
-        .suggestion-item:nth-child(4) { animation-delay: 0.14s; }
-        .suggestion-item:nth-child(5) { animation-delay: 0.17s; }
-        .suggestion-item:nth-child(6) { animation-delay: 0.20s; }
-        .suggestion-item:nth-child(7) { animation-delay: 0.23s; }
-        .suggestion-item:nth-child(8) { animation-delay: 0.26s; }
-    `;
-    document.head.appendChild(style);
-}
-
-// Hide suggestions dropdown with smooth animation
+// Hide suggestions dropdown
 function hideSuggestions() {
     const dropdown = document.getElementById('search-suggestions-dropdown');
     if (dropdown) {
-        dropdown.style.opacity = '0';
-        dropdown.style.transform = 'translateY(-10px) scale(0.95)';
-        dropdown.style.transition = 'all 0.15s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
-
-        setTimeout(() => {
-            dropdown.remove();
-            // Remove styles after animation
-            const style = document.getElementById('dropdown-styles');
-            if (style) {
-                setTimeout(() => style.remove(), 300);
-            }
-        }, 150);
+        dropdown.remove();
     }
 }
 
@@ -1061,7 +751,7 @@ function addSuggestionEventListeners() {
 }
 
 // Select a suggestion
-function selectSuggestion(productId, productName) {
+window.selectSuggestion = function(productId, productName) {
     hideSuggestions();
     
     // Navigate to product details
@@ -1069,7 +759,7 @@ function selectSuggestion(productId, productName) {
 }
 
 // View all search results
-function viewAllResults(query) {
+window.viewAllResults = function(query) {
     hideSuggestions();
     
     // Use the existing filter system with search term
@@ -1105,7 +795,7 @@ function applyFilters() {
     window.location.href = url;
 }
 
-function clearSearch() {
+window.clearSearch = function() {
     const searchInput = document.getElementById('globalSearch');
     const searchClearBtn = document.querySelector('.search-clear');
     
@@ -1118,7 +808,7 @@ function clearSearch() {
 }
 
 // View switching
-function switchView(view) {
+window.switchView = function(view) {
     const buttons = document.querySelectorAll('.view-btn');
     buttons.forEach(btn => btn.classList.remove('active'));
     
@@ -1147,7 +837,7 @@ function switchView(view) {
 }
 
 // Quick filter functions - now using the new filter system
-function filterLowStock() {
+window.filterLowStock = function() {
     const params = new URLSearchParams({
         stock: 'low-stock',
         limit: '50'
@@ -1155,7 +845,7 @@ function filterLowStock() {
     window.location.href = `/storage/filter?${params.toString()}`;
 }
 
-function filterOutOfStock() {
+window.filterOutOfStock = function() {
     const params = new URLSearchParams({
         stock: 'out-of-stock',
         limit: '50'
@@ -1166,7 +856,7 @@ function filterOutOfStock() {
 
 
 // Filter actions
-function resetAllFilters() {
+window.resetAllFilters = function() {
     window.location.href = '/storage';
 }
 
@@ -1193,29 +883,29 @@ function updateBulkActionsVisibility() {
 }
 
 // Product actions
-function editProduct(id) {
+window.editProduct = function(id) {
     window.location.href = `/items/edit/${id}`;
 }
 
-function viewProduct(id) {
+window.viewProduct = function(id) {
     window.location.href = `/items/get/${id}`;
 }
 
 
 
-function manageStock(id) {
+window.manageStock = function(id) {
     // Stock management functionality
     console.log('Managing stock for product:', id);
     // Could open a modal or navigate to stock management page
 }
 
-function quickSell(id) {
+window.quickSell = function(id) {
     // Quick sell functionality
     console.log('Quick sell product:', id);
     // Could open a quick sell modal
 }
 
-function deleteProduct(id) {
+window.deleteProduct = function(id) {
     Swal.fire({
         title: 'Delete Product',
         text: 'Are you sure you want to delete this product? This action cannot be undone.',
@@ -1234,7 +924,7 @@ function deleteProduct(id) {
 
 
 
-async function exportInventory() {
+window.exportInventory = async function() {
     try {
         // Show loading state
         Swal.fire({
@@ -2188,7 +1878,103 @@ function showErrorMessage(message) {
         errorDiv.style.animation = 'slideOut 0.3s ease-in';
         setTimeout(() => errorDiv.remove(), 300);
     }, 3000);
+
+<style>
+/* Super Professional and Clean Search Suggestions Dropdown */
+.search-suggestions-dropdown {
+    position: fixed;
+    z-index: 9999;
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 14px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.12), 0 2px 10px rgba(0, 0, 0, 0.08);
+    max-height: 420px;
+    overflow-y: auto;
+    padding: 8px 0;
+    animation: fadeIn 0.15s ease-out;
 }
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-4px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.search-suggestions-dropdown::-webkit-scrollbar {
+    width: 6px;
+}
+
+.search-suggestions-dropdown::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.search-suggestions-dropdown::-webkit-scrollbar-thumb {
+    background: #d1d5db;
+    border-radius: 3px;
+}
+
+.search-suggestions-dropdown::-webkit-scrollbar-thumb:hover {
+    background: #9ca3af;
+}
+
+.search-suggestions-dropdown .suggestion-item {
+    padding: 14px 18px;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    transition: all 0.15s ease;
+    border-left: 3px solid transparent;
+    margin: 0 4px;
+    border-radius: 10px;
+}
+
+.search-suggestions-dropdown .suggestion-item:hover {
+    background: #f9fafb;
+    border-left-color: #3b82f6;
+}
+
+.search-suggestions-dropdown .suggestion-item.active {
+    background: #eff6ff;
+    border-left-color: #3b82f6;
+}
+
+.search-suggestions-dropdown .suggestion-name {
+    font-size: 14px;
+    font-weight: 500;
+    color: #111827;
+    line-height: 1.4;
+}
+
+.search-suggestions-dropdown .suggestion-name mark {
+    background: #dbeafe;
+    color: #1e40af;
+    padding: 1px 2-radius: 3px;
+    borderpx;
+    font-weight: 600;
+}
+
+.search-suggestions-dropdown .suggestion-details {
+    font-size: 12px;
+    color: #6b7280;
+    font-weight: 400;
+    line-height: 1.3;
+}
+
+.search-suggestions-dropdown .suggestion-item:hover .suggestion-name {
+    color: #1f2937;
+}
+
+.search-suggestions-dropdown .suggestion-item:hover .suggestion-details {
+    color: #4b5563;
+}
+</style>
+
 </script>
 
 <%- include('../layout/footer') -%>
