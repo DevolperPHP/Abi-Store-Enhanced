@@ -1253,7 +1253,9 @@ router.get('/analysis/:id', async (req, res) => {
             })
             
             // Calculate current stock metrics
-            const currentStock = product.stock || 0
+            const mainStorage = product.qty || 0
+            const storeStorage = product.stock || 0
+            const currentStock = mainStorage + storeStorage
             const avgCost = totalPurchasedQty > 0 ? totalPurchasedCost / totalPurchasedQty : 0
             const avgSalePrice = totalSoldQty > 0 ? totalSoldRevenue / totalSoldQty : 0
             const profitMargin = avgSalePrice > 0 ? ((avgSalePrice - avgCost) / avgSalePrice * 100) : 0
@@ -1292,6 +1294,7 @@ router.get('/analysis/:id', async (req, res) => {
                     brand: product.brand,
                     sell_price: product.sell_price,
                     stock: product.stock,
+                    qty: product.qty,
                     image: product.image
                 },
                 summary: {

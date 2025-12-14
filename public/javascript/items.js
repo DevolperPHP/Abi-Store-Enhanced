@@ -653,7 +653,7 @@ function showAnalysisModal(data) {
                             </div>
                             <div class="summary-content">
                                 <div class="summary-label">Current Stock</div>
-                                <div class="summary-value">${formatNumber(summary.currentStock)} units</div>
+                                <div class="summary-value">${formatNumber(product.qty || 0)} Main + ${formatNumber(product.stock || 0)} Store</div>
                                 <div class="summary-subtext">${formatCurrency(summary.inventoryValue)} value</div>
                             </div>
                         </div>
@@ -687,10 +687,6 @@ function showAnalysisModal(data) {
                         <div class="metric-item">
                             <div class="metric-label">Potential Revenue</div>
                             <div class="metric-value">${formatCurrency(summary.potentialRevenue)}</div>
-                        </div>
-                        <div class="metric-item">
-                            <div class="metric-label">Days of Inventory</div>
-                            <div class="metric-value">${summary.daysOfInventory} days</div>
                         </div>
                         <div class="metric-item">
                             <div class="metric-label">Total Transactions</div>
