@@ -61,6 +61,38 @@ router.get('/', async (req, res) => {
     }
   });
   
+  // Delete all orders with empty or 0 total
+  router.delete('/api/delete-empty', async (req, res) => {
+    try {
+      // Find all orders that have total = 0, empty string, or no products
+      const emptyOrders = await Sell.find({
+        $or: [
+          { total: { $in: [0, '', null, undefined] } },
+          { products: { $size: 0 } }
+        ]
+      });
+
+      const deletedCount = emptyOrders.length;
+
+      // Delete all empty orders
+      await Sell.deleteMany({
+        $or: [
+          { total: { $in: [0, '', null, undefined] } },
+          { products: { $size: 0 } }
+        ]
+      });
+
+      res.json({
+        success: true,
+        deletedCount: deletedCount,
+        message: `Successfully deleted ${deletedCount} empty orders`
+      });
+    } catch (err) {
+      console.error('Error deleting empty orders:', err);
+      res.status(500).json({ success: false, error: "Server Error" });
+    }
+  });
+
   
 
 router.get('/new', async (req, res) => {

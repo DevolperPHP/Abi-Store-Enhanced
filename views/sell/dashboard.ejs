@@ -21,10 +21,6 @@
                 </div>
             </div>
             <div class="header-actions">
-                <button class="btn-secondary" onclick="refreshPage()">
-                    <ion-icon name="refresh-outline"></ion-icon>
-                    Refresh
-                </button>
                 <button class="btn-primary" onclick="window.location.href='/sell/new'">
                     <ion-icon name="add-outline"></ion-icon>
                     New Sale
@@ -136,7 +132,7 @@
                             <span>#<%= order.bid %></span>
                         </div>
                         <div class="order-total">
-                            <%= (order.total || (order.products ? order.products.reduce((sum, p) => sum + (p.total || 0), 0) : 0)).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") %> IQD
+                            <%= ((order.total && order.total !== '' ? parseFloat(order.total) : (order.products ? order.products.reduce((sum, p) => sum + (parseFloat(p.total) || 0), 0) : 0))).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") %> IQD
                         </div>
                     </div>
                 </div>
@@ -254,8 +250,75 @@
         }
     }
 
-    function refreshPage() {
-        window.location.reload();
+    async function refreshPage() {
+        // Show confirmation dialog
+        const result = await Swal.fire({
+            title: 'Delete Empty Orders?',
+            text: 'This will permanently delete all orders with 0 total (empty orders)',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#ff3b30',
+            cancelButtonColor: '#8e8e93',
+            confirmButtonText: 'Yes, delete them!',
+            cancelButtonText: 'Cancel',
+            background: '#ffffff',
+            customClass: {
+                popup: 'delete-confirm-popup',
+                confirmButton: 'delete-confirm-btn',
+                cancelButton: 'delete-cancel-btn'
+            }
+        });
+
+        if (result.isConfirmed) {
+            // Show loading state
+            Swal.fire({
+                title: 'Deleting...',
+                text: 'Please wait while we delete empty orders',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading()
+                }
+            });
+
+            try {
+                // Call API to delete orders with 0 total
+                const response = await fetch('/sell/api/delete-empty', {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to delete empty orders');
+                }
+
+                const data = await response.json();
+
+                // Show success message
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Deleted Successfully!',
+                    text: `Deleted ${data.deletedCount || 0} empty orders`,
+                    timer: 2000,
+                    showConfirmButton: false
+                });
+
+                // Refresh the page after short delay
+                setTimeout(() => {
+                    window.location.reload();
+                }, 2000);
+
+            } catch (error) {
+                console.error('Error deleting empty orders:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Deletion Failed',
+                    text: 'Could not delete empty orders. Please try again.',
+                    confirmButtonColor: '#007AFF'
+                });
+            }
+        }
     }
 
     function handleOrderClick(orderId, productCount) {
@@ -353,7 +416,7 @@
                     <span>#${order.bid}</span>
                 </div>
                 <div class="order-total">
-                    ${(order.total || 0).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")} IQD
+                    ${(order.total && order.total !== '' ? parseFloat(order.total) : (order.products ? order.products.reduce((sum, p) => sum + (parseFloat(p.total) || 0), 0) : 0)).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")} IQD
                 </div>
             </div>
         `;
@@ -864,6 +927,46 @@
             opacity: 0;
             transform: translate3d(0, -20px, 0);
         }
+    }
+
+    /* ===== DELETE CONFIRMATION STYLES ===== */
+    .delete-confirm-popup {
+        border-radius: 20px !important;
+        padding: 32px !important;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15) !important;
+        border: 1px solid rgba(0, 0, 0, 0.05) !important;
+        backdrop-filter: blur(20px) !important;
+    }
+
+    .delete-confirm-btn {
+        background: linear-gradient(135deg, #ff3b30, #ff5e57) !important;
+        border: none !important;
+        border-radius: 12px !important;
+        padding: 12px 32px !important;
+        font-weight: 600 !important;
+        font-size: 16px !important;
+        box-shadow: 0 4px 16px rgba(255, 59, 48, 0.3) !important;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    }
+
+    .delete-confirm-btn:hover {
+        transform: translateY(-1px) !important;
+        box-shadow: 0 6px 20px rgba(255, 59, 48, 0.4) !important;
+    }
+
+    .delete-cancel-btn {
+        background: rgba(0, 0, 0, 0.04) !important;
+        color: #1d1d1f !important;
+        border: none !important;
+        border-radius: 12px !important;
+        padding: 12px 32px !important;
+        font-weight: 500 !important;
+        font-size: 16px !important;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    }
+
+    .delete-cancel-btn:hover {
+        background: rgba(0, 0, 0, 0.08) !important;
     }
 
     /* ===== RESPONSIVE ===== */
