@@ -2772,6 +2772,11 @@
     color: white;
 }
 
+.action-btn-icon.analysis-btn:hover {
+    background: #8b5cf6;
+    color: white;
+}
+
 /* Empty State */
 .empty-state {
     text-align: center;
