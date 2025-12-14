@@ -427,9 +427,7 @@ class ItemsManager {
                     <button class="action-btn-icon" onclick="viewProduct('${product._id}')" title="View">
                         <ion-icon name="eye-outline"></ion-icon>
                     </button>
-                    <button class="action-btn-icon analysis-btn" onclick="analyzeProduct('${product._id}')" title="Analysis">
-                        <ion-icon name="analytics-outline"></ion-icon>
-                    </button>
+
                     <button class="action-btn-icon" onclick="editProduct('${product._id}')" title="Edit">
                         <ion-icon name="create-outline"></ion-icon>
                     </button>

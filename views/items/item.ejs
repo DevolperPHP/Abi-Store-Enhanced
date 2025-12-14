@@ -858,6 +858,10 @@
                                 <ion-icon name="trash-outline"></ion-icon>
                                 Delete Item
                             </button>
+                            <button class="action-btn" style="background: #dc2626; color: white;" onclick="bulkyDelete()">
+                                <ion-icon name="warning-outline"></ion-icon>
+                                Bulky Delete
+                            </button>
                         </div>
                             </div>
                         </div>
@@ -878,6 +882,47 @@
                 </form>
                         `
                             })
+                        }
+
+                        // Bulky Delete - Delete item with all colors and sizes
+                        function bulkyDelete() {
+                            Swal.fire({
+                                icon: 'warning',
+                                title: 'Bulky Delete - Are you absolutely sure?!',
+                                html: `
+                                    <div style="text-align: left; padding: 15px;">
+                                        <p style="color: #dc2626; font-weight: 600; margin-bottom: 10px;">
+                                            ⚠️ This will permanently delete:
+                                        </p>
+                                        <ul style="text-align: left; margin-left: 20px; line-height: 1.8;">
+                                            <li>This item (${'<%= data.name%>'} - ${'<%= data.size%>'})</li>
+                                            <li>All color variants of this item</li>
+                                            <li>All size variants of this item</li>
+                                            <li>All associated transaction data</li>
+                                        </ul>
+                                        <p style="color: #dc2626; font-weight: 600; margin-top: 15px;">
+                                            This action cannot be undone!
+                                        </p>
+                                    </div>
+                                `,
+                                showCancelButton: true,
+                                confirmButtonColor: '#dc2626',
+                                cancelButtonColor: '#6b7280',
+                                confirmButtonText: 'Yes, Delete Everything',
+                                cancelButtonText: 'Cancel',
+                                customClass: {
+                                    popup: 'bulky-delete-popup'
+                                }
+                            }).then((result) => {
+                                if (result.isConfirmed) {
+                                    // Submit the bulky delete form
+                                    const form = document.createElement('form');
+                                    form.method = 'POST';
+                                    form.action = '/items/bulky-delete/<%= data.id%>?_method=DELETE';
+                                    document.body.appendChild(form);
+                                    form.submit();
+                                }
+                            });
                         }
 
                         // Analyze Product - Show transaction analysis

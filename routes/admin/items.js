@@ -493,6 +493,47 @@ router.delete("/delete/:id", async (req, res) => {
     }
 })
 
+// Bulky Delete - Delete item with all colors and sizes
+router.delete("/bulky-delete/:id", async (req, res) => {
+    try {
+        const id = req.cookies.id
+        const user = await User.findOne({ _id: id })
+        const data = await Product.findOne({ _id: req.params.id })
+
+        if (user) {
+            if (user.isAdmin == true || user.permissions.includes("Items")) {
+                if (data) {
+                    // Get all variants (colors and sizes) of this item
+                    const allVariants = await Product.find({
+                        name: data.name,
+                        brand: data.brand,
+                        category: data.category
+                    })
+
+                    // Delete all variants
+                    const variantIds = allVariants.map(v => v._id)
+                    await Product.deleteMany({ _id: { $in: variantIds } })
+
+                    req.flash("delete-suc", "success")
+                    return res.redirect("/items")
+                } else {
+                    req.flash("error", "Item not found")
+                    return res.redirect("/items")
+                }
+            } else {
+                req.flash("permission-error", "error")
+                res.redirect("/")
+            }
+        } else {
+            res.redirect("/passport/sign-up")
+        }
+    } catch (err) {
+        console.log(err);
+        req.flash("error", "Failed to delete items")
+        res.redirect("/items")
+    }
+})
+
 router.get("/search/:name", async (req, res) => {
     try {
         const id = req.cookies.id
