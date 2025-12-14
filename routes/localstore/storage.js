@@ -101,9 +101,20 @@ router.get('/search/:barcode', async (req, res) => {
         const products = await Product.find({})
         const data = products.map((item) => `${item.name} - ${item.size}`)
         const uniqueArray = [... new Set(data)]
+
+        // Fetch color and size variants if item exists
+        let colors = [];
+        let sizes = [];
+        if (item) {
+            colors = await Product.find({ name: item.name, size: item.size })
+            sizes = await Product.find({ name: item.name, brand: item.brand, category: item.category })
+        }
+
         res.render('localstore/storage/search', {
             user: req.user,
             item,
+            colors,
+            sizes,
             suc: req.flash('qty-suc'),
             err: req.flash('qty-err'),
             data: uniqueArray
