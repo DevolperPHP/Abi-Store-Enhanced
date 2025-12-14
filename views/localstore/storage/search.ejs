@@ -315,6 +315,115 @@
             grid-template-columns: 1fr;
         }
     }
+ 
+
+/* Professional Autocomplete Styling - Matching sell.ejs */
+.autocomplete-items {
+    position: absolute;
+    z-index: 9999;
+    background: white;
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08), 0 2px 8px rgba(0, 0, 0, 0.04);
+    max-height: 400px;
+    overflow-y: auto;
+    margin-top: 8px;
+    padding: 8px 0;
+}
+
+.autocomplete-items::-webkit-scrollbar {
+    width: 8px;
+}
+
+.autocomplete-items::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.autocomplete-items::-webkit-scrollbar-thumb {
+    background: var(--border-color);
+    border-radius: 4px;
+}
+
+.autocomplete-items::-webkit-scrollbar-thumb:hover {
+    background: var(--text-secondary);
+}
+
+.autocomplete-items div {
+    padding: 12px 16px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    transition: all 0.15s ease;
+    border-left: 3px solid transparent;
+    margin: 0 4px;
+    border-radius: 8px;
+}
+
+.autocomplete-items div:hover {
+    background: var(--background-primary);
+}
+
+.autocomplete-items div.autocomplete-active {
+    background: rgba(0, 122, 255, 0.08);
+    border-left-color: var(--primary-color);
+}
+
+.autocomplete-items div strong {
+    color: var(--primary-color);
+    font-weight: 600;
+}
+
+.autocomplete-items .autocomplete-text {
+    flex: 1;
+}
+
+.autocomplete-items .autocomplete-name {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+.autocomplete-items .no-results {
+    padding: 32px 16px;
+    text-align: center;
+    color: var(--text-secondary);
+    cursor: default;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.autocomplete-items .no-results:hover {
+    background: transparent;
+    border-left-color: transparent;
+}
+
+.autocomplete-items .no-results ion-icon {
+    font-size: 32px;
+    opacity: 0.3;
+}
+
+.autocomplete-items .no-results-text {
+    font-size: 13px;
+}
+
+/* No results state */
+.autocomplete-no-results {
+    padding: 24px 16px;
+    text-align: center;
+    color: var(--text-secondary);
+}
+
+.autocomplete-no-results ion-icon {
+    font-size: 32px;
+    opacity: 0.3;
+    margin-bottom: 8px;
+}
+
+.autocomplete-no-results p {
+    font-size: 13px;
+    margin: 0;
+}
+
 </style>
 
 <div class="dashboard-container">
